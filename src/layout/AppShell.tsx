@@ -4,6 +4,7 @@ import {
   BookOpenText,
   BookText,
   ChartColumn,
+  FolderTree,
   Inbox,
   Languages,
   Menu,
@@ -16,6 +17,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { cn } from "@/lib/utils";
 import { getSettings } from "@/utils/storage";
+import { useGroups } from "@/hooks/useGroups";
 
 type NavItem = {
   label: string;
@@ -26,6 +28,7 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { label: "Inbox", path: "/inbox", icon: Inbox },
   { label: "Words", path: "/words", icon: BookOpenText },
+  { label: "Groups", path: "/groups", icon: FolderTree },
   { label: "Translations", path: "/translations", icon: Languages },
   { label: "Definitions", path: "/definitions", icon: BookText },
   { label: "Review", path: "/review", icon: BookCheck },
@@ -34,6 +37,7 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 const CAPTURE_PATHS = new Set(["/inbox", "/words", "/translations"]);
+const PRIMARY_MODIFIER_LABEL = navigator.platform.toLowerCase().includes("mac") ? "Cmd" : "Ctrl";
 
 function isPathActive(pathname: string, targetPath: string): boolean {
   return pathname === targetPath || pathname.startsWith(`${targetPath}/`);
@@ -66,6 +70,8 @@ export function AppShell({ children }: AppShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [shortcutsEnabled, setShortcutsEnabled] = useState(true);
+  const [selectedGroupFilter, setSelectedGroupFilter] = useState("all");
+  const { groups } = useGroups();
 
   const navLookup = useMemo(() => NAV_ITEMS.map((item) => item.path), []);
 
@@ -172,15 +178,6 @@ export function AppShell({ children }: AppShellProps) {
           <div className="lexi-sidebar-header">
             <button
               type="button"
-              className="hidden size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground lg:inline-flex"
-              onClick={toggleSidebarCollapsed}
-              aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            >
-              <Menu className="size-4" />
-            </button>
-
-            <button
-              type="button"
               className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground lg:hidden"
               onClick={() => setSidebarOpen(false)}
               aria-label="Close sidebar"
@@ -218,7 +215,7 @@ export function AppShell({ children }: AppShellProps) {
               <span className="size-1.5 rounded-full bg-foreground/75" />
               Synced, just now
             </span>
-            <p className="subtle-caption px-1">`Ctrl+K` search, `Ctrl+N` capture, `Alt+1..7` navigate</p>
+            <p className="subtle-caption px-1">{PRIMARY_MODIFIER_LABEL}+K search, {PRIMARY_MODIFIER_LABEL}+N capture, Alt+1..8 navigate</p>
           </div>
         </aside>
 
@@ -243,20 +240,29 @@ export function AppShell({ children }: AppShellProps) {
             </button>
 
             <nav className="lexi-tabs custom-scrollbar">
-              {NAV_ITEMS.map((item) => {
-                const active = isPathActive(location.pathname, item.path);
-
-                return (
-                  <Link
-                    key={`top-${item.path}`}
-                    to={item.path}
-                    className={cn("lexi-tab", active && "is-active")}
-                    title={`Alt+${NAV_ITEMS.indexOf(item) + 1}`}
-                  >
-                    {item.label}
-                  </Link>
-                );
-              })}
+              <button
+                type="button"
+                className={cn("lexi-tab", selectedGroupFilter === "all" && "is-active")}
+                onClick={() => {
+                  setSelectedGroupFilter("all");
+                  window.dispatchEvent(new CustomEvent("lexi:group-filter-changed", { detail: { groupId: "none" } }));
+                }}
+              >
+                All
+              </button>
+              {groups.map((group) => (
+                <button
+                  key={group.id}
+                  type="button"
+                  className={cn("lexi-tab", selectedGroupFilter === group.id && "is-active")}
+                  onClick={() => {
+                    setSelectedGroupFilter(group.id);
+                    window.dispatchEvent(new CustomEvent("lexi:group-filter-changed", { detail: { groupId: group.id } }));
+                  }}
+                >
+                  {group.name}
+                </button>
+              ))}
             </nav>
 
             <div className="ml-auto flex items-center gap-2">
@@ -265,7 +271,7 @@ export function AppShell({ children }: AppShellProps) {
                 className="inline-flex size-10 items-center justify-center rounded-lg border border-white/12 bg-white/5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground"
                 onClick={() => emitAppEvent("lexi:focus-search", location.pathname)}
                 aria-label="Search"
-                title="Ctrl+K"
+                title={`${PRIMARY_MODIFIER_LABEL}+K`}
               >
                 <Search className="size-4" />
               </button>
@@ -274,7 +280,7 @@ export function AppShell({ children }: AppShellProps) {
                 type="button"
                 className="inline-flex h-10 items-center gap-2 rounded-lg border border-white/14 bg-white/10 px-3.5 text-sm font-semibold text-foreground transition hover:bg-white/16"
                 onClick={() => emitAppEvent("lexi:capture", location.pathname)}
-                title="Ctrl+N"
+                title={`${PRIMARY_MODIFIER_LABEL}+N`}
               >
                 <Plus className="size-4" />
                 Capture

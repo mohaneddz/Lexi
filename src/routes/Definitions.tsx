@@ -4,7 +4,7 @@ import { CircleDot, Copy, RefreshCcw, Search, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useWords } from "@/hooks/useWords";
 import { cn } from "@/lib/utils";
-import { buildExample, getReviewStatus } from "@/utils/review";
+import { getReviewStatus } from "@/utils/review";
 import { truncateText } from "@/utils/formatters";
 
 function isTypingTarget(target: EventTarget | null): boolean {
@@ -113,8 +113,7 @@ export default function Definitions() {
     if (selectedWord.examples && selectedWord.examples.length > 0) {
       return selectedWord.examples[exampleVersion % selectedWord.examples.length];
     }
-
-    return buildExample({ ...selectedWord, dateAdded: selectedWord.dateAdded + exampleVersion });
+    return "";
   }, [exampleVersion, selectedWord]);
 
   const copyDefinition = async () => {
@@ -214,21 +213,26 @@ export default function Definitions() {
 
               <p className="detail-text">{selectedWord.definition}</p>
 
-              <div className="frost-panel-soft space-y-3 p-4">
-                <div className="flex items-center justify-between">
-                  <p className="font-medium">Usage Example</p>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="border-white/15 bg-white/6 hover:bg-white/14"
-                    onClick={() => setExampleVersion((current) => current + 1)}
-                  >
-                    <RefreshCcw className="mr-1.5 size-3.5" />
-                    Rotate
-                  </Button>
-                </div>
-                <p className="serif-display text-2xl italic text-muted-foreground">{selectedExample}</p>
+                <div className="frost-panel-soft space-y-3 p-4">
+                  <div className="flex items-center justify-between">
+                    <p className="font-medium">Usage Example</p>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={!selectedWord.examples || selectedWord.examples.length <= 1}
+                      className="border-white/15 bg-white/6 hover:bg-white/14"
+                      onClick={() => setExampleVersion((current) => current + 1)}
+                    >
+                      <RefreshCcw className="mr-1.5 size-3.5" />
+                      Rotate
+                    </Button>
+                  </div>
+                {selectedExample ? (
+                  <p className="serif-display text-2xl italic text-muted-foreground">{selectedExample}</p>
+                ) : (
+                  <p className="subtle-caption">No examples yet. Generate examples from the Words page.</p>
+                )}
               </div>
 
               <div className="flex flex-wrap gap-2">
