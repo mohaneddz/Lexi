@@ -9,6 +9,7 @@ export interface Word {
   tags: string[];
   aiGenerated: boolean;
   examples?: string[];
+  groupIds?: string[];
 }
 
 export interface Translation {
@@ -20,6 +21,14 @@ export interface Translation {
   dateAdded: number; // timestamp
   aiGenerated: boolean;
   context?: string;
+  groupIds?: string[];
+}
+
+export interface LexiGroup {
+  id: string;
+  name: string;
+  description?: string;
+  dateAdded: number; // timestamp
 }
 
 export interface LanguageStats {
