@@ -1,6 +1,6 @@
 // AddWordDialog component with AI features
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Sparkles, Loader2, Plus, X } from 'lucide-react';
 import {
     Dialog,
@@ -14,7 +14,9 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAI } from '@/hooks/useAI';
+import { getSettings } from '@/utils/storage';
 import { validateWord, validateDefinition, sanitizeInput } from '@/utils/validators';
+import { useGroups } from '@/hooks/useGroups';
 
 interface AddWordDialogProps {
     open: boolean;
@@ -25,26 +27,44 @@ interface AddWordDialogProps {
         language: string;
         tags: string[];
         aiGenerated: boolean;
+        examples?: string[];
+        groupIds?: string[];
     }) => Promise<unknown>;
 }
 
 export function AddWordDialog({ open, onOpenChange, onAdd }: AddWordDialogProps) {
     const [word, setWord] = useState('');
     const [definition, setDefinition] = useState('');
-    const [language, setLanguage] = useState('');
+    const [language, setLanguage] = useState('English');
+    const [defaultLanguage, setDefaultLanguage] = useState('English');
     const [tags, setTags] = useState<string[]>([]);
+    const [examples, setExamples] = useState<string[]>([]);
     const [tagInput, setTagInput] = useState('');
     const [aiGenerated, setAiGenerated] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [selectedGroupId, setSelectedGroupId] = useState<string>("");
     const [errors, setErrors] = useState<{ word?: string; definition?: string }>({});
 
-    const { detectLanguage, defineWord, suggestTags, loading: aiLoading } = useAI();
+    const { detectLanguage, defineWord, suggestTags, getExamples, suggestGroup, loading: aiLoading } = useAI();
+    const { groups } = useGroups();
+
+    useEffect(() => {
+        if (!open) {
+            return;
+        }
+
+        getSettings().then((settings) => {
+            const fallbackLanguage = settings.defaultLanguage || 'English';
+            setDefaultLanguage(fallbackLanguage);
+            setLanguage(fallbackLanguage);
+        });
+    }, [open]);
 
     const handleAIDefine = async () => {
         if (!word.trim()) return;
 
         const languageResult = await detectLanguage(word);
-        const detectedLanguage = languageResult.success ? languageResult.data : (language || 'English');
+        const detectedLanguage = languageResult.success ? languageResult.data : (language || defaultLanguage || 'English');
 
         if (languageResult.success) {
             setLanguage(languageResult.data);
@@ -59,6 +79,20 @@ export function AddWordDialog({ open, onOpenChange, onAdd }: AddWordDialogProps)
             const tagResult = await suggestTags(word, result.data);
             if (tagResult.success) {
                 setTags(tagResult.data);
+            }
+
+            const exampleResult = await getExamples(word, detectedLanguage);
+            if (exampleResult.success) {
+                const cleanedExamples = Array.from(new Set(exampleResult.data.map((item) => sanitizeInput(item)).filter(Boolean))).slice(0, 5);
+                setExamples(cleanedExamples);
+            }
+
+            // Auto-suggest group if groups are available
+            if (groups.length > 0) {
+                const groupResult = await suggestGroup(word, result.data, groups);
+                if (groupResult.success && groupResult.data) {
+                    setSelectedGroupId(groupResult.data);
+                }
             }
         }
     };
@@ -93,16 +127,20 @@ export function AddWordDialog({ open, onOpenChange, onAdd }: AddWordDialogProps)
             await onAdd({
                 word: sanitizeInput(word),
                 definition: sanitizeInput(definition),
-                language: language || 'English',
+                language: language || defaultLanguage || 'English',
                 tags,
                 aiGenerated,
+                examples: examples.length > 0 ? examples : undefined,
+                groupIds: selectedGroupId ? [selectedGroupId] : [],
             });
 
             // Reset form
             setWord('');
             setDefinition('');
-            setLanguage('');
+            setLanguage(defaultLanguage || 'English');
             setTags([]);
+            setExamples([]);
+            setSelectedGroupId("");
             setAiGenerated(false);
             setErrors({});
             onOpenChange(false);
@@ -196,6 +234,19 @@ export function AddWordDialog({ open, onOpenChange, onAdd }: AddWordDialogProps)
                         )}
                     </div>
 
+                    {examples.length > 0 && (
+                        <div className="space-y-2">
+                            <p className="text-sm font-medium">Examples</p>
+                            <div className="space-y-1.5 p-1">
+                                {examples.map((example, index) => (
+                                    <p key={`${example}-${index}`} className="text-sm text-muted-foreground">
+                                        {example}
+                                    </p>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Tags */}
                     <div className="space-y-2">
                         <label className="text-sm font-medium">Tags</label>
@@ -233,6 +284,29 @@ export function AddWordDialog({ open, onOpenChange, onAdd }: AddWordDialogProps)
                             </div>
                         )}
                     </div>
+
+                    {/* Group Selection */}
+                    {groups.length > 0 && (
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Group</label>
+                            <select
+                                value={selectedGroupId}
+                                onChange={(e) => setSelectedGroupId(e.target.value)}
+                                className="w-full px-3 py-2 rounded-md glass border border-glass-border bg-transparent text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                            >
+                                <option value="">No Group</option>
+                                {groups.map((group) => (
+                                    <option key={group.id} value={group.id}>{group.name}</option>
+                                ))}
+                            </select>
+                            {selectedGroupId && aiGenerated && (
+                                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                    <Sparkles className="h-3 w-3" />
+                                    AI suggested this group
+                                </p>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 <DialogFooter>

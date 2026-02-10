@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  ArrowRight,
+  Check,
   CircleDot,
   Copy,
+  FolderPlus,
   Languages,
   MoreHorizontal,
   Pencil,
@@ -17,13 +20,18 @@ import { EditTranslationDialog } from "@/components/EditTranslationDialog";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useGroups } from "@/hooks/useGroups";
 import { useTranslations } from "@/hooks/useTranslations";
 import { useWords } from "@/hooks/useWords";
 import { cn } from "@/lib/utils";
@@ -48,6 +56,12 @@ type SortMode = "recent" | "oldest" | "source" | "target" | "sourceLang" | "targ
 type GroupMode = "none" | "sourceLang" | "targetLang" | "pair";
 type SourceFilter = "All" | "AI" | "Manual";
 
+type ContextMenuState = {
+  translation: Translation;
+  x: number;
+  y: number;
+};
+
 export default function Translations() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -61,12 +75,16 @@ export default function Translations() {
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>("All");
   const [sortMode, setSortMode] = useState<SortMode>("recent");
   const [groupMode, setGroupMode] = useState<GroupMode>("none");
+  const [groupFilterId, setGroupFilterId] = useState("none");
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [actionTranslationId, setActionTranslationId] = useState<string | null>(null);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(true);
+  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
 
   const { translations, addTranslation, updateTranslation, deleteTranslation, loading } = useTranslations();
   const { words } = useWords();
+  const { groups, addGroup } = useGroups();
 
   const availableLanguages = useMemo(() => {
     const languages = new Set<string>();
@@ -77,6 +95,14 @@ export default function Translations() {
 
     return ["All", ...Array.from(languages).sort((a, b) => a.localeCompare(b))];
   }, [translations]);
+
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (languageFilter !== "All") count += 1;
+    if (sourceFilter !== "All") count += 1;
+    if (groupFilterId !== "none") count += 1;
+    return count;
+  }, [groupFilterId, languageFilter, sourceFilter]);
 
   const filteredTranslations = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -92,7 +118,11 @@ export default function Translations() {
         (sourceFilter === "AI" && translation.aiGenerated) ||
         (sourceFilter === "Manual" && !translation.aiGenerated);
 
-      if (!matchesLanguage || !matchesSource) {
+      const matchesGroup =
+        groupFilterId === "none" ||
+        (translation.groupIds || []).includes(groupFilterId);
+
+      if (!matchesLanguage || !matchesSource || !matchesGroup) {
         return false;
       }
 
@@ -125,7 +155,7 @@ export default function Translations() {
       default:
         return next.sort((a, b) => b.dateAdded - a.dateAdded);
     }
-  }, [languageFilter, query, sortMode, sourceFilter, translations]);
+  }, [groupFilterId, languageFilter, query, sortMode, sourceFilter, translations]);
 
   const groupedTranslations = useMemo(() => {
     const groups = new Map<string, Translation[]>();
@@ -229,10 +259,41 @@ export default function Translations() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [filteredTranslations, selectedId]);
 
+  useEffect(() => {
+    if (!contextMenu) {
+      return;
+    }
+
+    const close = () => setContextMenu(null);
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setContextMenu(null);
+      }
+    };
+
+    window.addEventListener("click", close);
+    window.addEventListener("scroll", close, true);
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      window.removeEventListener("click", close);
+      window.removeEventListener("scroll", close, true);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [contextMenu]);
+
   const selectedTranslation = useMemo(
     () => filteredTranslations.find((translation) => translation.id === selectedId) ?? null,
     [filteredTranslations, selectedId],
   );
+
+  const selectedTranslationGroups = useMemo(() => {
+    if (!selectedTranslation) {
+      return [];
+    }
+    const ids = selectedTranslation.groupIds || [];
+    return groups.filter((group) => ids.includes(group.id));
+  }, [groups, selectedTranslation]);
 
   const linkedWords = useMemo(() => {
     if (!selectedTranslation) {
@@ -289,12 +350,39 @@ export default function Translations() {
     }
   };
 
+  const toggleTranslationGroup = async (translation: Translation, groupId: string) => {
+    const current = translation.groupIds || [];
+    const next = current.includes(groupId)
+      ? current.filter((id) => id !== groupId)
+      : [...current, groupId];
+    await updateTranslation(translation.id, { groupIds: next });
+  };
+
+  const createGroupAndAssign = async (translation: Translation) => {
+    const name = window.prompt("New group name");
+    if (!name || !name.trim()) {
+      return;
+    }
+
+    const group = await addGroup({ name: name.trim() });
+    const nextGroupIds = Array.from(new Set([...(translation.groupIds || []), group.id]));
+    await updateTranslation(translation.id, { groupIds: nextGroupIds });
+  };
+
+  const clearAllFilters = () => {
+    setLanguageFilter("All");
+    setSourceFilter("All");
+    setQuery("");
+    setGroupFilterId("none");
+    setGroupMode("none");
+  };
+
   return (
     <>
       <div className="grid h-full grid-cols-1 gap-3 xl:grid-cols-[1.12fr_1fr]">
         <section className="frost-panel flex min-h-0 flex-col overflow-hidden animate-slide-in-up">
           <div className="flex items-center gap-2 border-b border-white/10 p-3">
-            <div className="search-field-wrap flex-1">
+            <div className="search-field-wrap min-w-0 flex-1">
               <Search className="search-field-icon" />
               <input
                 ref={searchInputRef}
@@ -305,28 +393,57 @@ export default function Translations() {
                 placeholder="Search translation pairs"
               />
             </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              disabled={activeFilterCount === 0}
+              onClick={clearAllFilters}
+              className="h-[2.36rem] w-[2.36rem] border-white/15 bg-white/5 text-muted-foreground disabled:opacity-45"
+              title={activeFilterCount > 0 ? "Clear all filters" : "No active filters"}
+            >
+              <Check className="size-4" />
+            </Button>
 
-            <DropdownMenu>
+            <DropdownMenu open={filtersOpen} onOpenChange={setFiltersOpen}>
               <DropdownMenuTrigger asChild>
-                <Button type="button" variant="outline" size="icon" className="h-[2.36rem] w-[2.36rem] border-white/15 bg-white/5 text-muted-foreground">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="relative h-[2.36rem] w-[2.36rem] border-white/15 bg-white/5 text-muted-foreground"
+                >
                   <SlidersHorizontal className="size-4" />
+                  {activeFilterCount > 0 ? (
+                    <span className="absolute -right-1 -top-1 inline-flex size-4 items-center justify-center rounded-full bg-white/90 text-[10px] font-semibold text-black">
+                      {activeFilterCount}
+                    </span>
+                  ) : null}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuContent align="end" className="w-64">
                 <DropdownMenuLabel>Source</DropdownMenuLabel>
-                {["All", "AI", "Manual"].map((entry) => (
-                  <DropdownMenuCheckboxItem key={entry} checked={sourceFilter === entry} onCheckedChange={() => setSourceFilter(entry as SourceFilter)}>
-                    {entry}
-                  </DropdownMenuCheckboxItem>
-                ))}
+                <DropdownMenuRadioGroup value={sourceFilter} onValueChange={(value) => setSourceFilter(value as SourceFilter)}>
+                  {["All", "AI", "Manual"].map((entry) => (
+                    <DropdownMenuRadioItem key={entry} value={entry}>{entry}</DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => { setLanguageFilter("All"); setSourceFilter("All"); setQuery(""); }}>
+                <DropdownMenuLabel>List Grouping</DropdownMenuLabel>
+                <DropdownMenuRadioGroup value={groupMode} onValueChange={(value) => setGroupMode(value as GroupMode)}>
+                  <DropdownMenuRadioItem value="none">No Grouping</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="sourceLang">By Source Language</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="targetLang">By Target Language</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="pair">By Language Pair</DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={clearAllFilters}>
                   Clear Filters
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <select className="frost-input h-[2.36rem] w-[124px] py-0" value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)}>
+            <select className="frost-input h-[2.36rem] w-[124px] shrink-0 py-0 max-sm:w-[108px]" value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)}>
               <option value="recent">Recent</option>
               <option value="oldest">Oldest</option>
               <option value="source">Source</option>
@@ -335,11 +452,11 @@ export default function Translations() {
               <option value="targetLang">Target Lang</option>
             </select>
 
-            <select className="frost-input h-[2.36rem] w-[122px] py-0" value={groupMode} onChange={(event) => setGroupMode(event.target.value as GroupMode)}>
+            <select className="frost-input h-[2.36rem] w-[168px] shrink-0 py-0 max-sm:w-[132px]" value={groupFilterId} onChange={(event) => setGroupFilterId(event.target.value)}>
               <option value="none">No Group</option>
-              <option value="sourceLang">Source Lang</option>
-              <option value="targetLang">Target Lang</option>
-              <option value="pair">By Pair</option>
+              {groups.map((group) => (
+                <option key={group.id} value={group.id}>{group.name}</option>
+              ))}
             </select>
           </div>
 
@@ -389,10 +506,23 @@ export default function Translations() {
                       role="button"
                       tabIndex={0}
                       onClick={() => setSelectedId(translation.id)}
+                      onContextMenu={(event) => {
+                        event.preventDefault();
+                        setSelectedId(translation.id);
+                        setContextMenu({
+                          translation,
+                          x: event.clientX,
+                          y: event.clientY,
+                        });
+                      }}
                     >
                       <div className="min-w-0">
                         <p className="serif-display truncate text-[1.6rem] leading-[0.95]">
-                          {translation.sourceWord} <span className="text-muted-foreground">{"->"}</span> {translation.targetWord}
+                          {translation.sourceWord}
+                          <span className="mx-2 inline-flex items-center align-middle text-muted-foreground/80">
+                            <ArrowRight className="size-4" />
+                          </span>
+                          {translation.targetWord}
                         </p>
                         <p className="word-sub mt-1.5 text-sm">{translation.targetLanguage} • added {formatDate(translation.dateAdded)}</p>
                       </div>
@@ -414,6 +544,40 @@ export default function Translations() {
                             <Pencil className="size-4" />
                             Edit pair
                           </DropdownMenuItem>
+
+                          <DropdownMenuSub>
+                            <DropdownMenuSubTrigger>
+                              <FolderPlus className="size-4" />
+                              Groups
+                            </DropdownMenuSubTrigger>
+                            <DropdownMenuSubContent className="w-56">
+                              {groups.length === 0 ? (
+                                <DropdownMenuItem onSelect={() => void createGroupAndAssign(translation)}>
+                                  Create first group
+                                </DropdownMenuItem>
+                              ) : (
+                                groups.map((groupEntry) => {
+                                  const assigned = (translation.groupIds || []).includes(groupEntry.id);
+                                  return (
+                                    <DropdownMenuItem key={groupEntry.id} onSelect={() => void toggleTranslationGroup(translation, groupEntry.id)}>
+                                      <Check className={cn("size-4", !assigned && "opacity-0")} />
+                                      {groupEntry.name}
+                                    </DropdownMenuItem>
+                                  );
+                                })
+                              )}
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onSelect={() => void createGroupAndAssign(translation)}>
+                                Create group and add
+                              </DropdownMenuItem>
+                              {(translation.groupIds || []).length > 0 ? (
+                                <DropdownMenuItem onSelect={() => void updateTranslation(translation.id, { groupIds: [] })}>
+                                  Remove from all groups
+                                </DropdownMenuItem>
+                              ) : null}
+                            </DropdownMenuSubContent>
+                          </DropdownMenuSub>
+
                           <DropdownMenuItem variant="destructive" onSelect={() => requestDeleteTranslation(translation)}>
                             <Trash2 className="size-4" />
                             Delete pair
@@ -441,7 +605,11 @@ export default function Translations() {
                   <div>
                     <h2 className="detail-title">{selectedTranslation.sourceWord}</h2>
                     <p className="detail-phonetic mt-1">
-                      {selectedTranslation.sourceLanguage} {"->"} {selectedTranslation.targetLanguage}
+                      {selectedTranslation.sourceLanguage}
+                      <span className="mx-2 inline-flex items-center align-middle text-muted-foreground/80">
+                        <ArrowRight className="size-3.5" />
+                      </span>
+                      {selectedTranslation.targetLanguage}
                     </p>
                   </div>
                   <span className={cn("status-pill", selectedTranslation.aiGenerated ? "status-learning" : "status-new")}>{selectedTranslation.aiGenerated ? "AI" : "Manual"}</span>
@@ -460,6 +628,23 @@ export default function Translations() {
                     <p className="word-sub">{selectedTranslation.context}</p>
                   </div>
                 ) : null}
+
+                <div className="ghost-divider" />
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="font-medium">Groups</p>
+                    <FolderPlus className="size-4 text-muted-foreground" />
+                  </div>
+
+                  {selectedTranslationGroups.length === 0 ? (
+                    <div className="frost-panel-soft p-3 text-sm text-muted-foreground">No group assigned yet. Right-click the row to manage groups.</div>
+                  ) : (
+                    <div className="flex flex-wrap gap-1.5">
+                      {selectedTranslationGroups.map((group) => <span key={group.id} className="lexi-chip">{group.name}</span>)}
+                    </div>
+                  )}
+                </div>
 
                 <div className="ghost-divider" />
 
@@ -490,6 +675,109 @@ export default function Translations() {
           </div>
         </section>
       </div>
+
+      {contextMenu ? (
+        <div
+          className="fixed inset-0 z-[70]"
+          onClick={() => setContextMenu(null)}
+          onContextMenu={(event) => {
+            event.preventDefault();
+            setContextMenu(null);
+          }}
+        >
+          <div
+            className="absolute w-64 rounded-md border border-white/15 bg-black/85 p-1 shadow-xl backdrop-blur-md"
+            style={{
+              left: Math.max(8, Math.min(contextMenu.x, window.innerWidth - 272)),
+              top: Math.max(8, Math.min(contextMenu.y, window.innerHeight - 320)),
+            }}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-white/10"
+              onClick={() => {
+                setSelectedId(contextMenu.translation.id);
+                setContextMenu(null);
+              }}
+            >
+              <Search className="size-4" />
+              Open details
+            </button>
+
+            <button
+              type="button"
+              className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-white/10"
+              onClick={() => {
+                void handleCopyTranslation(contextMenu.translation);
+                setContextMenu(null);
+              }}
+            >
+              <Copy className="size-4" />
+              Copy pair
+            </button>
+
+            <div className="my-1 h-px bg-white/10" />
+            <p className="px-2 py-1 text-xs text-muted-foreground">Groups</p>
+            {groups.length === 0 ? (
+              <button
+                type="button"
+                className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-white/10"
+                onClick={() => {
+                  void createGroupAndAssign(contextMenu.translation);
+                  setContextMenu(null);
+                }}
+              >
+                <FolderPlus className="size-4" />
+                Create first group
+              </button>
+            ) : (
+              groups.map((group) => {
+                const assigned = (contextMenu.translation.groupIds || []).includes(group.id);
+                return (
+                  <button
+                    key={group.id}
+                    type="button"
+                    className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-white/10"
+                    onClick={() => {
+                      void toggleTranslationGroup(contextMenu.translation, group.id);
+                      setContextMenu(null);
+                    }}
+                  >
+                    <Check className={cn("size-4", !assigned && "opacity-0")} />
+                    {group.name}
+                  </button>
+                );
+              })
+            )}
+
+            <button
+              type="button"
+              className="mt-1 flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-white/10"
+              onClick={() => {
+                void createGroupAndAssign(contextMenu.translation);
+                setContextMenu(null);
+              }}
+            >
+              <FolderPlus className="size-4" />
+              Create group and add
+            </button>
+
+            <div className="my-1 h-px bg-white/10" />
+            <button
+              type="button"
+              className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm text-red-200 hover:bg-red-400/10"
+              onClick={() => {
+                requestDeleteTranslation(contextMenu.translation);
+                setContextMenu(null);
+              }}
+            >
+              <Trash2 className="size-4" />
+              Delete pair
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       <AddTranslationDialog open={addDialogOpen} onOpenChange={setAddDialogOpen} onAdd={addTranslation} />
       <EditTranslationDialog

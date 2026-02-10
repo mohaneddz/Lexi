@@ -39,6 +39,11 @@ const EXAMPLE_SCHEMA = z.object({
   confidence: z.number().min(0).max(1),
 });
 
+const GROUP_SUGGESTION_SCHEMA = z.object({
+  groupId: z.string().min(1),
+  confidence: z.number().min(0).max(1),
+});
+
 function resolveEnvApiKey(): string {
   return (
     import.meta.env.GROQ_API_KEY?.trim() ||
@@ -471,6 +476,77 @@ export async function getExamples(
       success: false,
       data: [],
       error: toErrorMessage("Example generation failed", error),
+    };
+  }
+}
+
+export async function suggestGroup(
+  word: string,
+  definition: string,
+  availableGroups: Array<{ id: string; name: string; description?: string }>,
+): Promise<AIResponse<string>> {
+  const trimmedWord = word.trim();
+  const trimmedDefinition = definition.trim();
+
+  if (!trimmedWord || !trimmedDefinition) {
+    return {
+      success: false,
+      data: "",
+      error: "Both word and definition are required for group suggestion.",
+    };
+  }
+
+  if (availableGroups.length === 0) {
+    return {
+      success: false,
+      data: "",
+      error: "No groups available for suggestion.",
+    };
+  }
+
+  try {
+    const groupsList = availableGroups
+      .map((g) => `- ID: ${g.id}, Name: ${g.name}${g.description ? `, Description: ${g.description}` : ""}`)
+      .join("\n");
+
+    const object = await runStructuredPrompt({
+      schema: GROUP_SUGGESTION_SCHEMA,
+      system:
+        "You are a vocabulary categorization assistant. Analyze words and their definitions to suggest the most appropriate group from the available options. Return JSON only.",
+      prompt: [
+        `Word: ${trimmedWord}`,
+        `Definition: ${trimmedDefinition}`,
+        "",
+        "Available groups:",
+        groupsList,
+        "",
+        "Select the most appropriate group ID from the list above that best categorizes this word.",
+        "Return the exact group ID as it appears in the list.",
+      ].join("\n"),
+      temperature: 0.1,
+    });
+
+    // Validate that the returned groupId exists in availableGroups
+    const selectedGroup = availableGroups.find((g) => g.id === object.groupId);
+    if (!selectedGroup) {
+      // Fallback to first group if AI returns invalid ID
+      return {
+        success: true,
+        data: availableGroups[0].id,
+        confidence: 0.5,
+      };
+    }
+
+    return {
+      success: true,
+      data: object.groupId,
+      confidence: object.confidence,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      data: "",
+      error: toErrorMessage("Group suggestion failed", error),
     };
   }
 }

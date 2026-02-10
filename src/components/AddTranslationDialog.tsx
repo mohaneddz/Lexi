@@ -1,6 +1,6 @@
 // AddTranslationDialog component with AI translation
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Sparkles, Loader2, Languages as LanguagesIcon } from 'lucide-react';
 import {
     Dialog,
@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAI } from '@/hooks/useAI';
+import { getSettings } from '@/utils/storage';
 import { sanitizeInput } from '@/utils/validators';
 
 interface AddTranslationDialogProps {
@@ -38,12 +39,25 @@ export function AddTranslationDialog({ open, onOpenChange, onAdd }: AddTranslati
     const [sourceWord, setSourceWord] = useState('');
     const [targetWord, setTargetWord] = useState('');
     const [sourceLang, setSourceLang] = useState('English');
-    const [targetLang, setTargetLang] = useState('French');
+    const [targetLang, setTargetLang] = useState('English');
+    const [defaultLanguage, setDefaultLanguage] = useState('English');
     const [context, setContext] = useState('');
     const [aiGenerated, setAiGenerated] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const { translate, loading: aiLoading } = useAI();
+
+    useEffect(() => {
+        if (!open) {
+            return;
+        }
+
+        getSettings().then((settings) => {
+            const fallbackLanguage = settings.defaultLanguage || 'English';
+            setDefaultLanguage(fallbackLanguage);
+            setTargetLang(fallbackLanguage);
+        });
+    }, [open]);
 
     const handleAITranslate = async () => {
         if (!sourceWord.trim()) return;
@@ -72,6 +86,7 @@ export function AddTranslationDialog({ open, onOpenChange, onAdd }: AddTranslati
             // Reset form
             setSourceWord('');
             setTargetWord('');
+            setTargetLang(defaultLanguage || 'English');
             setContext('');
             setAiGenerated(false);
             onOpenChange(false);

@@ -273,6 +273,7 @@ textarea {
 .lexi-sidebar-header {
   display: flex;
   align-items: center;
+  justify-items: center;
   gap: 0.75rem;
   padding: 0.2rem 0.3rem 0.8rem;
   border-bottom: 1px solid oklch(1 0 0 / 0.08);
@@ -334,9 +335,10 @@ textarea {
   justify-content: center;
 }
 
-.lexi-sidebar.collapsed .lexi-brand span,
+.lexi-sidebar.collapsed .lexi-brand,
 .lexi-sidebar.collapsed .lexi-nav-link span,
-.lexi-sidebar.collapsed .lexi-sidebar-footer .subtle-caption {
+.lexi-sidebar.collapsed .lexi-sidebar-footer .subtle-caption,
+.lexi-sidebar.collapsed .lexi-sidebar-footer .sync-pill {
   display: none;
 }
 
@@ -779,10 +781,18 @@ textarea {
     justify-content: flex-start;
   }
 
+  .lexi-sidebar.collapsed .lexi-brand {
+    display: flex;
+  }
+
   .lexi-sidebar.collapsed .lexi-brand span,
   .lexi-sidebar.collapsed .lexi-nav-link span,
   .lexi-sidebar.collapsed .lexi-sidebar-footer .subtle-caption {
     display: initial;
+  }
+
+  .lexi-sidebar.collapsed .lexi-sidebar-footer .sync-pill {
+    display: inline-flex;
   }
 
   .lexi-sidebar.collapsed .lexi-nav-link {

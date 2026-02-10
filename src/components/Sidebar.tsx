@@ -1,8 +1,7 @@
 // Navigation Sidebar for Lexi
 
-import { Home, BookOpen, Languages, Settings, Moon, Sun, X } from 'lucide-react';
+import { Home, BookOpen, Languages, Settings, Moon, Sun } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
 import { cn } from '@/lib/utils';
 
@@ -55,14 +54,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                         </h2>
                         <p className="text-xs text-muted-foreground mt-1">AI Vocabulary Tracker</p>
                     </div>
-                    <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="md:hidden -mr-2 text-muted-foreground hover:text-foreground"
-                        onClick={onClose}
-                    >
-                        <X className="h-5 w-5" />
-                    </Button>
                 </div>
 
                 {/* Navigation */}

@@ -36,6 +36,7 @@ export function useWords() {
         ...word,
         id: crypto.randomUUID(),
         dateAdded: Date.now(),
+        groupIds: word.groupIds || [],
       };
       await storage.addWord(newWord);
       setWords(prev => [...prev, newWord]);

@@ -38,6 +38,7 @@ export function useTranslations() {
                 ...translation,
                 id: crypto.randomUUID(),
                 dateAdded: Date.now(),
+                groupIds: translation.groupIds || [],
             };
             await storage.addTranslation(newTranslation);
             setTranslations(prev => [...prev, newTranslation]);
