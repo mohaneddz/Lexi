@@ -436,7 +436,11 @@ export default function Review() {
                   {showAnswer ? (
                     <>
                       <p className="detail-text">{selectedWord.definition}</p>
-                      <p className="serif-display text-2xl italic text-muted-foreground">{buildExample(selectedWord)}</p>
+                      {buildExample(selectedWord) ? (
+                        <p className="serif-display text-2xl italic text-muted-foreground">{buildExample(selectedWord)}</p>
+                      ) : (
+                        <p className="subtle-caption">No examples yet for this word.</p>
+                      )}
                     </>
                   ) : (
                     <p className="serif-display text-3xl text-muted-foreground">Press Space or Reveal to show definition.</p>

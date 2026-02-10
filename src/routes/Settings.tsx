@@ -45,15 +45,17 @@ const REVISION_MODES: Array<{ label: string; value: RevisionMode }> = [
   { label: "Typing", value: "typing" },
 ];
 
+const PRIMARY_MODIFIER_LABEL = navigator.platform.toLowerCase().includes("mac") ? "Cmd" : "Ctrl";
+
 const SHORTCUTS = [
-  { keys: "Ctrl+K", action: "Focus page search" },
-  { keys: "Ctrl+N", action: "Capture item on active page" },
-  { keys: "Ctrl+Shift+T", action: "Open translations and add pair" },
-  { keys: "Ctrl+Shift+R", action: "Jump to review workspace" },
-  { keys: "Alt+1..7", action: "Navigate top tabs" },
+  { keys: `${PRIMARY_MODIFIER_LABEL}+K`, action: "Focus page search" },
+  { keys: `${PRIMARY_MODIFIER_LABEL}+N`, action: "Capture item on active page" },
+  { keys: `${PRIMARY_MODIFIER_LABEL}+Shift+T`, action: "Open translations and add pair" },
+  { keys: `${PRIMARY_MODIFIER_LABEL}+Shift+R`, action: "Jump to review workspace" },
+  { keys: "Alt+1..8", action: "Navigate top tabs" },
   { keys: "J / K", action: "Move selection in lists" },
   { keys: "1 / 2 / 3", action: "Set status New/Learning/Mastered" },
-  { keys: "Ctrl+Enter", action: "Run AI define in word capture dialog" },
+  { keys: `${PRIMARY_MODIFIER_LABEL}+Enter`, action: "Run AI define in word capture dialog" },
   { keys: "Space", action: "Reveal/advance flashcards" },
   { keys: "1..4 (Review)", action: "Pick multiple-choice answer" },
 ];
