@@ -4,6 +4,7 @@ export type ReviewStatus = "New" | "Learning" | "Mastered";
 
 const MASTERED_TAGS = new Set(["mastered", "learned", "fluent"]);
 const LEARNING_TAGS = new Set(["learning", "review", "study"]);
+const NEW_TAGS = new Set(["new", "fresh", "unseen"]);
 
 function normalizeTag(tag: string): string {
   return tag.trim().toLowerCase();
@@ -20,6 +21,10 @@ export function getReviewStatus(word: Word): ReviewStatus {
     return "Learning";
   }
 
+  if (normalizedTags.some((tag) => NEW_TAGS.has(tag))) {
+    return "New";
+  }
+
   const hoursSinceAdded = (Date.now() - word.dateAdded) / (1000 * 60 * 60);
   if (hoursSinceAdded <= 48) {
     return "New";
@@ -29,7 +34,7 @@ export function getReviewStatus(word: Word): ReviewStatus {
 }
 
 export function setReviewStatus(tags: string[], status: ReviewStatus): string[] {
-  const statusTags = new Set([...MASTERED_TAGS, ...LEARNING_TAGS, "new"]);
+  const statusTags = new Set([...MASTERED_TAGS, ...LEARNING_TAGS, ...NEW_TAGS]);
   const nextTags = tags.filter((tag) => !statusTags.has(normalizeTag(tag)));
 
   switch (status) {
@@ -69,20 +74,5 @@ export function buildExample(word: Word): string {
     return word.examples[index];
   }
 
-  const definitionSnippet = word.definition.length > 96
-    ? `${word.definition.slice(0, 93)}...`
-    : word.definition;
-  const lowerWord = word.word.toLowerCase();
-
-  const templates = [
-    `At the briefing, the speaker described the new policy as "${lowerWord}" because it was ${definitionSnippet.toLowerCase()}.`,
-    `The review called the restaurant "${lowerWord}," saying the overall experience felt ${definitionSnippet.toLowerCase()}.`,
-    `In the interview, she used "${lowerWord}" to explain how the situation became ${definitionSnippet.toLowerCase()}.`,
-    `The report said market conditions were "${lowerWord}" after months of ${definitionSnippet.toLowerCase()}.`,
-    `He chose the word "${lowerWord}" in his essay to show the mood was ${definitionSnippet.toLowerCase()}.`,
-    `During the discussion, they agreed that "${lowerWord}" best captured what happened: ${definitionSnippet.toLowerCase()}.`,
-  ];
-
-  const seed = Math.abs((word.dateAdded + word.word.length + word.language.length) % templates.length);
-  return templates[seed];
+  return "";
 }
