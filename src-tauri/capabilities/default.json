@@ -2,9 +2,80 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Capability for the main window",
-  "windows": ["main"],
+  "windows": [
+    "main"
+  ],
   "permissions": [
     "core:default",
-    "opener:default"
+    "core:window:default",
+    "core:window:allow-unmaximize",
+    "core:window:allow-start-dragging",
+    "core:window:allow-close",
+    "core:event:allow-listen",
+    "core:window:allow-minimize",
+    "core:window:allow-toggle-maximize",
+    "core:window:allow-internal-toggle-maximize",
+    "core:window:allow-set-fullscreen",
+    "opener:default",
+    "fs:default",
+    "fs:allow-exists",
+    "fs:allow-read",
+    "fs:allow-read-file",
+    "fs:allow-read-text-file",
+    "fs:allow-read-text-file-lines",
+    "fs:allow-write-file",
+    "fs:allow-write-text-file",
+    "fs:allow-remove",
+    "fs:allow-rename",
+    "fs:allow-copy-file",
+    "fs:allow-stat",
+    "fs:allow-lstat",
+    "fs:allow-open",
+    "fs:allow-create",
+    "fs:allow-mkdir",
+    "fs:allow-runtime-read-recursive",
+    "fs:scope-runtime-recursive",
+    "clipboard-manager:allow-read-image",
+    "clipboard-manager:allow-read-text",
+    "clipboard-x:default",
+    "shell:allow-execute",
+    "shell:allow-open",
+    "shell:allow-spawn",
+    "sql:default",
+    "sql:allow-load",
+    "sql:allow-execute",
+    "dialog:default",
+    "http:default",
+    "store:default",
+    {
+      "identifier": "fs:scope",
+      "allow": [
+        {
+          "path": "$APPDATA"
+        },
+        {
+          "path": "$APPDATA/**"
+        },
+        {
+          "path": "$TEMP"
+        },
+        {
+          "path": "$TEMP/**"
+        }
+      ]
+    },
+    {
+      "identifier": "http:default",
+      "allow": [
+        {
+          "url": "http://localhost:5600/*"
+        },
+        {
+          "url": "https://huggingface.co/**"
+        }
+      ],
+      "deny": []
+    },
+    "shell:default"
   ]
 }
