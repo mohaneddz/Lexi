@@ -72,6 +72,12 @@ export function useAI() {
     [runCall],
   );
 
+  const suggestGroup = useCallback(
+    async (word: string, definition: string, availableGroups: Array<{ id: string; name: string; description?: string }>) =>
+      runCall(() => aiService.suggestGroup(word, definition, availableGroups), ""),
+    [runCall],
+  );
+
   return {
     loading,
     error,
@@ -81,5 +87,6 @@ export function useAI() {
     suggestTags,
     getExamples,
     testConnection,
+    suggestGroup,
   };
 }
