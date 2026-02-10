@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "lexi",
+  "productName": "Lexi",
   "version": "0.1.0",
   "identifier": "com.lexi.app",
   "build": {
@@ -12,9 +12,12 @@
   "app": {
     "windows": [
       {
-        "title": "lexi",
-        "width": 450,
-        "height": 700,
+        "title": "Lexi",
+        "width": 1580,
+        "height": 940,
+        "minWidth": 1080,
+        "minHeight": 700,
+        "center": true,
         "decorations": false
       }
     ],
