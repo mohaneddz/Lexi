@@ -116,7 +116,7 @@ export function AddTranslationDialog({ open, onOpenChange, onAdd }: AddTranslati
                         <label className="text-sm font-medium">Source Word</label>
                         <div className="flex gap-2">
                             <Select value={sourceLang} onValueChange={setSourceLang}>
-                                <SelectTrigger className="w-[140px] glass border-glass-border">
+                                <SelectTrigger className="w-[140px] frost-input form-select">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent className="glass-strong">
@@ -137,7 +137,7 @@ export function AddTranslationDialog({ open, onOpenChange, onAdd }: AddTranslati
                                     }
                                 }}
                                 placeholder="Enter source word..."
-                                className="glass border-glass-border flex-1"
+                                className="frost-input flex-1"
                             />
                         </div>
                     </div>
@@ -165,7 +165,7 @@ export function AddTranslationDialog({ open, onOpenChange, onAdd }: AddTranslati
                         <label className="text-sm font-medium">Target Word</label>
                         <div className="flex gap-2">
                             <Select value={targetLang} onValueChange={setTargetLang}>
-                                <SelectTrigger className="w-[140px] glass border-glass-border">
+                                <SelectTrigger className="w-[140px] frost-input form-select">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent className="glass-strong">
@@ -186,7 +186,7 @@ export function AddTranslationDialog({ open, onOpenChange, onAdd }: AddTranslati
                                     }
                                 }}
                                 placeholder="Enter or generate translation..."
-                                className="glass border-glass-border flex-1"
+                                className="frost-input flex-1"
                             />
                         </div>
                     </div>
@@ -199,7 +199,7 @@ export function AddTranslationDialog({ open, onOpenChange, onAdd }: AddTranslati
                             onChange={(e) => setContext(e.target.value)}
                             placeholder="Add context or example usage..."
                             rows={3}
-                            className="w-full px-3 py-2 rounded-md glass border border-glass-border bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                            className="frost-input form-textarea"
                         />
                     </div>
                 </div>
@@ -231,3 +231,4 @@ export function AddTranslationDialog({ open, onOpenChange, onAdd }: AddTranslati
         </Dialog>
     );
 }
+
