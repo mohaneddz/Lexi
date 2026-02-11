@@ -44,6 +44,11 @@ const GROUP_SUGGESTION_SCHEMA = z.object({
   confidence: z.number().min(0).max(1),
 });
 
+const DISTRACTOR_DEFINITIONS_SCHEMA = z.object({
+  distractors: z.array(z.string().min(8).max(260)).length(3),
+  confidence: z.number().min(0).max(1),
+});
+
 function resolveEnvApiKey(): string {
   return (
     import.meta.env.GROQ_API_KEY?.trim() ||
@@ -547,6 +552,68 @@ export async function suggestGroup(
       success: false,
       data: "",
       error: toErrorMessage("Group suggestion failed", error),
+    };
+  }
+}
+
+export async function suggestDistractorDefinitions(
+  word: string,
+  definition: string,
+  language: string,
+): Promise<AIResponse<string[]>> {
+  const trimmedWord = word.trim();
+  const trimmedDefinition = definition.trim();
+
+  if (!trimmedWord || !trimmedDefinition) {
+    return {
+      success: false,
+      data: [],
+      error: "Word and definition are required for distractor generation.",
+    };
+  }
+
+  try {
+    const object = await runStructuredPrompt({
+      schema: DISTRACTOR_DEFINITIONS_SCHEMA,
+      system:
+        "You create plausible-but-wrong multiple-choice distractors for vocabulary learning. Return strict JSON only.",
+      prompt: [
+        `Word: ${trimmedWord}`,
+        `Language: ${language}`,
+        `Correct definition: ${trimmedDefinition}`,
+        "Generate exactly 3 fake definitions that are close in tone/domain but incorrect.",
+        "Avoid reusing the exact wording of the correct definition.",
+        "Do not mention that these are fake definitions.",
+      ].join("\n"),
+      temperature: 0.45,
+    });
+
+    const distractors = Array.from(
+      new Set(
+        object.distractors
+          .map((item) => item.trim())
+          .filter((item) => item && item.toLowerCase() !== trimmedDefinition.toLowerCase()),
+      ),
+    ).slice(0, 3);
+
+    if (distractors.length < 3) {
+      return {
+        success: false,
+        data: [],
+        error: "AI returned insufficient distractors.",
+      };
+    }
+
+    return {
+      success: true,
+      data: distractors,
+      confidence: object.confidence,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      data: [],
+      error: toErrorMessage("Distractor generation failed", error),
     };
   }
 }

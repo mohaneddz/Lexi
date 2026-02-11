@@ -26,6 +26,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   autoDetectLanguage: true,
   shortcutsEnabled: true,
   showDeleteConfirmation: true,
+  hideToTray: false,
   dailyReviewGoal: 20,
   defaultRevisionMode: 'flashcard',
 };

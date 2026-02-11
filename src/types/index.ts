@@ -77,6 +77,7 @@ export interface AppSettings {
   autoDetectLanguage: boolean;
   shortcutsEnabled: boolean;
   showDeleteConfirmation: boolean;
+  hideToTray: boolean;
   dailyReviewGoal: number;
   defaultRevisionMode: RevisionMode;
 }
