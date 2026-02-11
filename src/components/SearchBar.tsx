@@ -8,7 +8,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuCheckboxItem,
-  DropdownMenuLabel,
+  DropdownMenudiv,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
@@ -80,7 +80,7 @@ export function SearchBar({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="glass-strong w-56">
-              <DropdownMenuLabel>Filter by Language</DropdownMenuLabel>
+              <DropdownMenudiv>Filter by Language</DropdownMenudiv>
               <DropdownMenuSeparator />
               {availableLanguages.map((language) => (
                 <DropdownMenuCheckboxItem
@@ -110,7 +110,7 @@ export function SearchBar({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="glass-strong w-56 max-h-[300px] overflow-y-auto">
-              <DropdownMenuLabel>Filter by Tag</DropdownMenuLabel>
+              <DropdownMenudiv>Filter by Tag</DropdownMenudiv>
               <DropdownMenuSeparator />
               {availableTags.map((tag) => (
                 <DropdownMenuCheckboxItem

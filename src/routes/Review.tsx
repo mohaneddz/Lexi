@@ -46,10 +46,10 @@ function normalizeAnswer(value: string): string {
   return value.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
-const MODES: Array<{ value: RevisionMode; label: string; icon: ComponentType<{ className?: string }> }> = [
-  { value: "flashcard", label: "Flashcards", icon: Gamepad2 },
-  { value: "multiple-choice", label: "Multiple Choice", icon: Check },
-  { value: "typing", label: "Typing", icon: Keyboard },
+const MODES: Array<{ value: RevisionMode; div: string; icon: ComponentType<{ className?: string }> }> = [
+  { value: "flashcard", div: "Flashcards", icon: Gamepad2 },
+  { value: "multiple-choice", div: "Multiple Choice", icon: Check },
+  { value: "typing", div: "Typing", icon: Keyboard },
 ];
 
 export default function Review() {
@@ -459,7 +459,7 @@ export default function Review() {
                         }}
                       >
                         <Icon className="size-3.5" />
-                        {entry.label}
+                        {entry.div}
                       </button>
                     );
                   })}

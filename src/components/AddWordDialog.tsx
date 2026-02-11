@@ -98,9 +98,17 @@ export function AddWordDialog({ open, onOpenChange, onAdd }: AddWordDialogProps)
     };
 
     const handleAddTag = () => {
-        const tag = sanitizeInput(tagInput);
-        if (tag && !tags.includes(tag)) {
-            setTags([...tags, tag]);
+        const nextTags = Array.from(
+            new Set(
+                tagInput
+                    .split(',')
+                    .map((item) => sanitizeInput(item))
+                    .filter(Boolean),
+            ),
+        ).filter((tag) => !tags.includes(tag));
+
+        if (nextTags.length > 0) {
+            setTags([...tags, ...nextTags]);
             setTagInput('');
         }
     };
@@ -139,6 +147,7 @@ export function AddWordDialog({ open, onOpenChange, onAdd }: AddWordDialogProps)
             setDefinition('');
             setLanguage(defaultLanguage || 'English');
             setTags([]);
+            setTagInput('');
             setExamples([]);
             setSelectedGroupId("");
             setAiGenerated(false);
@@ -161,10 +170,10 @@ export function AddWordDialog({ open, onOpenChange, onAdd }: AddWordDialogProps)
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="space-y-4 py-4">
+                <div className="space-y-5 py-3">
                     {/* Word Input */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Word</label>
+                        <div className="text-sm font-medium">Word</div>
                         <Input
                             value={word}
                             onChange={(e) => {
@@ -172,7 +181,7 @@ export function AddWordDialog({ open, onOpenChange, onAdd }: AddWordDialogProps)
                                 setErrors({ ...errors, word: undefined });
                             }}
                             onKeyDown={(e) => {
-                                if (e.ctrlKey && e.key === 'Enter') {
+                                if (e.key === 'Enter' && !e.shiftKey) {
                                     e.preventDefault();
                                     void handleAIDefine();
                                 }
@@ -196,7 +205,7 @@ export function AddWordDialog({ open, onOpenChange, onAdd }: AddWordDialogProps)
                     {/* Definition */}
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                            <label className="text-sm font-medium">Definition</label>
+                            <div className="text-sm font-medium">Definition</div>
                             <Button
                                 type="button"
                                 size="sm"
@@ -249,21 +258,21 @@ export function AddWordDialog({ open, onOpenChange, onAdd }: AddWordDialogProps)
 
                     {/* Tags */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Tags</label>
+                        <div className="text-sm font-medium">Tags</div>
                         <div className="flex gap-2">
                             <Input
                                 value={tagInput}
                                 onChange={(e) => setTagInput(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
-                                placeholder="Add tags..."
-                                className="frost-input"
+                                placeholder="Add tags (comma separated)..."
+                                className="frost-input flex-1 min-w-0"
                             />
                             <Button
                                 type="button"
                                 size="icon"
                                 variant="outline"
                                 onClick={handleAddTag}
-                                className="frost-input"
+                                className="h-[2.36rem] w-[2.36rem] shrink-0 border border-white/15 bg-white/6 text-muted-foreground hover:bg-white/12 hover:text-foreground"
                             >
                                 <Plus className="h-4 w-4" />
                             </Button>
@@ -288,7 +297,7 @@ export function AddWordDialog({ open, onOpenChange, onAdd }: AddWordDialogProps)
                     {/* Group Selection */}
                     {groups.length > 0 && (
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">Group</label>
+                            <div className="text-sm font-medium">Group</div>
                             <select
                                 value={selectedGroupId}
                                 onChange={(e) => setSelectedGroupId(e.target.value)}

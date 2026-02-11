@@ -130,7 +130,7 @@ export function EditTranslationDialog({
             />
           </div>
 
-          <label className="space-y-1">
+          <div className="space-y-1">
             <span className="text-sm font-medium">Context (optional)</span>
             <textarea
               value={context}
@@ -138,7 +138,7 @@ export function EditTranslationDialog({
               rows={3}
               className="frost-input form-textarea"
             />
-          </label>
+          </div>
         </div>
 
         <DialogFooter>

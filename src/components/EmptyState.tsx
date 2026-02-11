@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 interface EmptyStateProps {
   title: string;
   description: string;
-  actionLabel?: string;
+  actiondiv?: string;
   onAction?: () => void;
   icon?: React.ReactNode;
 }
@@ -14,7 +14,7 @@ interface EmptyStateProps {
 export function EmptyState({
   title,
   description,
-  actionLabel,
+  actiondiv,
   onAction,
   icon,
 }: EmptyStateProps) {
@@ -34,13 +34,13 @@ export function EmptyState({
       </p>
 
       {/* Action */}
-      {actionLabel && onAction && (
+      {actiondiv && onAction && (
         <Button
           onClick={onAction}
           className="bg-gradient-primary hover:opacity-90 transition-opacity gap-2"
         >
           <Plus className="h-4 w-4" />
-          {actionLabel}
+          {actiondiv}
         </Button>
       )}
     </div>

@@ -15,7 +15,7 @@ interface DeleteConfirmationDialogProps {
   open: boolean;
   title?: string;
   description: string;
-  confirmLabel?: string;
+  confirmdiv?: string;
   onOpenChange: (open: boolean) => void;
   onConfirm: (skipNextTime: boolean) => void;
 }
@@ -24,7 +24,7 @@ export function DeleteConfirmationDialog({
   open,
   title = "Delete item?",
   description,
-  confirmLabel = "Delete",
+  confirmdiv = "Delete",
   onOpenChange,
   onConfirm,
 }: DeleteConfirmationDialogProps) {
@@ -38,7 +38,7 @@ export function DeleteConfirmationDialog({
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
 
-        <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+        <div className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
           <input
             type="checkbox"
             checked={skipNextTime}
@@ -46,7 +46,7 @@ export function DeleteConfirmationDialog({
             className="size-4 accent-white"
           />
           Don't show this again
-        </label>
+        </div>
 
         <AlertDialogFooter>
           <AlertDialogCancel onClick={() => setSkipNextTime(false)}>Cancel</AlertDialogCancel>
@@ -57,7 +57,7 @@ export function DeleteConfirmationDialog({
             }}
             className="bg-destructive hover:bg-destructive/90"
           >
-            {confirmLabel}
+            {confirmdiv}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

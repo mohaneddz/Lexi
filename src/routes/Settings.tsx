@@ -34,31 +34,31 @@ const LANGUAGE_OPTIONS = [
   "Chinese",
 ];
 
-const THEMES: Array<{ label: string; value: Theme; icon: ComponentType<{ className?: string }> }> = [
-  { label: "Dark", value: "dark", icon: MoonStar },
-  { label: "Light", value: "light", icon: Sun },
-  { label: "System", value: "system", icon: SunMoon },
+const THEMES: Array<{ div: string; value: Theme; icon: ComponentType<{ className?: string }> }> = [
+  { div: "Dark", value: "dark", icon: MoonStar },
+  { div: "Light", value: "light", icon: Sun },
+  { div: "System", value: "system", icon: SunMoon },
 ];
 
-const REVISION_MODES: Array<{ label: string; value: RevisionMode }> = [
-  { label: "Flashcards", value: "flashcard" },
-  { label: "Multiple Choice", value: "multiple-choice" },
-  { label: "Typing", value: "typing" },
+const REVISION_MODES: Array<{ div: string; value: RevisionMode }> = [
+  { div: "Flashcards", value: "flashcard" },
+  { div: "Multiple Choice", value: "multiple-choice" },
+  { div: "Typing", value: "typing" },
 ];
 
-const PRIMARY_MODIFIER_LABEL = navigator.platform.toLowerCase().includes("mac") ? "Cmd" : "Ctrl";
+const PRIMARY_MODIFIER_div = navigator.platform.toLowerCase().includes("mac") ? "Cmd" : "Ctrl";
 
 const SHORTCUTS = [
-  { keys: `${PRIMARY_MODIFIER_LABEL}+K`, action: "Focus page search" },
-  { keys: `${PRIMARY_MODIFIER_LABEL}+N`, action: "Capture item on active page" },
-  { keys: `${PRIMARY_MODIFIER_LABEL}+Shift+T`, action: "Open translations and add pair" },
-  { keys: `${PRIMARY_MODIFIER_LABEL}+Shift+R`, action: "Jump to review workspace" },
-  { keys: `${PRIMARY_MODIFIER_LABEL}+Alt+D`, action: "Global quick define popup" },
-  { keys: `${PRIMARY_MODIFIER_LABEL}+Alt+T`, action: "Global quick translate popup" },
+  { keys: `${PRIMARY_MODIFIER_div}+K`, action: "Focus page search" },
+  { keys: `${PRIMARY_MODIFIER_div}+N`, action: "Capture item on active page" },
+  { keys: `${PRIMARY_MODIFIER_div}+Shift+T`, action: "Open translations and add pair" },
+  { keys: `${PRIMARY_MODIFIER_div}+Shift+R`, action: "Jump to review workspace" },
+  { keys: `${PRIMARY_MODIFIER_div}+Alt+D`, action: "Global quick define popup" },
+  { keys: `${PRIMARY_MODIFIER_div}+Alt+T`, action: "Global quick translate popup" },
   { keys: "Alt+1..8", action: "Navigate top tabs" },
   { keys: "J / K", action: "Move selection in lists" },
   { keys: "1 / 2 / 3", action: "Set status New/Learning/Mastered" },
-  { keys: `${PRIMARY_MODIFIER_LABEL}+Enter`, action: "Run AI define in word capture dialog" },
+  { keys: "Enter (Capture)", action: "Run AI define/translate from source term field" },
   { keys: "Space", action: "Reveal/advance flashcards" },
   { keys: "1..4 (Review)", action: "Pick multiple-choice answer" },
 ];
@@ -210,7 +210,7 @@ export default function Settings() {
                     disabled={saving}
                   >
                     <EntryIcon className="size-3.5" />
-                    {entry.label}
+                    {entry.div}
                   </button>
                 );
               })}
@@ -238,7 +238,7 @@ export default function Settings() {
           </div>
 
           <div className="frost-panel-soft space-y-3 p-4">
-            <label className="flex cursor-pointer items-center justify-between gap-3">
+            <div className="flex cursor-pointer items-center justify-between gap-3">
               <div>
                 <p className="font-medium">AI Assistant</p>
                 <p className="subtle-caption mt-1">Enable AI define/translate helpers.</p>
@@ -250,9 +250,9 @@ export default function Settings() {
                 className="size-4 accent-white"
                 disabled={saving}
               />
-            </label>
+            </div>
 
-            <label className="flex cursor-pointer items-center justify-between gap-3">
+            <div className="flex cursor-pointer items-center justify-between gap-3">
               <div>
                 <p className="font-medium">Auto-detect Language</p>
                 <p className="subtle-caption mt-1">Use detection when AI capture is explicitly triggered.</p>
@@ -264,7 +264,7 @@ export default function Settings() {
                 className="size-4 accent-white"
                 disabled={saving || !settings.aiEnabled}
               />
-            </label>
+            </div>
           </div>
 
           <div className="frost-panel-soft space-y-4 p-4">
@@ -278,7 +278,7 @@ export default function Settings() {
               <KeyRound className="size-4 text-muted-foreground" />
             </div>
 
-            <label className="space-y-1">
+            <div className="space-y-1">
               <span className="subtle-caption">GROQ API Key</span>
               <input
                 type="text"
@@ -292,9 +292,9 @@ export default function Settings() {
                 placeholder="gsk_... (leave empty to use .env)"
                 disabled={saving || testingConnection}
               />
-            </label>
+            </div>
 
-            <label className="space-y-1">
+            <div className="space-y-1">
               <span className="subtle-caption">Model</span>
               <select
                 value={modelDraft}
@@ -312,7 +312,7 @@ export default function Settings() {
                   </option>
                 ))}
               </select>
-            </label>
+            </div>
 
             {apiError ? <p className="subtle-caption text-red-300">{apiError}</p> : null}
             {apiSuccess ? <p className="subtle-caption text-emerald-300">{apiSuccess}</p> : null}
@@ -339,7 +339,7 @@ export default function Settings() {
               <Target className="size-4 text-muted-foreground" />
             </div>
 
-            <label className="flex cursor-pointer items-center justify-between gap-3">
+            <div className="flex cursor-pointer items-center justify-between gap-3">
               <div>
                 <p className="font-medium">Enable Keyboard Shortcuts</p>
                 <p className="subtle-caption mt-1">Global shortcuts for search, capture, and navigation.</p>
@@ -351,9 +351,9 @@ export default function Settings() {
                 className="size-4 accent-white"
                 disabled={saving}
               />
-            </label>
+            </div>
 
-            <label className="flex cursor-pointer items-center justify-between gap-3">
+            <div className="flex cursor-pointer items-center justify-between gap-3">
               <div>
                 <p className="font-medium">Delete Confirmation Dialog</p>
                 <p className="subtle-caption mt-1">Show warning dialog before deleting words and translations.</p>
@@ -365,9 +365,9 @@ export default function Settings() {
                 className="size-4 accent-white"
                 disabled={saving}
               />
-            </label>
+            </div>
 
-            <label className="flex cursor-pointer items-center justify-between gap-3">
+            <div className="flex cursor-pointer items-center justify-between gap-3">
               <div>
                 <p className="font-medium">Hide To Tray On Close</p>
                 <p className="subtle-caption mt-1">Closing the titlebar will hide Lexi instead of exiting.</p>
@@ -379,10 +379,10 @@ export default function Settings() {
                 className="size-4 accent-white"
                 disabled={saving}
               />
-            </label>
+            </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <label className="space-y-1">
+              <div className="space-y-1">
                 <span className="subtle-caption">Daily review goal</span>
                 <input
                   type="number"
@@ -394,9 +394,9 @@ export default function Settings() {
                   className="frost-input"
                   disabled={saving}
                 />
-              </label>
+              </div>
 
-              <label className="space-y-1">
+              <div className="space-y-1">
                 <span className="subtle-caption">Default revision mode</span>
                 <select
                   value={settings.defaultRevisionMode}
@@ -406,11 +406,11 @@ export default function Settings() {
                 >
                   {REVISION_MODES.map((option) => (
                     <option key={option.value} value={option.value}>
-                      {option.label}
+                      {option.div}
                     </option>
                   ))}
                 </select>
-              </label>
+              </div>
             </div>
           </div>
 

@@ -102,7 +102,7 @@ export function EditWordDialog({ open, word, onOpenChange, onSave }: EditWordDia
         </DialogHeader>
 
         <div className="space-y-4 py-3">
-          <label className="space-y-1">
+          <div className="space-y-1">
             <span className="text-sm font-medium">Word</span>
             <Input
               value={value}
@@ -113,9 +113,9 @@ export function EditWordDialog({ open, word, onOpenChange, onSave }: EditWordDia
               className="frost-input"
             />
             {errors.word ? <p className="text-xs text-destructive">{errors.word}</p> : null}
-          </label>
+          </div>
 
-          <label className="space-y-1">
+          <div className="space-y-1">
             <span className="text-sm font-medium">Definition</span>
             <textarea
               value={definition}
@@ -127,10 +127,10 @@ export function EditWordDialog({ open, word, onOpenChange, onSave }: EditWordDia
               className="frost-input form-textarea"
             />
             {errors.definition ? <p className="text-xs text-destructive">{errors.definition}</p> : null}
-          </label>
+          </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <label className="space-y-1">
+            <div className="space-y-1">
               <span className="text-sm font-medium">Language</span>
               <select
                 value={language}
@@ -143,16 +143,16 @@ export function EditWordDialog({ open, word, onOpenChange, onSave }: EditWordDia
                   </option>
                 ))}
               </select>
-            </label>
+            </div>
 
-            <label className="space-y-1">
+            <div className="space-y-1">
               <span className="text-sm font-medium">Tags (comma-separated)</span>
               <Input
                 value={tagsText}
                 onChange={(event) => setTagsText(event.target.value)}
                 className="frost-input"
               />
-            </label>
+            </div>
           </div>
         </div>
 
