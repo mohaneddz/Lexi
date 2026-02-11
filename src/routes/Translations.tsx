@@ -204,6 +204,18 @@ export default function Translations() {
   }, []);
 
   useEffect(() => {
+    const onGroupFilterChanged = (event: Event) => {
+      const custom = event as CustomEvent<{ groupId?: string }>;
+      if (typeof custom.detail?.groupId === "string") {
+        setGroupFilterId(custom.detail.groupId);
+      }
+    };
+
+    window.addEventListener("lexi:group-filter-changed", onGroupFilterChanged);
+    return () => window.removeEventListener("lexi:group-filter-changed", onGroupFilterChanged);
+  }, []);
+
+  useEffect(() => {
     const onCapture = (event: Event) => {
       const customEvent = event as CustomEvent<{ path?: string }>;
       if (customEvent.detail?.path !== "/translations") {
@@ -381,8 +393,8 @@ export default function Translations() {
     <>
       <div className="grid h-full grid-cols-1 gap-3 xl:grid-cols-[1.12fr_1fr]">
         <section className="frost-panel flex min-h-0 flex-col overflow-hidden animate-slide-in-up">
-          <div className="flex items-center gap-2 border-b border-white/10 p-3">
-            <div className="search-field-wrap min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2 border-b border-white/10 p-3">
+            <div className="search-field-wrap min-w-[220px] flex-[1_1_340px]">
               <Search className="search-field-icon" />
               <input
                 ref={searchInputRef}
@@ -443,7 +455,7 @@ export default function Translations() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <select className="frost-input h-[2.36rem] w-[124px] shrink-0 py-0 max-sm:w-[108px]" value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)}>
+            <select className="frost-input toolbar-select h-[2.36rem] py-0" value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)}>
               <option value="recent">Recent</option>
               <option value="oldest">Oldest</option>
               <option value="source">Source</option>
@@ -452,7 +464,7 @@ export default function Translations() {
               <option value="targetLang">Target Lang</option>
             </select>
 
-            <select className="frost-input h-[2.36rem] w-[168px] shrink-0 py-0 max-sm:w-[132px]" value={groupFilterId} onChange={(event) => setGroupFilterId(event.target.value)}>
+            <select className="frost-input toolbar-select toolbar-select-wide h-[2.36rem] py-0" value={groupFilterId} onChange={(event) => setGroupFilterId(event.target.value)}>
               <option value="none">No Group</option>
               {groups.map((group) => (
                 <option key={group.id} value={group.id}>{group.name}</option>
