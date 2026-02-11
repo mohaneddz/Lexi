@@ -23,7 +23,7 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
+  DropdownMenudiv,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
@@ -57,13 +57,13 @@ type ContextMenuState = {
   y: number;
 };
 
-const SORT_OPTIONS: Array<{ label: string; value: SortMode }> = [
-  { label: "Recent", value: "recent" },
-  { label: "Oldest", value: "oldest" },
-  { label: "A-Z", value: "az" },
-  { label: "Z-A", value: "za" },
-  { label: "By Status", value: "status" },
-  { label: "By Language", value: "language" },
+const SORT_OPTIONS: Array<{ div: string; value: SortMode }> = [
+  { div: "Recent", value: "recent" },
+  { div: "Oldest", value: "oldest" },
+  { div: "A-Z", value: "az" },
+  { div: "Z-A", value: "za" },
+  { div: "By Status", value: "status" },
+  { div: "By Language", value: "language" },
 ];
 
 type DailySuggestion = {
@@ -600,7 +600,7 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-72">
-                <DropdownMenuLabel>Status</DropdownMenuLabel>
+                <DropdownMenudiv>Status</DropdownMenudiv>
                 <DropdownMenuRadioGroup value={statusFilter} onValueChange={(value) => setStatusFilter(value as StatusFilter)}>
                   {["All", "New", "Learning", "Mastered"].map((status) => (
                     <DropdownMenuRadioItem key={status} value={status}>{status}</DropdownMenuRadioItem>
@@ -608,7 +608,7 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
                 </DropdownMenuRadioGroup>
                 <DropdownMenuSeparator />
 
-                <DropdownMenuLabel>Language</DropdownMenuLabel>
+                <DropdownMenudiv>Language</DropdownMenudiv>
                 <DropdownMenuRadioGroup value={languageFilter} onValueChange={setLanguageFilter}>
                   {availableLanguages.map((language) => (
                     <DropdownMenuRadioItem key={language} value={language}>{language}</DropdownMenuRadioItem>
@@ -616,7 +616,7 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
                 </DropdownMenuRadioGroup>
                 <DropdownMenuSeparator />
 
-                <DropdownMenuLabel>Source</DropdownMenuLabel>
+                <DropdownMenudiv>Source</DropdownMenudiv>
                 <DropdownMenuRadioGroup value={sourceFilter} onValueChange={(value) => setSourceFilter(value as SourceFilter)}>
                   {["All", "AI", "Manual"].map((source) => (
                     <DropdownMenuRadioItem key={source} value={source}>{source}</DropdownMenuRadioItem>
@@ -626,7 +626,7 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
                 {availableTags.length > 0 ? (
                   <>
                     <DropdownMenuSeparator />
-                    <DropdownMenuLabel>Tags</DropdownMenuLabel>
+                    <DropdownMenudiv>Tags</DropdownMenudiv>
                     {availableTags.slice(0, 20).map((tag) => (
                       <DropdownMenuCheckboxItem
                         key={tag}
@@ -639,7 +639,7 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
                   </>
                 ) : null}
                 <DropdownMenuSeparator />
-                <DropdownMenuLabel>List Grouping</DropdownMenuLabel>
+                <DropdownMenudiv>List Grouping</DropdownMenudiv>
                 <DropdownMenuRadioGroup value={groupMode} onValueChange={(value) => setGroupMode(value as GroupMode)}>
                   <DropdownMenuRadioItem value="none">No Grouping</DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="status">By Status</DropdownMenuRadioItem>
@@ -655,7 +655,7 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
             </DropdownMenu>
 
             <select className="frost-input toolbar-select h-[2.36rem] py-0" value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)}>
-              {SORT_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+              {SORT_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.div}</option>)}
             </select>
           </div>
 

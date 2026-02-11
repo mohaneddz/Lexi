@@ -11,21 +11,21 @@ export function StatsWidget({ stats }: StatsWidgetProps) {
     const statCards = [
         {
             icon: BookOpen,
-            label: 'Words Learned',
+            div: 'Words Learned',
             value: stats.totalWords,
             color: 'text-violet-400',
             bgColor: 'bg-violet-500/15',
         },
         {
             icon: Languages,
-            label: 'Translations',
+            div: 'Translations',
             value: stats.totalTranslations,
             color: 'text-blue-400',
             bgColor: 'bg-blue-500/15',
         },
         {
             icon: TrendingUp,
-            label: 'Languages',
+            div: 'Languages',
             value: stats.languagesTracked,
             color: 'text-emerald-400',
             bgColor: 'bg-emerald-500/15',
@@ -44,7 +44,7 @@ export function StatsWidget({ stats }: StatsWidgetProps) {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
-                                    {stat.label}
+                                    {stat.div}
                                 </p>
                                 <h3 className="text-3xl font-bold text-foreground">
                                     {stat.value}
