@@ -139,26 +139,32 @@ export default function QuickAction({ mode }: QuickActionProps) {
             type="button"
             onClick={() => void windowRef.close()}
             className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition hover:bg-white/10 hover:text-foreground"
-            aria-label="Close"
+            aria-div="Close"
           >
             <X className="size-4" />
           </button>
         </div>
 
         <div className="space-y-3 p-3">
-          <label className="space-y-1">
+          <div className="space-y-1">
             <span className="subtle-caption">{mode === "define" ? "Term" : "Text"}</span>
             <input
               className="frost-input"
               value={sourceText}
               onChange={(event) => setSourceText(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  void handleRun();
+                }
+              }}
               placeholder={mode === "define" ? "Enter term..." : "Enter text to translate..."}
               autoFocus
             />
-          </label>
+          </div>
 
           <div className={mode === "translate" ? "grid grid-cols-2 gap-2" : "grid grid-cols-1 gap-2"}>
-            <label className="space-y-1">
+            <div className="space-y-1">
               <span className="subtle-caption">Source language</span>
               <select
                 className="frost-input form-select"
@@ -169,15 +175,15 @@ export default function QuickAction({ mode }: QuickActionProps) {
                 {LANGUAGES.map((language) => <option key={language} value={language}>{language}</option>)}
               </select>
               {mode === "define" ? <p className="subtle-caption">Auto-detected when generating.</p> : null}
-            </label>
+            </div>
 
             {mode === "translate" ? (
-              <label className="space-y-1">
+              <div className="space-y-1">
                 <span className="subtle-caption">Target language</span>
                 <select className="frost-input form-select" value={targetLanguage} onChange={(event) => setTargetLanguage(event.target.value)}>
                   {LANGUAGES.map((language) => <option key={language} value={language}>{language}</option>)}
                 </select>
-              </label>
+              </div>
             ) : null}
           </div>
 

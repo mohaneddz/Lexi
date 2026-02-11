@@ -125,7 +125,7 @@ export default function Home() {
             <EmptyState
               title="No words yet"
               description="Start building your vocabulary by adding your first word!"
-              actionLabel="Add Word"
+              actiondiv="Add Word"
               onAction={() => setAddWordOpen(true)}
               icon={<BookOpen className="h-10 w-10 text-primary" />}
             />
@@ -157,7 +157,7 @@ export default function Home() {
             <EmptyState
               title="No translations yet"
               description="Add your first translation to start learning!"
-              actionLabel="Add Translation"
+              actiondiv="Add Translation"
               onAction={() => setAddTranslationOpen(true)}
               icon={<Languages className="h-10 w-10 text-blue-400" />}
             />
