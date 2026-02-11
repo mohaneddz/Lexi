@@ -110,13 +110,13 @@ export function AddTranslationDialog({ open, onOpenChange, onAdd }: AddTranslati
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="space-y-4 py-4">
+                <div className="space-y-5 py-3">
                     {/* Source Word */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Source Word</label>
-                        <div className="flex gap-2">
+                        <div className="text-sm font-medium">Source Word</div>
+                        <div className="grid grid-cols-[11rem_minmax(0,1fr)] gap-3">
                             <Select value={sourceLang} onValueChange={setSourceLang}>
-                                <SelectTrigger className="w-[140px] frost-input form-select">
+                                <SelectTrigger className="frost-select form-select w-44 shrink-0">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent className="glass-strong">
@@ -131,13 +131,13 @@ export function AddTranslationDialog({ open, onOpenChange, onAdd }: AddTranslati
                                 value={sourceWord}
                                 onChange={(e) => setSourceWord(e.target.value)}
                                 onKeyDown={(e) => {
-                                    if (e.ctrlKey && e.key === 'Enter') {
+                                    if (e.key === 'Enter' && !e.shiftKey) {
                                         e.preventDefault();
                                         void handleAITranslate();
                                     }
                                 }}
                                 placeholder="Enter source word..."
-                                className="frost-input flex-1"
+                                className="frost-input flex-1 min-w-0"
                             />
                         </div>
                     </div>
@@ -162,10 +162,10 @@ export function AddTranslationDialog({ open, onOpenChange, onAdd }: AddTranslati
 
                     {/* Target Word */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Target Word</label>
-                        <div className="flex gap-2">
+                        <div className="text-sm font-medium">Target Word</div>
+                        <div className="grid grid-cols-[11rem_minmax(0,1fr)] gap-3">
                             <Select value={targetLang} onValueChange={setTargetLang}>
-                                <SelectTrigger className="w-[140px] frost-input form-select">
+                                <SelectTrigger className="frost-select form-select w-44 shrink-0">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent className="glass-strong">
@@ -186,14 +186,14 @@ export function AddTranslationDialog({ open, onOpenChange, onAdd }: AddTranslati
                                     }
                                 }}
                                 placeholder="Enter or generate translation..."
-                                className="frost-input flex-1"
+                                className="frost-input flex-1 min-w-0"
                             />
                         </div>
                     </div>
 
                     {/* Context (Optional) */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Context (Optional)</label>
+                        <div className="text-sm font-medium">Context (Optional)</div>
                         <textarea
                             value={context}
                             onChange={(e) => setContext(e.target.value)}
