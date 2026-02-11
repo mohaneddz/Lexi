@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import {
   SidebarGroup,
-  SidebarGroupLabel,
+  SidebarGroupdiv,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -35,7 +35,7 @@ export function NavTools({
 
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-      <SidebarGroupLabel>Tools</SidebarGroupLabel>
+      <SidebarGroupdiv>Tools</SidebarGroupdiv>
 
       <SidebarMenu>
         

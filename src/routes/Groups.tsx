@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { CircleDot, FolderTree, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, CircleDot, FolderTree, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useGroups } from "@/hooks/useGroups";
@@ -10,7 +10,7 @@ import type { LexiGroup } from "@/types";
 import { formatDate } from "@/utils/formatters";
 
 export default function Groups() {
-  const { groups, loading, addGroup, updateGroup, deleteGroup } = useGroups();
+  const { groups, loading, addGroup, updateGroup, deleteGroup, moveGroup } = useGroups();
   const { words } = useWords();
   const { translations } = useTranslations();
 
@@ -156,6 +156,28 @@ export default function Groups() {
                   <div className="flex items-center gap-1.5">
                     <button
                       type="button"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-white/10 disabled:opacity-35"
+                      disabled={groups.findIndex((entry) => entry.id === group.id) === 0}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        void moveGroup(group.id, "up");
+                      }}
+                    >
+                      <ArrowUp className="size-4" />
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-white/10 disabled:opacity-35"
+                      disabled={groups.findIndex((entry) => entry.id === group.id) === groups.length - 1}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        void moveGroup(group.id, "down");
+                      }}
+                    >
+                      <ArrowDown className="size-4" />
+                    </button>
+                    <button
+                      type="button"
                       className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-white/10"
                       onClick={(event) => {
                         event.stopPropagation();
@@ -192,12 +214,13 @@ export default function Groups() {
       <section className="frost-panel flex min-h-0 flex-col overflow-hidden animate-slide-in-up">
         <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-5 md:p-6">
           <div className="space-y-6">
+            
             <div>
               <h3 className="detail-title">{editingGroup ? "Edit Group" : "Create Group"}</h3>
               <p className="subtle-caption mt-2">Use groups in filters and right-click context actions.</p>
             </div>
 
-            <label className="space-y-1">
+            <div className="mb-6">
               <span className="text-sm font-medium">Group name</span>
               <input
                 value={draftName}
@@ -205,9 +228,9 @@ export default function Groups() {
                 className="frost-input"
                 placeholder="e.g. Reading, Work, Travel"
               />
-            </label>
+            </div>
 
-            <label className="space-y-1">
+            <div>
               <span className="text-sm font-medium">Description (optional)</span>
               <textarea
                 value={draftDescription}
@@ -216,7 +239,7 @@ export default function Groups() {
                 className="w-full rounded-md border border-glass-border bg-transparent px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="What this group is for"
               />
-            </label>
+            </div>
 
             <div className="flex gap-2">
               <Button

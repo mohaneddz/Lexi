@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CircleDot, Copy, RefreshCcw, Search, Sparkles } from "lucide-react";
 
+import { AddWordDialog } from "@/components/AddWordDialog";
 import { Button } from "@/components/ui/button";
 import { useWords } from "@/hooks/useWords";
 import { cn } from "@/lib/utils";
@@ -22,13 +23,14 @@ function isTypingTarget(target: EventTarget | null): boolean {
 
 export default function Definitions() {
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const { words, loading } = useWords();
+  const { words, loading, addWord } = useWords();
 
   const [query, setQuery] = useState("");
   const [groupFilterId, setGroupFilterId] = useState("none");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [exampleVersion, setExampleVersion] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
 
   const filteredWords = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -60,6 +62,15 @@ export default function Definitions() {
   }, [filteredWords, selectedId]);
 
   useEffect(() => {
+    const onCapture = (event: Event) => {
+      const customEvent = event as CustomEvent<{ path?: string }>;
+      if (customEvent.detail?.path !== "/definitions") {
+        return;
+      }
+
+      setAddDialogOpen(true);
+    };
+
     const onSearchFocus = (event: Event) => {
       const customEvent = event as CustomEvent<{ path?: string }>;
       if (customEvent.detail?.path !== "/definitions") {
@@ -69,8 +80,12 @@ export default function Definitions() {
       searchInputRef.current?.focus();
     };
 
+    window.addEventListener("lexi:capture", onCapture);
     window.addEventListener("lexi:focus-search", onSearchFocus);
-    return () => window.removeEventListener("lexi:focus-search", onSearchFocus);
+    return () => {
+      window.removeEventListener("lexi:capture", onCapture);
+      window.removeEventListener("lexi:focus-search", onSearchFocus);
+    };
   }, []);
 
   useEffect(() => {
@@ -141,7 +156,8 @@ export default function Definitions() {
   };
 
   return (
-    <div className="grid h-full grid-cols-1 gap-3 xl:grid-cols-[1.04fr_1fr]">
+    <>
+      <div className="grid h-full grid-cols-1 gap-3 xl:grid-cols-[1.04fr_1fr]">
       <section className="frost-panel flex min-h-0 flex-col overflow-hidden animate-slide-in-up">
         <div className="border-b border-white/10 p-3">
           <div className="search-field-wrap">
@@ -283,6 +299,8 @@ export default function Definitions() {
           <span className="subtle-caption">`J/K` move through entries</span>
         </div>
       </section>
-    </div>
+      </div>
+      <AddWordDialog open={addDialogOpen} onOpenChange={setAddDialogOpen} onAdd={addWord} />
+    </>
   );
 }
