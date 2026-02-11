@@ -3,7 +3,7 @@
   "identifier": "default",
   "description": "Capability for the main window",
   "windows": [
-    "main"
+    "main","quick-define","quick-translate"
   ],
   "permissions": [
     "core:default",
