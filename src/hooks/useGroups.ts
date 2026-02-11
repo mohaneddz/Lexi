@@ -60,7 +60,7 @@ export function useGroups() {
     };
 
     await storage.addGroup(nextGroup);
-    setGroups((prev) => [...prev, nextGroup].sort((a, b) => a.name.localeCompare(b.name)));
+    setGroups((prev) => [...prev, nextGroup]);
     emitGroupsUpdated();
     return nextGroup;
   }, [groups]);
@@ -71,11 +71,7 @@ export function useGroups() {
       name: updates.name?.trim(),
       description: updates.description?.trim() || undefined,
     });
-    setGroups((prev) =>
-      prev
-        .map((group) => (group.id === id ? { ...group, ...updates } : group))
-        .sort((a, b) => a.name.localeCompare(b.name)),
-    );
+    setGroups((prev) => prev.map((group) => (group.id === id ? { ...group, ...updates } : group)));
     emitGroupsUpdated();
   }, []);
 
@@ -85,6 +81,24 @@ export function useGroups() {
     emitGroupsUpdated();
   }, []);
 
+  const moveGroup = useCallback(async (id: string, direction: "up" | "down") => {
+    const index = groups.findIndex((group) => group.id === id);
+    if (index < 0) {
+      return;
+    }
+
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= groups.length) {
+      return;
+    }
+
+    const next = [...groups];
+    [next[index], next[targetIndex]] = [next[targetIndex], next[index]];
+    await storage.saveGroups(next);
+    setGroups(next);
+    emitGroupsUpdated();
+  }, [groups]);
+
   return {
     groups,
     loading,
@@ -92,6 +106,7 @@ export function useGroups() {
     addGroup,
     updateGroup,
     deleteGroup,
+    moveGroup,
     refresh: loadGroups,
   };
 }

@@ -1,4 +1,4 @@
-import { type ComponentType, type ReactNode, useEffect, useMemo, useState } from "react";
+import { type ComponentType, type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import {
   BookCheck,
   BookOpenText,
@@ -19,24 +19,24 @@ import { getSettings } from "@/utils/storage";
 import { useGroups } from "@/hooks/useGroups";
 
 type NavItem = {
-  label: string;
+  div: string;
   path: string;
   icon: ComponentType<{ className?: string }>;
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Inbox", path: "/inbox", icon: Inbox },
-  { label: "Words", path: "/words", icon: BookOpenText },
-  { label: "Definitions", path: "/definitions", icon: BookText },
-  { label: "Translations", path: "/translations", icon: Languages },
-  { label: "Review", path: "/review", icon: BookCheck },
-  { label: "Stats", path: "/stats", icon: ChartColumn },
-  { label: "Groups", path: "/groups", icon: FolderTree },
-  { label: "Settings", path: "/settings", icon: Settings },
+  { div: "Inbox", path: "/inbox", icon: Inbox },
+  { div: "Words", path: "/words", icon: BookOpenText },
+  { div: "Definitions", path: "/definitions", icon: BookText },
+  { div: "Translations", path: "/translations", icon: Languages },
+  { div: "Review", path: "/review", icon: BookCheck },
+  { div: "Stats", path: "/stats", icon: ChartColumn },
+  { div: "Groups", path: "/groups", icon: FolderTree },
+  { div: "Settings", path: "/settings", icon: Settings },
 ];
 
-const CAPTURE_PATHS = new Set(["/inbox", "/words", "/translations"]);
-const PRIMARY_MODIFIER_LABEL = navigator.platform.toLowerCase().includes("mac") ? "Cmd" : "Ctrl";
+const CAPTURE_PATHS = new Set(["/inbox", "/words", "/translations", "/definitions"]);
+const PRIMARY_MODIFIER_div = navigator.platform.toLowerCase().includes("mac") ? "Cmd" : "Ctrl";
 
 function isPathActive(pathname: string, targetPath: string): boolean {
   return pathname === targetPath || pathname.startsWith(`${targetPath}/`);
@@ -74,6 +74,16 @@ export function AppShell({ children }: AppShellProps) {
   const groupTabsDisabled = location.pathname === "/groups" || location.pathname === "/stats" || location.pathname === "/settings";
 
   const navLookup = useMemo(() => NAV_ITEMS.map((item) => item.path), []);
+
+  const triggerCapture = useCallback(() => {
+    if (CAPTURE_PATHS.has(location.pathname)) {
+      emitAppEvent("lexi:capture", location.pathname);
+      return;
+    }
+
+    navigate("/definitions");
+    setTimeout(() => emitAppEvent("lexi:capture", "/definitions"), 0);
+  }, [location.pathname, navigate]);
 
   useEffect(() => {
     try {
@@ -127,12 +137,8 @@ export function AppShell({ children }: AppShellProps) {
       }
 
       if (isMeta && event.key.toLowerCase() === "n") {
-        if (!CAPTURE_PATHS.has(location.pathname)) {
-          return;
-        }
-
         event.preventDefault();
-        emitAppEvent("lexi:capture", location.pathname);
+        triggerCapture();
         return;
       }
 
@@ -160,7 +166,7 @@ export function AppShell({ children }: AppShellProps) {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [location.pathname, navLookup, navigate, shortcutsEnabled]);
+  }, [location.pathname, navLookup, navigate, shortcutsEnabled, triggerCapture]);
 
   useEffect(() => {
     window.dispatchEvent(
@@ -175,7 +181,7 @@ export function AppShell({ children }: AppShellProps) {
       {sidebarOpen ? (
         <button
           type="button"
-          aria-label="Close navigation"
+          aria-div="Close navigation"
           className="mobile-overlay lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
@@ -188,7 +194,7 @@ export function AppShell({ children }: AppShellProps) {
               type="button"
               className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground lg:hidden"
               onClick={() => setSidebarOpen(false)}
-              aria-label="Close sidebar"
+              aria-div="Close sidebar"
             >
               <Menu className="size-4" />
             </button>
@@ -212,7 +218,7 @@ export function AppShell({ children }: AppShellProps) {
                   onClick={() => setSidebarOpen(false)}
                 >
                   <ItemIcon className="size-4" />
-                  <span>{item.label}</span>
+                  <span>{item.div}</span>
                 </Link>
               );
             })}
@@ -223,7 +229,7 @@ export function AppShell({ children }: AppShellProps) {
               <span className="size-1.5 rounded-full bg-foreground/75" />
               Synced, just now
             </span>
-            <p className="subtle-caption px-1">{PRIMARY_MODIFIER_LABEL}+K search, {PRIMARY_MODIFIER_LABEL}+N capture, Alt+1..8 navigate</p>
+            <p className="subtle-caption px-1">{PRIMARY_MODIFIER_div}+K search, {PRIMARY_MODIFIER_div}+N capture, Alt+1..8 navigate</p>
           </div>
         </aside>
 
@@ -233,7 +239,7 @@ export function AppShell({ children }: AppShellProps) {
               type="button"
               className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground lg:hidden"
               onClick={() => setSidebarOpen(true)}
-              aria-label="Open navigation"
+              aria-div="Open navigation"
             >
               <Menu className="size-4" />
             </button>
@@ -242,7 +248,7 @@ export function AppShell({ children }: AppShellProps) {
               type="button"
               className="hidden size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground lg:inline-flex"
               onClick={toggleSidebarCollapsed}
-              aria-label={sidebarCollapsed ? "Expand navigation" : "Collapse navigation"}
+              aria-div={sidebarCollapsed ? "Expand navigation" : "Collapse navigation"}
             >
               <Menu className="size-4" />
             </button>
@@ -280,8 +286,8 @@ export function AppShell({ children }: AppShellProps) {
                 type="button"
                 className="inline-flex size-10 items-center justify-center rounded-lg border border-white/12 bg-white/5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground"
                 onClick={() => emitAppEvent("lexi:focus-search", location.pathname)}
-                aria-label="Search"
-                title={`${PRIMARY_MODIFIER_LABEL}+K`}
+                aria-div="Search"
+                title={`${PRIMARY_MODIFIER_div}+K`}
               >
                 <Search className="size-4" />
               </button>
@@ -289,8 +295,8 @@ export function AppShell({ children }: AppShellProps) {
               <button
                 type="button"
                 className="inline-flex h-10 items-center gap-2 rounded-lg border border-white/14 bg-white/10 px-3.5 text-sm font-semibold text-foreground transition hover:bg-white/16"
-                onClick={() => emitAppEvent("lexi:capture", location.pathname)}
-                title={`${PRIMARY_MODIFIER_LABEL}+N`}
+                onClick={triggerCapture}
+                title={`${PRIMARY_MODIFIER_div}+N`}
               >
                 <Plus className="size-4" />
                 Capture
