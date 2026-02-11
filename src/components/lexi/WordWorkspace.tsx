@@ -103,6 +103,15 @@ function parseJsonArray(value: string | null): string[] {
   }
 }
 
+function shuffleArray<T>(items: T[]): T[] {
+  const next = [...items];
+  for (let i = next.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [next[i], next[j]] = [next[j], next[i]];
+  }
+  return next;
+}
+
 function isTypingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) {
     return false;
@@ -180,6 +189,7 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
   const [dailySuggestions, setDailySuggestions] = useState<DailySuggestion[]>([]);
   const [appliedDailyWords, setAppliedDailyWords] = useState<string[]>([]);
   const [dismissingSuggestionWord, setDismissingSuggestionWord] = useState<string | null>(null);
+  const [suggestionsRevision, setSuggestionsRevision] = useState(0);
 
   const availableLanguages = useMemo(() => ["All", ...Array.from(new Set(words.map((w) => w.language))).sort((a, b) => a.localeCompare(b))], [words]);
   const availableTags = useMemo(() => Array.from(new Set(words.flatMap((w) => w.tags))).sort((a, b) => a.localeCompare(b)), [words]);
@@ -194,10 +204,11 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
     const dismissedKey = `lexi:inbox:daily-dismissed:${todayKey}`;
     const generatedKey = `lexi:inbox:daily-generated:${todayKey}`;
 
-    const existingWords = new Set(words.map((word) => word.word.trim().toLowerCase()));
+    const scopedWords = groupFilterId === "none" ? words : words.filter((word) => (word.groupIds || []).includes(groupFilterId));
+    const existingWords = new Set(scopedWords.map((word) => word.word.trim().toLowerCase()));
     const preferredLanguage =
-      words.length > 0
-        ? words.reduce<Record<string, number>>((acc, word) => {
+      scopedWords.length > 0
+        ? scopedWords.reduce<Record<string, number>>((acc, word) => {
             acc[word.language] = (acc[word.language] || 0) + 1;
             return acc;
           }, {})
@@ -208,7 +219,7 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
     const applied = parseJsonArray(window.localStorage.getItem(appliedKey));
     setAppliedDailyWords(applied);
 
-    const persisted = parseJsonArray(window.localStorage.getItem(generatedKey));
+    const persisted = suggestionsRevision === 0 ? parseJsonArray(window.localStorage.getItem(generatedKey)) : [];
     if (persisted.length > 0) {
       const persistedSet = new Set(persisted.map((item) => item.toLowerCase()));
       const suggestions = DAILY_SUGGESTION_BANK.filter(
@@ -218,18 +229,20 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
       return;
     }
 
-    const ranked = [...DAILY_SUGGESTION_BANK]
+    const ranked = shuffleArray(
+      DAILY_SUGGESTION_BANK
       .filter((entry) => !existingWords.has(entry.word.toLowerCase()) && !dismissed.has(entry.word.toLowerCase()))
       .sort((a, b) => {
         const aLanguageScore = a.language === topLanguage ? 1 : 0;
         const bLanguageScore = b.language === topLanguage ? 1 : 0;
         return bLanguageScore - aLanguageScore || a.word.localeCompare(b.word);
       })
-      .slice(0, 4);
+      .slice(0, 8),
+    ).slice(0, 4);
 
     setDailySuggestions(ranked);
     window.localStorage.setItem(generatedKey, JSON.stringify(ranked.map((item) => item.word)));
-  }, [mode, todayKey, words]);
+  }, [groupFilterId, mode, suggestionsRevision, todayKey, words]);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -524,7 +537,7 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
       tags: Array.from(new Set([...suggestion.tags, "new", "daily-suggestion"])),
       aiGenerated: false,
       examples: [],
-      groupIds: [],
+      groupIds: groupFilterId !== "none" ? [groupFilterId] : [],
     });
     const nextApplied = Array.from(new Set([...appliedDailyWords, suggestion.word]));
     setAppliedDailyWords(nextApplied);
@@ -545,8 +558,8 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
     <>
       <div className="grid h-full grid-cols-1 gap-3 xl:grid-cols-[1.18fr_1fr]">
         <section className="frost-panel flex min-h-0 flex-col overflow-hidden animate-slide-in-up">
-          <div className="flex items-center gap-2 border-b border-white/10 p-3">
-            <div className="search-field-wrap min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2 border-b border-white/10 p-3">
+            <div className="search-field-wrap min-w-[220px] flex-[1_1_340px]">
               <Search className="search-field-icon" />
               <input
                 ref={searchInputRef}
@@ -641,7 +654,7 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <select className="frost-input h-[2.36rem] w-[126px] shrink-0 py-0 max-sm:w-[108px]" value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)}>
+            <select className="frost-input toolbar-select h-[2.36rem] py-0" value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)}>
               {SORT_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
             </select>
           </div>
@@ -838,9 +851,20 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
                   <>
                     <div className="ghost-divider" />
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-2">
                         <h3 className="serif-display text-4xl">Inbox Suggestions</h3>
-                        <span className="subtle-caption">{todayKey}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="subtle-caption">{todayKey}</span>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="border-white/14 bg-white/7 hover:bg-white/14"
+                            onClick={() => setSuggestionsRevision((prev) => prev + 1)}
+                          >
+                            New Suggestions
+                          </Button>
+                        </div>
                       </div>
                       <p className="subtle-caption">
                         Daily suggestions based on your current vocabulary trends.
@@ -950,7 +974,18 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
               <div className="flex h-full min-h-[380px] flex-col items-center justify-center text-center">
                 {mode === "inbox" ? (
                   <div className="w-full max-w-xl space-y-3 text-left">
-                    <p className="section-title text-center">Inbox Suggestions</p>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="section-title text-center">Inbox Suggestions</p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="border-white/14 bg-white/7 hover:bg-white/14"
+                        onClick={() => setSuggestionsRevision((prev) => prev + 1)}
+                      >
+                        New Suggestions
+                      </Button>
+                    </div>
                     <p className="subtle-caption text-center">Daily suggestions based on your current vocabulary history.</p>
                     {dailySuggestions.length === 0 ? (
                       <div className="frost-panel-soft p-3 text-sm text-muted-foreground">

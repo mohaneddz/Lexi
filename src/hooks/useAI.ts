@@ -78,6 +78,12 @@ export function useAI() {
     [runCall],
   );
 
+  const suggestDistractorDefinitions = useCallback(
+    async (word: string, definition: string, language: string) =>
+      runCall(() => aiService.suggestDistractorDefinitions(word, definition, language), []),
+    [runCall],
+  );
+
   return {
     loading,
     error,
@@ -88,5 +94,6 @@ export function useAI() {
     getExamples,
     testConnection,
     suggestGroup,
+    suggestDistractorDefinitions,
   };
 }
