@@ -11,7 +11,6 @@ import {
   Plus,
   Search,
   Settings,
-  Sparkles,
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
@@ -28,11 +27,11 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { label: "Inbox", path: "/inbox", icon: Inbox },
   { label: "Words", path: "/words", icon: BookOpenText },
-  { label: "Groups", path: "/groups", icon: FolderTree },
-  { label: "Translations", path: "/translations", icon: Languages },
   { label: "Definitions", path: "/definitions", icon: BookText },
+  { label: "Translations", path: "/translations", icon: Languages },
   { label: "Review", path: "/review", icon: BookCheck },
   { label: "Stats", path: "/stats", icon: ChartColumn },
+  { label: "Groups", path: "/groups", icon: FolderTree },
   { label: "Settings", path: "/settings", icon: Settings },
 ];
 
@@ -72,6 +71,7 @@ export function AppShell({ children }: AppShellProps) {
   const [shortcutsEnabled, setShortcutsEnabled] = useState(true);
   const [selectedGroupFilter, setSelectedGroupFilter] = useState("all");
   const { groups } = useGroups();
+  const groupTabsDisabled = location.pathname === "/groups" || location.pathname === "/stats" || location.pathname === "/settings";
 
   const navLookup = useMemo(() => NAV_ITEMS.map((item) => item.path), []);
 
@@ -162,6 +162,14 @@ export function AppShell({ children }: AppShellProps) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [location.pathname, navLookup, navigate, shortcutsEnabled]);
 
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent("lexi:group-filter-changed", {
+        detail: { groupId: selectedGroupFilter === "all" ? "none" : selectedGroupFilter },
+      }),
+    );
+  }, [selectedGroupFilter, location.pathname]);
+
   return (
     <div className="lexi-stage">
       {sidebarOpen ? (
@@ -186,7 +194,7 @@ export function AppShell({ children }: AppShellProps) {
             </button>
 
             <div className="lexi-brand">
-              <Sparkles className="lexi-brand-mark size-5" />
+              <img src="/icon.png" alt="Lexi icon" className="lexi-brand-icon" />
               <span>Lexi</span>
             </div>
           </div>
@@ -242,7 +250,8 @@ export function AppShell({ children }: AppShellProps) {
             <nav className="lexi-tabs custom-scrollbar">
               <button
                 type="button"
-                className={cn("lexi-tab", selectedGroupFilter === "all" && "is-active")}
+                className={cn("lexi-tab", selectedGroupFilter === "all" && "is-active", groupTabsDisabled && "cursor-not-allowed opacity-45")}
+                disabled={groupTabsDisabled}
                 onClick={() => {
                   setSelectedGroupFilter("all");
                   window.dispatchEvent(new CustomEvent("lexi:group-filter-changed", { detail: { groupId: "none" } }));
@@ -254,7 +263,8 @@ export function AppShell({ children }: AppShellProps) {
                 <button
                   key={group.id}
                   type="button"
-                  className={cn("lexi-tab", selectedGroupFilter === group.id && "is-active")}
+                  className={cn("lexi-tab", selectedGroupFilter === group.id && "is-active", groupTabsDisabled && "cursor-not-allowed opacity-45")}
+                  disabled={groupTabsDisabled}
                   onClick={() => {
                     setSelectedGroupFilter(group.id);
                     window.dispatchEvent(new CustomEvent("lexi:group-filter-changed", { detail: { groupId: group.id } }));

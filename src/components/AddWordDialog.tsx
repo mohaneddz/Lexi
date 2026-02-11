@@ -178,7 +178,7 @@ export function AddWordDialog({ open, onOpenChange, onAdd }: AddWordDialogProps)
                                 }
                             }}
                             placeholder="Enter a word..."
-                            className="glass border-glass-border"
+                            className="frost-input"
                         />
                         {errors.word && (
                             <p className="text-xs text-destructive">{errors.word}</p>
@@ -227,7 +227,7 @@ export function AddWordDialog({ open, onOpenChange, onAdd }: AddWordDialogProps)
                             }}
                             placeholder="Enter or generate definition..."
                             rows={4}
-                            className="w-full px-3 py-2 rounded-md glass border border-glass-border bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                            className="frost-input form-textarea"
                         />
                         {errors.definition && (
                             <p className="text-xs text-destructive">{errors.definition}</p>
@@ -256,14 +256,14 @@ export function AddWordDialog({ open, onOpenChange, onAdd }: AddWordDialogProps)
                                 onChange={(e) => setTagInput(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
                                 placeholder="Add tags..."
-                                className="glass border-glass-border"
+                                className="frost-input"
                             />
                             <Button
                                 type="button"
                                 size="icon"
                                 variant="outline"
                                 onClick={handleAddTag}
-                                className="glass border-glass-border"
+                                className="frost-input"
                             >
                                 <Plus className="h-4 w-4" />
                             </Button>
@@ -292,7 +292,7 @@ export function AddWordDialog({ open, onOpenChange, onAdd }: AddWordDialogProps)
                             <select
                                 value={selectedGroupId}
                                 onChange={(e) => setSelectedGroupId(e.target.value)}
-                                className="w-full px-3 py-2 rounded-md glass border border-glass-border bg-transparent text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                className="frost-input form-select"
                             >
                                 <option value="">No Group</option>
                                 {groups.map((group) => (
@@ -336,3 +336,4 @@ export function AddWordDialog({ open, onOpenChange, onAdd }: AddWordDialogProps)
         </Dialog>
     );
 }
+

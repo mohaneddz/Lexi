@@ -10,11 +10,12 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { useAI } from "@/hooks/useAI";
 import { useWords } from "@/hooks/useWords";
 import { cn } from "@/lib/utils";
 import { buildExample, getReviewStatus, setReviewStatus, type ReviewStatus } from "@/utils/review";
 import { getSettings } from "@/utils/storage";
-import type { RevisionMode, Word } from "@/types";
+import type { RevisionMode } from "@/types";
 
 function statusClass(status: ReviewStatus): string {
   switch (status) {
@@ -41,16 +42,6 @@ function isTypingTarget(target: EventTarget | null): boolean {
   );
 }
 
-function pickDistractors(words: Word[], currentWord: Word): string[] {
-  const otherDefinitions = words
-    .filter((word) => word.id !== currentWord.id)
-    .map((word) => word.definition)
-    .filter((definition) => definition.trim().length > 0);
-
-  const shuffled = [...otherDefinitions].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, 3);
-}
-
 function normalizeAnswer(value: string): string {
   return value.trim().toLowerCase().replace(/\s+/g, " ");
 }
@@ -63,8 +54,10 @@ const MODES: Array<{ value: RevisionMode; label: string; icon: ComponentType<{ c
 
 export default function Review() {
   const { words, updateWord, loading } = useWords();
+  const { suggestDistractorDefinitions } = useAI();
 
   const [query, setQuery] = useState("");
+  const [groupFilterId, setGroupFilterId] = useState("none");
   const [selectedWordId, setSelectedWordId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [mode, setMode] = useState<RevisionMode>("flashcard");
@@ -77,6 +70,8 @@ export default function Review() {
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
   const [feedback, setFeedback] = useState<"idle" | "correct" | "wrong">("idle");
+  const [mcOptionsByWordId, setMcOptionsByWordId] = useState<Record<string, string[]>>({});
+  const [mcLoading, setMcLoading] = useState(false);
 
   const [lightningMode, setLightningMode] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(60);
@@ -93,6 +88,7 @@ export default function Review() {
 
     return words
       .filter((word) => getReviewStatus(word) !== "Mastered")
+      .filter((word) => groupFilterId === "none" || (word.groupIds || []).includes(groupFilterId))
       .filter((word) => {
         if (!normalizedQuery) {
           return true;
@@ -104,7 +100,7 @@ export default function Review() {
         );
       })
       .sort((a, b) => a.dateAdded - b.dateAdded);
-  }, [query, words]);
+  }, [groupFilterId, query, words]);
 
   useEffect(() => {
     if (queue.length === 0) {
@@ -133,9 +129,66 @@ export default function Review() {
       return [] as string[];
     }
 
-    const values = [selectedWord.definition, ...pickDistractors(queue.length >= 4 ? queue : words, selectedWord)];
+    const distractors = mcOptionsByWordId[selectedWord.id] ?? [];
+    const values = [selectedWord.definition, ...distractors];
     return values.sort(() => Math.random() - 0.5);
-  }, [queue, selectedWord, words]);
+  }, [mcOptionsByWordId, selectedWord]);
+
+  useEffect(() => {
+    if (!selectedWord || mode !== "multiple-choice") {
+      return;
+    }
+
+    if ((mcOptionsByWordId[selectedWord.id] || []).length === 3) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const createFallbackDistractors = () => {
+      const base = selectedWord.definition.trim();
+      return [
+        `A minor variation of "${selectedWord.word}" used only in formal legal writing.`,
+        `A broader concept often confused with "${selectedWord.word}", but with weaker intensity.`,
+        `A contextual meaning of "${selectedWord.word}" tied only to historical documents.`,
+      ].filter((item) => item.toLowerCase() !== base.toLowerCase()).slice(0, 3);
+    };
+
+    const generate = async () => {
+      setMcLoading(true);
+      try {
+        const result = await suggestDistractorDefinitions(
+          selectedWord.word,
+          selectedWord.definition,
+          selectedWord.language,
+        );
+
+        if (cancelled) {
+          return;
+        }
+
+        const distractors =
+          result.success && result.data.length === 3
+            ? result.data
+            : createFallbackDistractors();
+
+        setMcOptionsByWordId((prev) => ({
+          ...prev,
+          [selectedWord.id]: distractors,
+        }));
+      } finally {
+        if (!cancelled) {
+          setMcLoading(false);
+        }
+      }
+    };
+
+    void generate();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [mcOptionsByWordId, mode, selectedWord, suggestDistractorDefinitions]);
 
   const totalMastered = useMemo(
     () => words.filter((word) => getReviewStatus(word) === "Mastered").length,
@@ -160,6 +213,18 @@ export default function Review() {
 
     return () => window.clearInterval(timer);
   }, [lightningMode, secondsLeft]);
+
+  useEffect(() => {
+    const onGroupFilterChanged = (event: Event) => {
+      const custom = event as CustomEvent<{ groupId?: string }>;
+      if (typeof custom.detail?.groupId === "string") {
+        setGroupFilterId(custom.detail.groupId);
+      }
+    };
+
+    window.addEventListener("lexi:group-filter-changed", onGroupFilterChanged);
+    return () => window.removeEventListener("lexi:group-filter-changed", onGroupFilterChanged);
+  }, []);
 
   const moveToNextWord = () => {
     if (!selectedWord || queue.length === 0) {
@@ -487,19 +552,23 @@ export default function Review() {
                   <h2 className="detail-title">{selectedWord.word}</h2>
                   <p className="subtle-caption">Choose the matching definition:</p>
 
-                  <div className="space-y-2">
-                    {options.map((option, index) => (
-                      <button
-                        key={`${selectedWord.id}-${index}`}
-                        type="button"
-                        className="frost-panel-soft w-full p-3 text-left transition-colors hover:bg-white/10"
-                        onClick={() => void handleChoice(option)}
-                      >
-                        <span className="mr-2 text-muted-foreground">{index + 1}.</span>
-                        {option}
-                      </button>
-                    ))}
-                  </div>
+                  {mcLoading && options.length < 4 ? (
+                    <p className="subtle-caption">Generating close distractors with AI...</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {options.map((option, index) => (
+                        <button
+                          key={`${selectedWord.id}-${index}`}
+                          type="button"
+                          className="frost-panel-soft w-full p-3 text-left transition-colors hover:bg-white/10"
+                          onClick={() => void handleChoice(option)}
+                        >
+                          <span className="mr-2 text-muted-foreground">{index + 1}.</span>
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ) : null}
 

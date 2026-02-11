@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { listen } from "@tauri-apps/api/event";
+import { getSettings } from "@/utils/storage";
 
 export default function Titlebar() {
   const appWindow = getCurrentWindow();
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
+  const [hideToTray, setHideToTray] = useState(false);
 
   const toggleFullscreen = async () => {
     const fullscreen = await appWindow.isFullscreen();
@@ -24,6 +27,9 @@ export default function Titlebar() {
     let unlisteners: Array<() => void | Promise<void>> = [];
 
     (async () => {
+      const settings = await getSettings();
+      setHideToTray(settings.hideToTray);
+
       setIsFullscreen(await appWindow.isFullscreen());
       setIsMaximized(await appWindow.isMaximized());
 
@@ -61,6 +67,15 @@ export default function Titlebar() {
 
     window.addEventListener("keydown", keydownHandler);
 
+    const onSettingsUpdated = (event: Event) => {
+      const custom = event as CustomEvent<{ hideToTray?: boolean }>;
+      if (typeof custom.detail?.hideToTray === "boolean") {
+        setHideToTray(custom.detail.hideToTray);
+      }
+    };
+
+    window.addEventListener("lexi:settings-updated", onSettingsUpdated);
+
     return () => {
       unlisteners.forEach((u) => {
         try {
@@ -70,6 +85,7 @@ export default function Titlebar() {
         }
       });
       window.removeEventListener("keydown", keydownHandler);
+      window.removeEventListener("lexi:settings-updated", onSettingsUpdated);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -127,7 +143,13 @@ export default function Titlebar() {
           </button>
 
           <button
-            onClick={() => appWindow.close()}
+            onClick={() => {
+              if (hideToTray) {
+                void invoke("hide_to_tray").catch(() => appWindow.hide());
+                return;
+              }
+              void appWindow.close();
+            }}
             className={`${btnBase} ${btnHover} z-[9999]`}
             id="titlebar-close"
             type="button"

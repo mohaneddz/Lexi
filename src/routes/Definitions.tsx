@@ -25,6 +25,7 @@ export default function Definitions() {
   const { words, loading } = useWords();
 
   const [query, setQuery] = useState("");
+  const [groupFilterId, setGroupFilterId] = useState("none");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [exampleVersion, setExampleVersion] = useState(0);
   const [copied, setCopied] = useState(false);
@@ -33,6 +34,7 @@ export default function Definitions() {
     const normalizedQuery = query.trim().toLowerCase();
 
     return [...words]
+      .filter((word) => groupFilterId === "none" || (word.groupIds || []).includes(groupFilterId))
       .filter((word) => {
         if (!normalizedQuery) {
           return true;
@@ -44,7 +46,7 @@ export default function Definitions() {
         );
       })
       .sort((a, b) => a.word.localeCompare(b.word));
-  }, [query, words]);
+  }, [groupFilterId, query, words]);
 
   useEffect(() => {
     if (filteredWords.length === 0) {
@@ -69,6 +71,18 @@ export default function Definitions() {
 
     window.addEventListener("lexi:focus-search", onSearchFocus);
     return () => window.removeEventListener("lexi:focus-search", onSearchFocus);
+  }, []);
+
+  useEffect(() => {
+    const onGroupFilterChanged = (event: Event) => {
+      const customEvent = event as CustomEvent<{ groupId?: string }>;
+      if (typeof customEvent.detail?.groupId === "string") {
+        setGroupFilterId(customEvent.detail.groupId);
+      }
+    };
+
+    window.addEventListener("lexi:group-filter-changed", onGroupFilterChanged);
+    return () => window.removeEventListener("lexi:group-filter-changed", onGroupFilterChanged);
   }, []);
 
   useEffect(() => {

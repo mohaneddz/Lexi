@@ -94,7 +94,7 @@ export function EditTranslationDialog({
             <select
               value={sourceLanguage}
               onChange={(event) => setSourceLanguage(event.target.value)}
-              className="frost-input"
+              className="frost-input form-select"
             >
               {LANGUAGES.map((lang) => (
                 <option key={lang} value={lang}>
@@ -105,7 +105,7 @@ export function EditTranslationDialog({
             <Input
               value={sourceWord}
               onChange={(event) => setSourceWord(event.target.value)}
-              className="glass border-glass-border"
+              className="frost-input"
               placeholder="Source word"
             />
           </div>
@@ -114,7 +114,7 @@ export function EditTranslationDialog({
             <select
               value={targetLanguage}
               onChange={(event) => setTargetLanguage(event.target.value)}
-              className="frost-input"
+              className="frost-input form-select"
             >
               {LANGUAGES.map((lang) => (
                 <option key={lang} value={lang}>
@@ -125,7 +125,7 @@ export function EditTranslationDialog({
             <Input
               value={targetWord}
               onChange={(event) => setTargetWord(event.target.value)}
-              className="glass border-glass-border"
+              className="frost-input"
               placeholder="Target word"
             />
           </div>
@@ -136,7 +136,7 @@ export function EditTranslationDialog({
               value={context}
               onChange={(event) => setContext(event.target.value)}
               rows={3}
-              className="w-full rounded-md border border-glass-border bg-transparent px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="frost-input form-textarea"
             />
           </label>
         </div>
@@ -164,3 +164,5 @@ export function EditTranslationDialog({
     </Dialog>
   );
 }
+
+

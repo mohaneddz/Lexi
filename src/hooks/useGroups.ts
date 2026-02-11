@@ -3,6 +3,8 @@ import { useCallback, useEffect, useState } from "react";
 import type { LexiGroup } from "@/types";
 import * as storage from "@/utils/storage";
 
+const GROUPS_UPDATED_EVENT = "lexi:groups-updated";
+
 export function useGroups() {
   const [groups, setGroups] = useState<LexiGroup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,6 +28,19 @@ export function useGroups() {
     void loadGroups();
   }, [loadGroups]);
 
+  useEffect(() => {
+    const onGroupsUpdated = () => {
+      void loadGroups();
+    };
+
+    window.addEventListener(GROUPS_UPDATED_EVENT, onGroupsUpdated);
+    return () => window.removeEventListener(GROUPS_UPDATED_EVENT, onGroupsUpdated);
+  }, [loadGroups]);
+
+  const emitGroupsUpdated = () => {
+    window.dispatchEvent(new CustomEvent(GROUPS_UPDATED_EVENT));
+  };
+
   const addGroup = useCallback(async (group: Omit<LexiGroup, "id" | "dateAdded">) => {
     const trimmedName = group.name.trim();
     if (!trimmedName) {
@@ -46,6 +61,7 @@ export function useGroups() {
 
     await storage.addGroup(nextGroup);
     setGroups((prev) => [...prev, nextGroup].sort((a, b) => a.name.localeCompare(b.name)));
+    emitGroupsUpdated();
     return nextGroup;
   }, [groups]);
 
@@ -60,11 +76,13 @@ export function useGroups() {
         .map((group) => (group.id === id ? { ...group, ...updates } : group))
         .sort((a, b) => a.name.localeCompare(b.name)),
     );
+    emitGroupsUpdated();
   }, []);
 
   const deleteGroup = useCallback(async (id: string) => {
     await storage.deleteGroup(id);
     setGroups((prev) => prev.filter((group) => group.id !== id));
+    emitGroupsUpdated();
   }, []);
 
   return {

@@ -110,7 +110,7 @@ export function EditWordDialog({ open, word, onOpenChange, onSave }: EditWordDia
                 setValue(event.target.value);
                 setErrors((current) => ({ ...current, word: undefined }));
               }}
-              className="glass border-glass-border"
+              className="frost-input"
             />
             {errors.word ? <p className="text-xs text-destructive">{errors.word}</p> : null}
           </label>
@@ -124,7 +124,7 @@ export function EditWordDialog({ open, word, onOpenChange, onSave }: EditWordDia
                 setErrors((current) => ({ ...current, definition: undefined }));
               }}
               rows={4}
-              className="w-full rounded-md border border-glass-border bg-transparent px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="frost-input form-textarea"
             />
             {errors.definition ? <p className="text-xs text-destructive">{errors.definition}</p> : null}
           </label>
@@ -135,7 +135,7 @@ export function EditWordDialog({ open, word, onOpenChange, onSave }: EditWordDia
               <select
                 value={language}
                 onChange={(event) => setLanguage(event.target.value)}
-                className="frost-input"
+                className="frost-input form-select"
               >
                 {LANGUAGE_OPTIONS.map((entry) => (
                   <option key={entry} value={entry}>
@@ -150,7 +150,7 @@ export function EditWordDialog({ open, word, onOpenChange, onSave }: EditWordDia
               <Input
                 value={tagsText}
                 onChange={(event) => setTagsText(event.target.value)}
-                className="glass border-glass-border"
+                className="frost-input"
               />
             </label>
           </div>
@@ -175,3 +175,6 @@ export function EditWordDialog({ open, word, onOpenChange, onSave }: EditWordDia
     </Dialog>
   );
 }
+
+
+

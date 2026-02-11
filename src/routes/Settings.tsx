@@ -1,4 +1,5 @@
 import { type ComponentType, useEffect, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import {
   CircleDot,
   Keyboard,
@@ -52,6 +53,8 @@ const SHORTCUTS = [
   { keys: `${PRIMARY_MODIFIER_LABEL}+N`, action: "Capture item on active page" },
   { keys: `${PRIMARY_MODIFIER_LABEL}+Shift+T`, action: "Open translations and add pair" },
   { keys: `${PRIMARY_MODIFIER_LABEL}+Shift+R`, action: "Jump to review workspace" },
+  { keys: `${PRIMARY_MODIFIER_LABEL}+Alt+D`, action: "Global quick define popup" },
+  { keys: `${PRIMARY_MODIFIER_LABEL}+Alt+T`, action: "Global quick translate popup" },
   { keys: "Alt+1..8", action: "Navigate top tabs" },
   { keys: "J / K", action: "Move selection in lists" },
   { keys: "1 / 2 / 3", action: "Set status New/Learning/Mastered" },
@@ -85,6 +88,9 @@ export default function Settings() {
     setSaving(true);
     try {
       await updateSettings(updates);
+      if (typeof updates.hideToTray === "boolean") {
+        await invoke("set_hide_to_tray", { enabled: updates.hideToTray });
+      }
       setSettings((current) => {
         if (!current) {
           return current;
@@ -356,6 +362,20 @@ export default function Settings() {
                 type="checkbox"
                 checked={settings.showDeleteConfirmation}
                 onChange={(event) => patchSettings({ showDeleteConfirmation: event.target.checked })}
+                className="size-4 accent-white"
+                disabled={saving}
+              />
+            </label>
+
+            <label className="flex cursor-pointer items-center justify-between gap-3">
+              <div>
+                <p className="font-medium">Hide To Tray On Close</p>
+                <p className="subtle-caption mt-1">Closing the titlebar will hide Lexi instead of exiting.</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={settings.hideToTray}
+                onChange={(event) => patchSettings({ hideToTray: event.target.checked })}
                 className="size-4 accent-white"
                 disabled={saving}
               />

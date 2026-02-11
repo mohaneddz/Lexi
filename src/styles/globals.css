@@ -60,6 +60,32 @@
 
   --glass-bg: var(--panel-soft);
   --glass-border: var(--border);
+
+  --app-body-bg:
+    radial-gradient(70% 55% at 78% 14%, oklch(0.53 0.07 252 / 0.26), transparent 70%),
+    radial-gradient(70% 50% at 18% 90%, oklch(0.35 0.04 235 / 0.22), transparent 70%),
+    linear-gradient(160deg, oklch(0.08 0.017 257) 0%, oklch(0.12 0.02 252) 48%, oklch(0.1 0.018 248) 100%);
+  --app-window-bg: linear-gradient(170deg, oklch(0.2 0.02 253 / 0.92) 0%, oklch(0.15 0.018 253 / 0.86) 100%);
+  --app-window-shadow:
+    0 30px 60px oklch(0 0 0 / 0.45),
+    inset 0 1px 0 oklch(1 0 0 / 0.13),
+    inset 0 -1px 0 oklch(1 0 0 / 0.05);
+  --app-sidebar-bg: linear-gradient(180deg, oklch(0.13 0.02 253 / 0.78) 0%, oklch(0.12 0.02 253 / 0.75) 100%);
+  --app-sidebar-link: oklch(0.78 0.016 255);
+  --app-sidebar-link-hover-bg: oklch(0.27 0.02 253 / 0.4);
+  --app-sidebar-link-hover-fg: oklch(0.95 0.01 255);
+  --app-sidebar-link-active-bg: linear-gradient(90deg, oklch(0.32 0.02 253 / 0.55), oklch(0.27 0.02 253 / 0.22));
+  --app-sidebar-link-active-fg: oklch(0.96 0.01 255);
+  --app-sidebar-link-active-bar: oklch(0.78 0.03 245 / 0.9);
+  --app-frost-soft-bg: oklch(0.18 0.02 253 / 0.5);
+  --app-input-bg: oklch(0.17 0.02 253 / 0.72);
+  --app-input-border: oklch(1 0 0 / 0.14);
+  --app-detail-text: oklch(0.95 0.01 255);
+  --app-chip-bg: oklch(1 0 0 / 0.08);
+  --app-chip-border: oklch(1 0 0 / 0.16);
+  --app-chip-fg: oklch(0.9 0.01 255);
+  --app-sync-bg: oklch(0.2 0.02 253 / 0.7);
+  --app-sync-border: oklch(1 0 0 / 0.12);
 }
 
 .dark {
@@ -115,6 +141,32 @@
 
   --glass-bg: var(--panel-soft);
   --glass-border: var(--border);
+
+  --app-body-bg:
+    radial-gradient(60% 45% at 82% 8%, oklch(0.9 0.03 240 / 0.38), transparent 72%),
+    radial-gradient(56% 42% at 8% 96%, oklch(0.87 0.03 225 / 0.3), transparent 72%),
+    linear-gradient(150deg, oklch(0.98 0.006 255) 0%, oklch(0.96 0.008 252) 55%, oklch(0.94 0.01 250) 100%);
+  --app-window-bg: linear-gradient(170deg, oklch(1 0 0 / 0.96) 0%, oklch(0.985 0.004 252 / 0.94) 100%);
+  --app-window-shadow:
+    0 14px 36px oklch(0.35 0.02 250 / 0.16),
+    inset 0 1px 0 oklch(1 0 0 / 0.95),
+    inset 0 -1px 0 oklch(0.8 0.01 250 / 0.25);
+  --app-sidebar-bg: linear-gradient(180deg, oklch(0.965 0.006 252 / 0.96) 0%, oklch(0.95 0.008 252 / 0.94) 100%);
+  --app-sidebar-link: oklch(0.34 0.02 253);
+  --app-sidebar-link-hover-bg: oklch(0.9 0.01 252 / 0.85);
+  --app-sidebar-link-hover-fg: oklch(0.2 0.02 253);
+  --app-sidebar-link-active-bg: linear-gradient(90deg, oklch(0.87 0.016 250 / 0.95), oklch(0.9 0.012 252 / 0.85));
+  --app-sidebar-link-active-fg: oklch(0.18 0.02 253);
+  --app-sidebar-link-active-bar: oklch(0.46 0.04 246 / 0.85);
+  --app-frost-soft-bg: oklch(1 0 0 / 0.8);
+  --app-input-bg: oklch(1 0 0 / 0.96);
+  --app-input-border: oklch(0.8 0.01 253 / 0.7);
+  --app-detail-text: oklch(0.22 0.02 253);
+  --app-chip-bg: oklch(0.92 0.01 252 / 0.95);
+  --app-chip-border: oklch(0.78 0.01 252 / 0.8);
+  --app-chip-fg: oklch(0.28 0.02 253);
+  --app-sync-bg: oklch(0.92 0.012 252 / 0.95);
+  --app-sync-border: oklch(0.75 0.01 252 / 0.7);
 }
 
 @theme inline {
@@ -173,10 +225,7 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
   font-feature-settings: "ss01" on, "cv05" on;
-  background:
-    radial-gradient(70% 55% at 78% 14%, oklch(0.53 0.07 252 / 0.26), transparent 70%),
-    radial-gradient(70% 50% at 18% 90%, oklch(0.35 0.04 235 / 0.22), transparent 70%),
-    linear-gradient(160deg, oklch(0.08 0.017 257) 0%, oklch(0.12 0.02 252) 48%, oklch(0.1 0.018 248) 100%);
+  background: var(--app-body-bg);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -234,11 +283,8 @@ textarea {
   margin-top: 16px;
   border: 1px solid var(--app-border);
   border-radius: 1.2rem;
-  background: linear-gradient(170deg, oklch(0.2 0.02 253 / 0.92) 0%, oklch(0.15 0.018 253 / 0.86) 100%);
-  box-shadow:
-    0 30px 60px oklch(0 0 0 / 0.45),
-    inset 0 1px 0 oklch(1 0 0 / 0.13),
-    inset 0 -1px 0 oklch(1 0 0 / 0.05);
+  background: var(--app-window-bg);
+  box-shadow: var(--app-window-shadow);
   backdrop-filter: blur(24px);
   overflow: hidden;
   display: flex;
@@ -258,7 +304,7 @@ textarea {
   width: 240px;
   flex-shrink: 0;
   border-right: 1px solid var(--sidebar-border);
-  background: linear-gradient(180deg, oklch(0.13 0.02 253 / 0.78) 0%, oklch(0.12 0.02 253 / 0.75) 100%);
+  background: var(--app-sidebar-bg);
   display: flex;
   flex-direction: column;
   padding: 1rem 0.9rem;
@@ -271,7 +317,6 @@ textarea {
 }
 
 .lexi-sidebar-header {
-  display: flex;
   align-items: center;
   justify-items: center;
   gap: 0.75rem;
@@ -293,6 +338,11 @@ textarea {
   color: oklch(0.93 0.02 252);
 }
 
+.lexi-brand-icon {
+  width: 3rem;
+  object-fit: contain;
+}
+
 .lexi-side-nav {
   display: flex;
   flex-direction: column;
@@ -307,22 +357,22 @@ textarea {
   min-height: 2.6rem;
   padding: 0.58rem 0.7rem;
   border-radius: 0.72rem;
-  color: oklch(0.78 0.016 255);
+  color: var(--app-sidebar-link);
   font-size: 0.96rem;
   border: 1px solid transparent;
   transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
 }
 
 .lexi-nav-link:hover {
-  background: oklch(0.27 0.02 253 / 0.4);
-  color: oklch(0.95 0.01 255);
+  background: var(--app-sidebar-link-hover-bg);
+  color: var(--app-sidebar-link-hover-fg);
 }
 
 .lexi-nav-link.is-active {
-  background: linear-gradient(90deg, oklch(0.32 0.02 253 / 0.55), oklch(0.27 0.02 253 / 0.22));
-  color: oklch(0.96 0.01 255);
+  background: var(--app-sidebar-link-active-bg);
+  color: var(--app-sidebar-link-active-fg);
   border-color: oklch(0.6 0.02 255 / 0.28);
-  box-shadow: inset 2px 0 0 oklch(0.78 0.03 245 / 0.9);
+  box-shadow: inset 2px 0 0 var(--app-sidebar-link-active-bar);
 }
 
 .lexi-sidebar-footer {
@@ -335,7 +385,7 @@ textarea {
   justify-content: center;
 }
 
-.lexi-sidebar.collapsed .lexi-brand,
+.lexi-sidebar.collapsed .lexi-brand span,
 .lexi-sidebar.collapsed .lexi-nav-link span,
 .lexi-sidebar.collapsed .lexi-sidebar-footer .subtle-caption,
 .lexi-sidebar.collapsed .lexi-sidebar-footer .sync-pill {
@@ -423,7 +473,7 @@ textarea {
 }
 
 .frost-panel-soft {
-  background: oklch(0.18 0.02 253 / 0.5);
+  background: var(--app-frost-soft-bg);
   border: 1px solid oklch(1 0 0 / 0.08);
   border-radius: 0.72rem;
 }
@@ -431,9 +481,9 @@ textarea {
 .frost-input {
   height: 2.36rem;
   width: 100%;
-  border: 1px solid oklch(1 0 0 / 0.14);
+  border: 1px solid var(--app-input-border);
   border-radius: 0.55rem;
-  background: oklch(0.17 0.02 253 / 0.72);
+  background: var(--app-input-bg);
   color: var(--foreground);
   padding: 0.5rem 0.82rem;
   transition: border-color 120ms ease, box-shadow 120ms ease;
@@ -443,14 +493,30 @@ textarea {
   color: var(--muted-foreground);
 }
 
+
+
 .frost-input:focus {
   outline: none;
   border-color: var(--ring);
   box-shadow: 0 0 0 3px oklch(0.8 0.02 250 / 0.2);
 }
 
+.form-select {
+  height: 2.36rem;
+  padding-right: 2rem;
+}
+
+.form-textarea {
+  min-height: 7rem;
+  height: auto;
+  resize: vertical;
+  line-height: 1.4;
+}
+
 .search-field-wrap {
   position: relative;
+  min-width: 0;
+  flex: 1 1 20rem;
 }
 
 .search-field-icon {
@@ -467,6 +533,21 @@ textarea {
 
 .search-field-input {
   padding-left: 2.45rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.toolbar-select {
+  min-width: 6.8rem;
+  max-width: 10.5rem;
+  flex: 0 1 10rem;
+  padding-right: 1.85rem;
+}
+
+.toolbar-select-wide {
+  min-width: 8rem;
+  max-width: 12rem;
+  flex-basis: 11rem;
 }
 
 .table-head {
@@ -531,7 +612,7 @@ textarea {
   font-family: var(--font-serif);
   font-size: clamp(1.58rem, 2.1vw, 2.35rem);
   line-height: 1.33;
-  color: oklch(0.95 0.01 255);
+  color: var(--app-detail-text);
 }
 
 .detail-note {
@@ -547,10 +628,10 @@ textarea {
   display: inline-flex;
   align-items: center;
   gap: 0.33rem;
-  border: 1px solid oklch(1 0 0 / 0.16);
+  border: 1px solid var(--app-chip-border);
   border-radius: 0.56rem;
-  background: oklch(1 0 0 / 0.08);
-  color: oklch(0.9 0.01 255);
+  background: var(--app-chip-bg);
+  color: var(--app-chip-fg);
   padding: 0.32rem 0.62rem;
   font-size: 0.86rem;
 }
@@ -593,10 +674,42 @@ textarea {
   min-height: 1.7rem;
   padding: 0.2rem 0.62rem;
   border-radius: 999px;
-  border: 1px solid oklch(1 0 0 / 0.12);
-  background: oklch(0.2 0.02 253 / 0.7);
+  border: 1px solid var(--app-sync-border);
+  background: var(--app-sync-bg);
   color: var(--muted-foreground);
   font-size: 0.83rem;
+}
+
+.light .lexi-stage::before {
+  background: radial-gradient(circle, oklch(0.86 0.03 245 / 0.35) 0%, transparent 74%);
+}
+
+.light .lexi-stage::after {
+  background: radial-gradient(circle, oklch(0.83 0.03 232 / 0.28) 0%, transparent 72%);
+}
+
+.light .lexi-window::before {
+  opacity: 0.04;
+}
+
+.light .lexi-brand-icon {
+  filter: brightness(0) saturate(100%);
+}
+
+.light .word-row:hover {
+  background: oklch(0.93 0.012 252 / 0.75);
+}
+
+.light .word-row-active {
+  background: linear-gradient(90deg, oklch(0.78 0.02 250 / 0.45), transparent);
+  border-left-color: oklch(0.5 0.04 248 / 0.78);
+}
+
+.light .table-head,
+.light .lexi-topbar,
+.light .lexi-sidebar-header,
+.light .lexi-sidebar-footer {
+  border-color: oklch(0.74 0.01 252 / 0.45);
 }
 
 .ghost-divider {
@@ -826,3 +939,8 @@ textarea {
     transform: none !important;
   }
 }
+
+
+
+
+
