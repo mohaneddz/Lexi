@@ -6,10 +6,10 @@ import { useTheme } from '@/hooks/useTheme';
 import { cn } from '@/lib/utils';
 
 const navItems = [
-    { path: '/', label: 'Dashboard', icon: Home },
-    { path: '/words', label: 'Words', icon: BookOpen },
-    { path: '/translations', label: 'Translations', icon: Languages },
-    { path: '/settings', label: 'Settings', icon: Settings },
+    { path: '/', div: 'Dashboard', icon: Home },
+    { path: '/words', div: 'Words', icon: BookOpen },
+    { path: '/translations', div: 'Translations', icon: Languages },
+    { path: '/settings', div: 'Settings', icon: Settings },
 ];
 
 interface SidebarProps {
@@ -74,7 +74,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                                     )}
                                 >
                                     <Icon className={cn("h-5 w-5", isActive && "text-primary")} />
-                                    {item.label}
+                                    {item.div}
                                 </div>
                             </Link>
                         );
