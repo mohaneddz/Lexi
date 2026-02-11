@@ -48,7 +48,7 @@ export default function Stats() {
 
   const weeklyTrend = useMemo(() => {
     const now = new Date();
-    const points = [] as Array<{ label: string; count: number }>;
+    const points = [] as Array<{ div: string; count: number }>;
 
     for (let i = 6; i >= 0; i -= 1) {
       const day = new Date(now);
@@ -60,7 +60,7 @@ export default function Stats() {
       const count = words.filter((word) => word.dateAdded >= dayStart && word.dateAdded < dayEnd).length;
 
       points.push({
-        label: day.toLocaleDateString("en-US", { weekday: "short" }),
+        div: day.toLocaleDateString("en-US", { weekday: "short" }),
         count,
       });
     }
@@ -150,7 +150,7 @@ export default function Stats() {
                 const width = `${Math.max(8, (row.score / languageBreakdown[0].score) * 100)}%`;
 
                 return (
-                  <div key={row.language} className="frost-panel-soft p-3">
+                  <div key={row.language} className="frost-panel-soft stats-surface p-3">
                     <div className="mb-2 flex items-center justify-between gap-3">
                       <p className="font-medium">{row.language}</p>
                       <p className="subtle-caption">
@@ -175,14 +175,14 @@ export default function Stats() {
 
           <div className="grid grid-cols-7 gap-2">
             {weeklyTrend.map((point) => (
-              <div key={point.label} className="frost-panel-soft flex flex-col items-center gap-2 p-3">
+              <div key={point.div} className="frost-panel-soft stats-surface flex flex-col items-center gap-2 p-3">
                 <div className="flex h-20 items-end">
                   <div
                     className="w-4 rounded-full bg-white/70"
                     style={{ height: `${Math.max(8, (point.count / maxTrend) * 100)}%` }}
                   />
                 </div>
-                <p className="subtle-caption text-center">{point.label}</p>
+                <p className="subtle-caption text-center">{point.div}</p>
                 <p className="text-sm font-medium">{point.count}</p>
               </div>
             ))}
@@ -196,15 +196,15 @@ export default function Stats() {
           </div>
 
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-            <article className="frost-panel-soft p-3">
+            <article className="frost-panel-soft stats-surface p-3">
               <p className="subtle-caption">New</p>
               <p className="serif-display text-3xl">{statusDistribution.New}</p>
             </article>
-            <article className="frost-panel-soft p-3">
+            <article className="frost-panel-soft stats-surface p-3">
               <p className="subtle-caption">Learning</p>
               <p className="serif-display text-3xl">{statusDistribution.Learning}</p>
             </article>
-            <article className="frost-panel-soft p-3">
+            <article className="frost-panel-soft stats-surface p-3">
               <p className="subtle-caption">Mastered</p>
               <p className="serif-display text-3xl">{statusDistribution.Mastered}</p>
             </article>
@@ -220,12 +220,12 @@ export default function Stats() {
 
         <div className="custom-scrollbar min-h-0 flex-1 space-y-2.5 overflow-y-auto p-4">
           {recentEntries.length === 0 ? (
-            <div className="frost-panel-soft p-4 text-sm text-muted-foreground">
+            <div className="frost-panel-soft stats-surface p-4 text-sm text-muted-foreground">
               No recent entries available yet.
             </div>
           ) : (
             recentEntries.map((word) => (
-              <article key={word.id} className="frost-panel-soft p-3">
+              <article key={word.id} className="frost-panel-soft stats-surface p-3">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="serif-display text-3xl leading-[0.95]">{word.word}</p>
@@ -239,7 +239,7 @@ export default function Stats() {
             ))
           )}
 
-          <div className="frost-panel-soft p-3">
+          <div className="frost-panel-soft stats-surface p-3">
             <p className="subtle-caption mb-2">Top Tags</p>
             {topTags.length === 0 ? (
               <p className="text-sm text-muted-foreground">No tags yet.</p>

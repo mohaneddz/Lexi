@@ -22,7 +22,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
+  DropdownMenudiv,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
@@ -434,14 +434,14 @@ export default function Translations() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64">
-                <DropdownMenuLabel>Source</DropdownMenuLabel>
+                <DropdownMenudiv>Source</DropdownMenudiv>
                 <DropdownMenuRadioGroup value={sourceFilter} onValueChange={(value) => setSourceFilter(value as SourceFilter)}>
                   {["All", "AI", "Manual"].map((entry) => (
                     <DropdownMenuRadioItem key={entry} value={entry}>{entry}</DropdownMenuRadioItem>
                   ))}
                 </DropdownMenuRadioGroup>
                 <DropdownMenuSeparator />
-                <DropdownMenuLabel>List Grouping</DropdownMenuLabel>
+                <DropdownMenudiv>List Grouping</DropdownMenudiv>
                 <DropdownMenuRadioGroup value={groupMode} onValueChange={(value) => setGroupMode(value as GroupMode)}>
                   <DropdownMenuRadioItem value="none">No Grouping</DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="sourceLang">By Source Language</DropdownMenuRadioItem>

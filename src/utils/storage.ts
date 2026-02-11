@@ -117,7 +117,7 @@ export async function deleteTranslation(id: string): Promise<void> {
 // Groups operations
 export async function getGroups(): Promise<LexiGroup[]> {
   const groups = await store.get<LexiGroup[]>(KEYS.GROUPS);
-  return (groups || []).sort((a, b) => a.name.localeCompare(b.name));
+  return groups || [];
 }
 
 export async function saveGroups(groups: LexiGroup[]): Promise<void> {
