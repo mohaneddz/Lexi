@@ -4,6 +4,10 @@ import { useState, useEffect, useCallback } from 'react';
 import type { Translation } from '@/types';
 import * as storage from '@/utils/storage';
 
+function capitalizeLeadingCharacter(value: string): string {
+    return value.replace(/^(\s*)(\S)/, (_match, ws: string, first: string) => `${ws}${first.toUpperCase()}`);
+}
+
 export function useTranslations() {
     const [translations, setTranslations] = useState<Translation[]>([]);
     const [loading, setLoading] = useState(true);
@@ -36,6 +40,8 @@ export function useTranslations() {
         try {
             const newTranslation: Translation = {
                 ...translation,
+                sourceWord: capitalizeLeadingCharacter(translation.sourceWord),
+                targetWord: capitalizeLeadingCharacter(translation.targetWord),
                 id: crypto.randomUUID(),
                 dateAdded: Date.now(),
                 groupIds: translation.groupIds || [],
@@ -58,7 +64,16 @@ export function useTranslations() {
         try {
             await storage.updateTranslation(id, updates);
             setTranslations(prev =>
-                prev.map(t => (t.id === id ? { ...t, ...updates } : t))
+                prev.map(t => (
+                    t.id === id
+                        ? {
+                            ...t,
+                            ...updates,
+                            ...(typeof updates.sourceWord === "string" ? { sourceWord: capitalizeLeadingCharacter(updates.sourceWord) } : {}),
+                            ...(typeof updates.targetWord === "string" ? { targetWord: capitalizeLeadingCharacter(updates.targetWord) } : {}),
+                        }
+                        : t
+                ))
             );
         } catch (err) {
             setError('Failed to update translation');

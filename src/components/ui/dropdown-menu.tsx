@@ -145,11 +145,11 @@ function DropdownMenudiv({
   className,
   inset,
   ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.div> & {
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Label> & {
   inset?: boolean
 }) {
   return (
-    <DropdownMenuPrimitive.div
+    <DropdownMenuPrimitive.Label
       data-slot="dropdown-menu-div"
       data-inset={inset}
       className={cn(
