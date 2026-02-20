@@ -1,6 +1,11 @@
 import { type ComponentType, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import {
+  disable as disableAutostart,
+  enable as enableAutostart,
+  isEnabled as isAutostartEnabled,
+} from "@tauri-apps/plugin-autostart";
+import {
   CircleDot,
   Keyboard,
   KeyRound,
@@ -53,8 +58,9 @@ const SHORTCUTS = [
   { keys: `${PRIMARY_MODIFIER_div}+N`, action: "Capture item on active page" },
   { keys: `${PRIMARY_MODIFIER_div}+Shift+T`, action: "Open translations and add pair" },
   { keys: `${PRIMARY_MODIFIER_div}+Shift+R`, action: "Jump to review workspace" },
-  { keys: `${PRIMARY_MODIFIER_div}+Alt+D`, action: "Global quick define popup" },
-  { keys: `${PRIMARY_MODIFIER_div}+Alt+T`, action: "Global quick translate popup" },
+  { keys: "Ctrl+Shift+<", action: "Toggle tray hide/show and open Inbox" },
+  { keys: `${PRIMARY_MODIFIER_div}+Shift+;`, action: "Global quick define popup toggle" },
+  { keys: `${PRIMARY_MODIFIER_div}+Shift+'`, action: "Global quick translate popup toggle" },
   { keys: "Alt+1..8", action: "Navigate top tabs" },
   { keys: "J / K", action: "Move selection in lists" },
   { keys: "1 / 2 / 3", action: "Set status New/Learning/Mastered" },
@@ -75,12 +81,33 @@ export default function Settings() {
   const [modelDraft, setModelDraft] = useState<string>(GROQ_MODELS[0]);
   const [apiError, setApiError] = useState<string | null>(null);
   const [apiSuccess, setApiSuccess] = useState<string | null>(null);
+  const [startupError, setStartupError] = useState<string | null>(null);
 
   useEffect(() => {
-    getSettings().then((loaded) => {
-      setSettings(loaded);
-      setApiDraft(loaded.groqApiKey);
-      setModelDraft(loaded.groqModel || GROQ_MODELS[0]);
+    getSettings().then(async (loaded) => {
+      let launchAtStartup = loaded.launchAtStartup;
+      try {
+        launchAtStartup = await isAutostartEnabled();
+      } catch {
+        // Ignore in unsupported contexts.
+      }
+
+      const next = {
+        ...loaded,
+        launchAtStartup,
+        startMinimized: launchAtStartup ? loaded.startMinimized : false,
+      };
+
+      setSettings(next);
+      setApiDraft(next.groqApiKey);
+      setModelDraft(next.groqModel || GROQ_MODELS[0]);
+
+      if (next.launchAtStartup !== loaded.launchAtStartup || next.startMinimized !== loaded.startMinimized) {
+        await updateSettings({
+          launchAtStartup: next.launchAtStartup,
+          startMinimized: next.startMinimized,
+        });
+      }
     });
   }, []);
 
@@ -166,6 +193,28 @@ export default function Settings() {
     }
   };
 
+  const handleLaunchAtStartupChange = async (enabled: boolean) => {
+    setStartupError(null);
+
+    try {
+      if (enabled) {
+        await enableAutostart();
+        await patchSettings({ launchAtStartup: true });
+        return;
+      }
+
+      await disableAutostart();
+      await patchSettings({ launchAtStartup: false, startMinimized: false });
+    } catch {
+      setStartupError("Could not update startup registration.");
+    }
+  };
+
+  const handleStartMinimizedChange = async (enabled: boolean) => {
+    setStartupError(null);
+    await patchSettings({ startMinimized: enabled });
+  };
+
   if (!settings) {
     return (
       <div className="frost-panel flex h-full items-center justify-center">
@@ -219,22 +268,75 @@ export default function Settings() {
 
           <div className="frost-panel-soft space-y-4 p-4">
             <div>
-              <p className="font-medium">Default Language</p>
-              <p className="subtle-caption mt-1">Used as preselected language in capture flows.</p>
+              <p className="font-medium">Language Defaults</p>
+              <p className="subtle-caption mt-1">Set separate favorites for definition and translation flows.</p>
             </div>
 
-            <select
-              value={settings.defaultLanguage}
-              onChange={(event) => patchSettings({ defaultLanguage: event.target.value })}
-              className="frost-input"
-              disabled={saving}
-            >
-              {LANGUAGE_OPTIONS.map((language) => (
-                <option key={language} value={language}>
-                  {language}
-                </option>
-              ))}
-            </select>
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="space-y-1">
+                <span className="subtle-caption">Global fallback</span>
+                <select
+                  value={settings.defaultLanguage}
+                  onChange={(event) => patchSettings({ defaultLanguage: event.target.value })}
+                  className="frost-input"
+                  disabled={saving}
+                >
+                  {LANGUAGE_OPTIONS.map((language) => (
+                    <option key={language} value={language}>
+                      {language}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <span className="subtle-caption">Definition default</span>
+                <select
+                  value={settings.defaultDefinitionLanguage}
+                  onChange={(event) => patchSettings({ defaultDefinitionLanguage: event.target.value })}
+                  className="frost-input"
+                  disabled={saving}
+                >
+                  {LANGUAGE_OPTIONS.map((language) => (
+                    <option key={language} value={language}>
+                      {language}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <span className="subtle-caption">Translation source default</span>
+                <select
+                  value={settings.defaultTranslationSourceLanguage}
+                  onChange={(event) => patchSettings({ defaultTranslationSourceLanguage: event.target.value })}
+                  className="frost-input"
+                  disabled={saving}
+                >
+                  {LANGUAGE_OPTIONS.map((language) => (
+                    <option key={language} value={language}>
+                      {language}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <span className="subtle-caption">Translation target default</span>
+                <select
+                  value={settings.defaultTranslationTargetLanguage}
+                  onChange={(event) => patchSettings({ defaultTranslationTargetLanguage: event.target.value })}
+                  className="frost-input"
+                  disabled={saving}
+                >
+                  {LANGUAGE_OPTIONS.map((language) => (
+                    <option key={language} value={language}>
+                      {language}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
 
           <div className="frost-panel-soft space-y-3 p-4">
@@ -380,6 +482,36 @@ export default function Settings() {
                 disabled={saving}
               />
             </div>
+
+            <div className="flex cursor-pointer items-center justify-between gap-3">
+              <div>
+                <p className="font-medium">Launch At Startup</p>
+                <p className="subtle-caption mt-1">Run Lexi automatically when you sign in.</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={settings.launchAtStartup}
+                onChange={(event) => void handleLaunchAtStartupChange(event.target.checked)}
+                className="size-4 accent-white"
+                disabled={saving}
+              />
+            </div>
+
+            <div className="flex cursor-pointer items-center justify-between gap-3">
+              <div>
+                <p className="font-medium">Start Minimized</p>
+                <p className="subtle-caption mt-1">When launched at startup, open minimized instead of focused.</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={settings.startMinimized}
+                onChange={(event) => void handleStartMinimizedChange(event.target.checked)}
+                className="size-4 accent-white"
+                disabled={saving || !settings.launchAtStartup}
+              />
+            </div>
+
+            {startupError ? <p className="subtle-caption text-red-300">{startupError}</p> : null}
 
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1">

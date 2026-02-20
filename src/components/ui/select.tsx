@@ -88,9 +88,9 @@ function SelectContent({
 function Selectdiv({
   className,
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.div>) {
+}: React.ComponentProps<typeof SelectPrimitive.Label>) {
   return (
-    <SelectPrimitive.div
+    <SelectPrimitive.Label
       data-slot="select-div"
       className={cn("text-muted-foreground px-2 py-1.5 text-xs", className)}
       {...props}

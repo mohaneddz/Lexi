@@ -47,6 +47,7 @@
     "dialog:default",
     "http:default",
     "store:default",
+    "autostart:default",
     {
       "identifier": "fs:scope",
       "allow": [

@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAI } from '@/hooks/useAI';
-import { getSettings } from '@/utils/storage';
+import { getSettings, updateSettings } from '@/utils/storage';
 import { validateWord, validateDefinition, sanitizeInput } from '@/utils/validators';
 import { useGroups } from '@/hooks/useGroups';
 
@@ -54,7 +54,7 @@ export function AddWordDialog({ open, onOpenChange, onAdd }: AddWordDialogProps)
         }
 
         getSettings().then((settings) => {
-            const fallbackLanguage = settings.defaultLanguage || 'English';
+            const fallbackLanguage = settings.defaultDefinitionLanguage || settings.defaultLanguage || 'English';
             setDefaultLanguage(fallbackLanguage);
             setLanguage(fallbackLanguage);
         });
@@ -141,6 +141,7 @@ export function AddWordDialog({ open, onOpenChange, onAdd }: AddWordDialogProps)
                 examples: examples.length > 0 ? examples : undefined,
                 groupIds: selectedGroupId ? [selectedGroupId] : [],
             });
+            await updateSettings({ defaultDefinitionLanguage: language || defaultLanguage || 'English' });
 
             // Reset form
             setWord('');

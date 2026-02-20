@@ -4,6 +4,10 @@ import { useState, useEffect, useCallback } from 'react';
 import type { Word } from '@/types';
 import * as storage from '@/utils/storage';
 
+function capitalizeLeadingCharacter(value: string): string {
+  return value.replace(/^(\s*)(\S)/, (_match, ws: string, first: string) => `${ws}${first.toUpperCase()}`);
+}
+
 export function useWords() {
   const [words, setWords] = useState<Word[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,6 +38,7 @@ export function useWords() {
     try {
       const newWord: Word = {
         ...word,
+        word: capitalizeLeadingCharacter(word.word),
         id: crypto.randomUUID(),
         dateAdded: Date.now(),
         groupIds: word.groupIds || [],
@@ -53,7 +58,15 @@ export function useWords() {
     try {
       await storage.updateWord(id, updates);
       setWords(prev =>
-        prev.map(w => (w.id === id ? { ...w, ...updates } : w))
+        prev.map(w => (
+          w.id === id
+            ? {
+                ...w,
+                ...updates,
+                ...(typeof updates.word === "string" ? { word: capitalizeLeadingCharacter(updates.word) } : {}),
+              }
+            : w
+        ))
       );
     } catch (err) {
       setError('Failed to update word');

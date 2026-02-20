@@ -176,12 +176,21 @@ export function AppShell({ children }: AppShellProps) {
     );
   }, [selectedGroupFilter, location.pathname]);
 
+  useEffect(() => {
+    const onOpenInbox = () => {
+      navigate("/inbox");
+    };
+
+    window.addEventListener("lexi:open-inbox", onOpenInbox);
+    return () => window.removeEventListener("lexi:open-inbox", onOpenInbox);
+  }, [navigate]);
+
   return (
     <div className="lexi-stage">
       {sidebarOpen ? (
         <button
           type="button"
-          aria-div="Close navigation"
+          aria-label="Close navigation"
           className="mobile-overlay lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
@@ -194,7 +203,7 @@ export function AppShell({ children }: AppShellProps) {
               type="button"
               className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground lg:hidden"
               onClick={() => setSidebarOpen(false)}
-              aria-div="Close sidebar"
+              aria-label="Close sidebar"
             >
               <Menu className="size-4" />
             </button>
@@ -239,7 +248,7 @@ export function AppShell({ children }: AppShellProps) {
               type="button"
               className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground lg:hidden"
               onClick={() => setSidebarOpen(true)}
-              aria-div="Open navigation"
+              aria-label="Open navigation"
             >
               <Menu className="size-4" />
             </button>
@@ -248,7 +257,7 @@ export function AppShell({ children }: AppShellProps) {
               type="button"
               className="hidden size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground lg:inline-flex"
               onClick={toggleSidebarCollapsed}
-              aria-div={sidebarCollapsed ? "Expand navigation" : "Collapse navigation"}
+              aria-label={sidebarCollapsed ? "Expand navigation" : "Collapse navigation"}
             >
               <Menu className="size-4" />
             </button>
@@ -286,7 +295,7 @@ export function AppShell({ children }: AppShellProps) {
                 type="button"
                 className="inline-flex size-10 items-center justify-center rounded-lg border border-white/12 bg-white/5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground"
                 onClick={() => emitAppEvent("lexi:focus-search", location.pathname)}
-                aria-div="Search"
+                aria-label="Search"
                 title={`${PRIMARY_MODIFIER_div}+K`}
               >
                 <Search className="size-4" />

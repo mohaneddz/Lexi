@@ -38,6 +38,14 @@ import { cn } from "@/lib/utils";
 import type { Translation } from "@/types";
 import { formatDate } from "@/utils/formatters";
 import { getSettings, updateSettings } from "@/utils/storage";
+import {
+  TRANSLATION_SUGGESTION_BANK,
+  dayKey,
+  parseJsonArray,
+  shuffleArray,
+  translationFingerprint,
+  type TranslationSuggestion,
+} from "@/utils/suggestions";
 
 function isTypingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) {
@@ -81,6 +89,9 @@ export default function Translations() {
   const [actionTranslationId, setActionTranslationId] = useState<string | null>(null);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(true);
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
+  const [translationSuggestions, setTranslationSuggestions] = useState<TranslationSuggestion[]>([]);
+  const [addingSuggestionId, setAddingSuggestionId] = useState<string | null>(null);
+  const todayKey = useMemo(() => dayKey(Date.now()), []);
 
   const { translations, addTranslation, updateTranslation, deleteTranslation, loading } = useTranslations();
   const { words } = useWords();
@@ -389,6 +400,61 @@ export default function Translations() {
     setGroupMode("none");
   };
 
+  useEffect(() => {
+    const existingPairSet = new Set(translations.map((entry) => translationFingerprint(entry)));
+    const dismissedKey = `lexi:translations:daily-dismissed:${todayKey}`;
+    const generatedKey = `lexi:translations:daily-generated:${todayKey}`;
+    const dismissed = new Set(parseJsonArray(window.localStorage.getItem(dismissedKey)));
+    const persisted = parseJsonArray(window.localStorage.getItem(generatedKey));
+
+    if (persisted.length > 0) {
+      const persistedSet = new Set(persisted);
+      const nextPersisted = TRANSLATION_SUGGESTION_BANK.filter((entry) => {
+        if (!persistedSet.has(entry.id)) return false;
+        if (dismissed.has(entry.id)) return false;
+        return !existingPairSet.has(translationFingerprint(entry));
+      });
+      setTranslationSuggestions(nextPersisted);
+      return;
+    }
+
+    const nextFresh = shuffleArray(
+      TRANSLATION_SUGGESTION_BANK.filter((entry) => {
+        if (dismissed.has(entry.id)) return false;
+        return !existingPairSet.has(translationFingerprint(entry));
+      }),
+    ).slice(0, 4);
+
+    setTranslationSuggestions(nextFresh);
+    window.localStorage.setItem(generatedKey, JSON.stringify(nextFresh.map((entry) => entry.id)));
+  }, [todayKey, translations]);
+
+  const dismissSuggestion = (id: string) => {
+    const dismissedKey = `lexi:translations:daily-dismissed:${todayKey}`;
+    const dismissed = new Set(parseJsonArray(window.localStorage.getItem(dismissedKey)));
+    dismissed.add(id);
+    window.localStorage.setItem(dismissedKey, JSON.stringify(Array.from(dismissed)));
+    setTranslationSuggestions((current) => current.filter((entry) => entry.id !== id));
+  };
+
+  const applySuggestion = async (suggestion: TranslationSuggestion) => {
+    setAddingSuggestionId(suggestion.id);
+    try {
+      await addTranslation({
+        sourceWord: suggestion.sourceWord,
+        sourceLanguage: suggestion.sourceLanguage,
+        targetWord: suggestion.targetWord,
+        targetLanguage: suggestion.targetLanguage,
+        context: suggestion.context,
+        aiGenerated: false,
+        groupIds: [],
+      });
+      setTranslationSuggestions((current) => current.filter((entry) => entry.id !== suggestion.id));
+    } finally {
+      setAddingSuggestionId(null);
+    }
+  };
+
   return (
     <>
       <div className="grid h-full grid-cols-1 gap-3 xl:grid-cols-[1.12fr_1fr]">
@@ -611,8 +677,9 @@ export default function Translations() {
 
         <section className="frost-panel flex min-h-0 flex-col overflow-hidden animate-slide-in-up">
           <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-5 md:p-6">
-            {selectedTranslation ? (
-              <div className="space-y-6">
+            <div className="space-y-6">
+              {selectedTranslation ? (
+                <>
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <h2 className="detail-title">{selectedTranslation.sourceWord}</h2>
@@ -672,13 +739,72 @@ export default function Translations() {
                     <div className="flex flex-wrap gap-1.5">{linkedWords.map((word) => <span key={word.id} className="lexi-chip">{word.word}</span>)}</div>
                   )}
                 </div>
+              </>
+              ) : (
+                <div className="flex h-full min-h-[220px] flex-col items-center justify-center text-center">
+                  <p className="section-title">Choose a translation</p>
+                  <p className="subtle-caption mt-2 max-w-sm">Explore context, linked words, and language flow for each pair.</p>
+                </div>
+              )}
+
+              <div className="ghost-divider" />
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="font-medium">Translation Suggestions</p>
+                  <Sparkles className="size-4 text-muted-foreground" />
+                </div>
+
+                {translationSuggestions.length === 0 ? (
+                  <div className="frost-panel-soft p-3 text-sm text-muted-foreground">
+                    No suggestions left for today.
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {translationSuggestions.map((suggestion) => (
+                      <div key={suggestion.id} className="frost-panel-soft space-y-2 p-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="serif-display text-2xl leading-[0.95]">
+                              {suggestion.sourceWord}
+                              <span className="mx-2 inline-flex items-center align-middle text-muted-foreground/80">
+                                <ArrowRight className="size-4" />
+                              </span>
+                              {suggestion.targetWord}
+                            </p>
+                            <p className="subtle-caption">
+                              {suggestion.sourceLanguage} {"->"} {suggestion.targetLanguage}
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="border-white/15 bg-white/6 hover:bg-white/14"
+                              disabled={addingSuggestionId === suggestion.id}
+                              onClick={() => void applySuggestion(suggestion)}
+                            >
+                              {addingSuggestionId === suggestion.id ? "Adding..." : "Add"}
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="border-white/15 bg-white/6 hover:bg-white/14"
+                              onClick={() => dismissSuggestion(suggestion.id)}
+                            >
+                              Dismiss
+                            </Button>
+                          </div>
+                        </div>
+                        {suggestion.context ? <p className="word-sub">{suggestion.context}</p> : null}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="flex h-full min-h-[320px] flex-col items-center justify-center text-center">
-                <p className="section-title">Choose a translation</p>
-                <p className="subtle-caption mt-2 max-w-sm">Explore context, linked words, and language flow for each pair.</p>
-              </div>
-            )}
+            </div>
           </div>
 
           <div className="flex items-center justify-between border-t border-white/10 p-2">

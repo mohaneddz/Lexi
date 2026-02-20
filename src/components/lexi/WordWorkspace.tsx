@@ -194,26 +194,64 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
   const availableLanguages = useMemo(() => ["All", ...Array.from(new Set(words.map((w) => w.language))).sort((a, b) => a.localeCompare(b))], [words]);
   const availableTags = useMemo(() => Array.from(new Set(words.flatMap((w) => w.tags))).sort((a, b) => a.localeCompare(b)), [words]);
   const todayKey = useMemo(() => dayKey(Date.now()), []);
+  const suggestionScopeKey = groupFilterId === "none" ? "global" : `group:${groupFilterId}`;
 
   useEffect(() => {
     if (mode !== "inbox") {
       return;
     }
 
-    const appliedKey = `lexi:inbox:daily-applied:${todayKey}`;
-    const dismissedKey = `lexi:inbox:daily-dismissed:${todayKey}`;
-    const generatedKey = `lexi:inbox:daily-generated:${todayKey}`;
+    const appliedKey = `lexi:inbox:daily-applied:${todayKey}:${suggestionScopeKey}`;
+    const dismissedKey = `lexi:inbox:daily-dismissed:${todayKey}:${suggestionScopeKey}`;
+    const generatedKey = `lexi:inbox:daily-generated:${todayKey}:${suggestionScopeKey}`;
 
     const scopedWords = groupFilterId === "none" ? words : words.filter((word) => (word.groupIds || []).includes(groupFilterId));
-    const existingWords = new Set(scopedWords.map((word) => word.word.trim().toLowerCase()));
-    const preferredLanguage =
-      scopedWords.length > 0
-        ? scopedWords.reduce<Record<string, number>>((acc, word) => {
-            acc[word.language] = (acc[word.language] || 0) + 1;
-            return acc;
-          }, {})
-        : {};
-    const topLanguage = Object.entries(preferredLanguage).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "English";
+    const scopedTranslations = groupFilterId === "none" ? translations : translations.filter((entry) => (entry.groupIds || []).includes(groupFilterId));
+    const existingWords = new Set(words.map((word) => word.word.trim().toLowerCase()));
+
+    const languageWeights = new Map<string, number>();
+    const addLanguageWeight = (language: string, weight: number) => {
+      languageWeights.set(language, (languageWeights.get(language) || 0) + weight);
+    };
+
+    for (const word of words) {
+      addLanguageWeight(word.language, 1);
+    }
+    for (const translation of translations) {
+      addLanguageWeight(translation.sourceLanguage, 1);
+      addLanguageWeight(translation.targetLanguage, 1);
+    }
+    for (const word of scopedWords) {
+      addLanguageWeight(word.language, 3);
+    }
+    for (const translation of scopedTranslations) {
+      addLanguageWeight(translation.sourceLanguage, 3);
+      addLanguageWeight(translation.targetLanguage, 3);
+    }
+
+    const knownLanguages = new Set(languageWeights.keys());
+    if (knownLanguages.size === 0) {
+      knownLanguages.add("English");
+      languageWeights.set("English", 1);
+    }
+
+    const tagWeights = new Map<string, number>();
+    const addTagWeight = (tag: string, weight: number) => {
+      const key = tag.trim().toLowerCase();
+      if (!key) return;
+      tagWeights.set(key, (tagWeights.get(key) || 0) + weight);
+    };
+
+    for (const word of words) {
+      for (const tag of word.tags || []) {
+        addTagWeight(tag, 1);
+      }
+    }
+    for (const word of scopedWords) {
+      for (const tag of word.tags || []) {
+        addTagWeight(tag, 2);
+      }
+    }
 
     const dismissed = new Set(parseJsonArray(window.localStorage.getItem(dismissedKey)).map((item) => item.toLowerCase()));
     const applied = parseJsonArray(window.localStorage.getItem(appliedKey));
@@ -223,26 +261,31 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
     if (persisted.length > 0) {
       const persistedSet = new Set(persisted.map((item) => item.toLowerCase()));
       const suggestions = DAILY_SUGGESTION_BANK.filter(
-        (entry) => persistedSet.has(entry.word.toLowerCase()) && !existingWords.has(entry.word.toLowerCase()) && !dismissed.has(entry.word.toLowerCase()),
+        (entry) =>
+          persistedSet.has(entry.word.toLowerCase()) &&
+          !existingWords.has(entry.word.toLowerCase()) &&
+          !dismissed.has(entry.word.toLowerCase()) &&
+          knownLanguages.has(entry.language),
       );
       setDailySuggestions(suggestions);
       return;
     }
 
-    const ranked = shuffleArray(
-      DAILY_SUGGESTION_BANK
-      .filter((entry) => !existingWords.has(entry.word.toLowerCase()) && !dismissed.has(entry.word.toLowerCase()))
+    const rankedCandidates = DAILY_SUGGESTION_BANK
+      .filter((entry) => !existingWords.has(entry.word.toLowerCase()) && !dismissed.has(entry.word.toLowerCase()) && knownLanguages.has(entry.language))
       .sort((a, b) => {
-        const aLanguageScore = a.language === topLanguage ? 1 : 0;
-        const bLanguageScore = b.language === topLanguage ? 1 : 0;
-        return bLanguageScore - aLanguageScore || a.word.localeCompare(b.word);
-      })
-      .slice(0, 8),
-    ).slice(0, 4);
+        const aLanguageScore = languageWeights.get(a.language) || 0;
+        const bLanguageScore = languageWeights.get(b.language) || 0;
+        const aTagScore = a.tags.reduce((score, tag) => score + (tagWeights.get(tag.toLowerCase()) || 0), 0);
+        const bTagScore = b.tags.reduce((score, tag) => score + (tagWeights.get(tag.toLowerCase()) || 0), 0);
+        return (bLanguageScore + bTagScore) - (aLanguageScore + aTagScore) || a.word.localeCompare(b.word);
+      });
+
+    const ranked = shuffleArray(rankedCandidates.slice(0, 8)).slice(0, 4);
 
     setDailySuggestions(ranked);
     window.localStorage.setItem(generatedKey, JSON.stringify(ranked.map((item) => item.word)));
-  }, [groupFilterId, mode, suggestionsRevision, todayKey, words]);
+  }, [groupFilterId, mode, suggestionScopeKey, suggestionsRevision, todayKey, translations, words]);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -541,12 +584,12 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
     });
     const nextApplied = Array.from(new Set([...appliedDailyWords, suggestion.word]));
     setAppliedDailyWords(nextApplied);
-    window.localStorage.setItem(`lexi:inbox:daily-applied:${todayKey}`, JSON.stringify(nextApplied));
+    window.localStorage.setItem(`lexi:inbox:daily-applied:${todayKey}:${suggestionScopeKey}`, JSON.stringify(nextApplied));
     setDailySuggestions((prev) => prev.filter((entry) => entry.word !== suggestion.word));
   };
 
   const dismissDailySuggestion = (suggestion: DailySuggestion) => {
-    const key = `lexi:inbox:daily-dismissed:${todayKey}`;
+    const key = `lexi:inbox:daily-dismissed:${todayKey}:${suggestionScopeKey}`;
     const existing = new Set(parseJsonArray(window.localStorage.getItem(key)).map((item) => item.toLowerCase()));
     existing.add(suggestion.word.toLowerCase());
     window.localStorage.setItem(key, JSON.stringify(Array.from(existing)));

@@ -71,6 +71,9 @@ export type RevisionMode = 'flashcard' | 'multiple-choice' | 'typing';
 export interface AppSettings {
   theme: Theme;
   defaultLanguage: string;
+  defaultDefinitionLanguage: string;
+  defaultTranslationSourceLanguage: string;
+  defaultTranslationTargetLanguage: string;
   aiEnabled: boolean;
   groqApiKey: string;
   groqModel: string;
@@ -78,6 +81,8 @@ export interface AppSettings {
   shortcutsEnabled: boolean;
   showDeleteConfirmation: boolean;
   hideToTray: boolean;
+  launchAtStartup: boolean;
+  startMinimized: boolean;
   dailyReviewGoal: number;
   defaultRevisionMode: RevisionMode;
 }
