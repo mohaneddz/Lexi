@@ -17,6 +17,9 @@ const KEYS = {
 const DEFAULT_SETTINGS: AppSettings = {
   theme: 'dark',
   defaultLanguage: 'English',
+  defaultDefinitionLanguage: 'English',
+  defaultTranslationSourceLanguage: 'English',
+  defaultTranslationTargetLanguage: 'English',
   aiEnabled: true,
   groqApiKey: '',
   groqModel:
@@ -27,13 +30,20 @@ const DEFAULT_SETTINGS: AppSettings = {
   shortcutsEnabled: true,
   showDeleteConfirmation: true,
   hideToTray: false,
+  launchAtStartup: false,
+  startMinimized: false,
   dailyReviewGoal: 20,
   defaultRevisionMode: 'flashcard',
 };
 
+function capitalizeLeadingCharacter(value: string): string {
+  return value.replace(/^(\s*)(\S)/, (_match, ws: string, first: string) => `${ws}${first.toUpperCase()}`);
+}
+
 function normalizeWord(word: Word): Word {
   return {
     ...word,
+    word: capitalizeLeadingCharacter(word.word),
     tags: Array.isArray(word.tags) ? word.tags : [],
     examples: Array.isArray(word.examples) ? word.examples : [],
     groupIds: Array.isArray(word.groupIds) ? word.groupIds : [],
@@ -43,6 +53,8 @@ function normalizeWord(word: Word): Word {
 function normalizeTranslation(translation: Translation): Translation {
   return {
     ...translation,
+    sourceWord: capitalizeLeadingCharacter(translation.sourceWord),
+    targetWord: capitalizeLeadingCharacter(translation.targetWord),
     groupIds: Array.isArray(translation.groupIds) ? translation.groupIds : [],
   };
 }
@@ -162,8 +174,18 @@ export async function deleteGroup(id: string): Promise<void> {
 
 // Settings operations
 export async function getSettings(): Promise<AppSettings> {
-  const settings = await store.get<AppSettings>(KEYS.SETTINGS);
-  return { ...DEFAULT_SETTINGS, ...settings };
+  const settings = await store.get<Partial<AppSettings>>(KEYS.SETTINGS);
+  const merged = { ...DEFAULT_SETTINGS, ...(settings || {}) };
+
+  return {
+    ...merged,
+    defaultDefinitionLanguage:
+      settings?.defaultDefinitionLanguage?.trim() || merged.defaultLanguage || 'English',
+    defaultTranslationSourceLanguage:
+      settings?.defaultTranslationSourceLanguage?.trim() || merged.defaultLanguage || 'English',
+    defaultTranslationTargetLanguage:
+      settings?.defaultTranslationTargetLanguage?.trim() || merged.defaultLanguage || 'English',
+  };
 }
 
 export async function saveSettings(settings: AppSettings): Promise<void> {

@@ -1,5 +1,5 @@
 import { createGroq } from "@ai-sdk/groq";
-import { generateObject } from "ai";
+import { generateObject, generateText } from "ai";
 import { z } from "zod";
 
 import type { AIResponse } from "@/types";
@@ -385,11 +385,59 @@ export async function translateText(
       confidence: object.confidence,
     };
   } catch (error) {
-    return {
-      success: false,
-      data: "",
-      error: toErrorMessage("Translation failed", error),
-    };
+    // Fallback path when structured JSON output fails schema validation.
+    try {
+      const config = await resolveAiConfig();
+      const groq = createGroq({ apiKey: config.apiKey });
+      const candidateModels =
+        config.model !== DEFAULT_MODEL ? [config.model, DEFAULT_MODEL] : [config.model];
+      let translated = "";
+      let fallbackError: unknown = null;
+
+      for (const model of candidateModels) {
+        try {
+          const result = await generateText({
+            model: groq(model),
+            system:
+              "You are a precise translation assistant. Return only the translated text, with no JSON, markdown, or explanation.",
+            prompt: [
+              `Translate this text from ${sourceLang} to ${targetLang}.`,
+              "Preserve tone, punctuation, and intent.",
+              `Text: ${trimmedText}`,
+            ].join("\n"),
+            temperature: 0,
+          });
+
+          translated = result.text.trim().replace(/^["'`]+|["'`]+$/g, "");
+          if (translated) {
+            break;
+          }
+        } catch (fallbackRunError) {
+          fallbackError = fallbackRunError;
+        }
+      }
+
+      if (translated) {
+        return {
+          success: true,
+          data: translated,
+        };
+      }
+
+      return {
+        success: false,
+        data: "",
+        error: toErrorMessage("Translation failed", fallbackError ?? error),
+      };
+    } catch (fallbackOuterError) {
+      const primary = toErrorMessage("Translation failed", error);
+      const secondary = toErrorMessage("Fallback translation failed", fallbackOuterError);
+      return {
+        success: false,
+        data: "",
+        error: `${primary} | ${secondary}`,
+      };
+    }
   }
 }
 
