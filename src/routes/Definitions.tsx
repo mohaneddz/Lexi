@@ -3,10 +3,19 @@ import { CircleDot, Copy, RefreshCcw, Search, Sparkles } from "lucide-react";
 
 import { AddWordDialog } from "@/components/AddWordDialog";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "@/hooks/useTranslations";
 import { useWords } from "@/hooks/useWords";
 import { cn } from "@/lib/utils";
 import { getReviewStatus } from "@/utils/review";
 import { truncateText } from "@/utils/formatters";
+import {
+  DEFINITION_SUGGESTION_BANK,
+  dayKey,
+  parseJsonArray,
+  shuffleArray,
+  wordFingerprint,
+  type DefinitionSuggestion,
+} from "@/utils/suggestions";
 
 function isTypingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) {
@@ -24,6 +33,7 @@ function isTypingTarget(target: EventTarget | null): boolean {
 export default function Definitions() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { words, loading, addWord } = useWords();
+  const { translations } = useTranslations();
 
   const [query, setQuery] = useState("");
   const [groupFilterId, setGroupFilterId] = useState("none");
@@ -31,6 +41,10 @@ export default function Definitions() {
   const [exampleVersion, setExampleVersion] = useState(0);
   const [copied, setCopied] = useState(false);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [definitionSuggestions, setDefinitionSuggestions] = useState<DefinitionSuggestion[]>([]);
+  const [addingSuggestionId, setAddingSuggestionId] = useState<string | null>(null);
+  const todayKey = useMemo(() => dayKey(Date.now()), []);
+  const suggestionScopeKey = groupFilterId === "none" ? "global" : `group:${groupFilterId}`;
 
   const filteredWords = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -155,6 +169,90 @@ export default function Definitions() {
     setTimeout(() => setCopied(false), 1800);
   };
 
+  useEffect(() => {
+    const existingWordSet = new Set(words.map((word) => wordFingerprint(word)));
+    const dismissedKey = `lexi:definitions:daily-dismissed:${todayKey}:${suggestionScopeKey}`;
+    const generatedKey = `lexi:definitions:daily-generated:${todayKey}:${suggestionScopeKey}`;
+    const scopedWords = groupFilterId === "none" ? words : words.filter((word) => (word.groupIds || []).includes(groupFilterId));
+    const scopedTranslations = groupFilterId === "none" ? translations : translations.filter((entry) => (entry.groupIds || []).includes(groupFilterId));
+
+    const languageWeights = new Map<string, number>();
+    const addLanguageWeight = (language: string, weight: number) => {
+      languageWeights.set(language, (languageWeights.get(language) || 0) + weight);
+    };
+
+    for (const word of words) {
+      addLanguageWeight(word.language, 1);
+    }
+    for (const translation of translations) {
+      addLanguageWeight(translation.sourceLanguage, 1);
+      addLanguageWeight(translation.targetLanguage, 1);
+    }
+    for (const word of scopedWords) {
+      addLanguageWeight(word.language, 3);
+    }
+    for (const translation of scopedTranslations) {
+      addLanguageWeight(translation.sourceLanguage, 3);
+      addLanguageWeight(translation.targetLanguage, 3);
+    }
+
+    const knownLanguages = new Set(languageWeights.keys());
+    if (knownLanguages.size === 0) {
+      knownLanguages.add("English");
+    }
+
+    const dismissed = new Set(parseJsonArray(window.localStorage.getItem(dismissedKey)));
+    const persisted = parseJsonArray(window.localStorage.getItem(generatedKey));
+
+    if (persisted.length > 0) {
+      const persistedSet = new Set(persisted);
+      const nextPersisted = DEFINITION_SUGGESTION_BANK.filter((entry) => {
+        if (!persistedSet.has(entry.id)) return false;
+        if (dismissed.has(entry.id)) return false;
+        if (!knownLanguages.has(entry.language)) return false;
+        return !existingWordSet.has(wordFingerprint({ word: entry.word, language: entry.language }));
+      });
+      setDefinitionSuggestions(nextPersisted);
+      return;
+    }
+
+    const nextFresh = shuffleArray(
+      DEFINITION_SUGGESTION_BANK.filter((entry) => {
+        if (dismissed.has(entry.id)) return false;
+        if (!knownLanguages.has(entry.language)) return false;
+        return !existingWordSet.has(wordFingerprint({ word: entry.word, language: entry.language }));
+      }),
+    ).slice(0, 4);
+
+    setDefinitionSuggestions(nextFresh);
+    window.localStorage.setItem(generatedKey, JSON.stringify(nextFresh.map((entry) => entry.id)));
+  }, [groupFilterId, suggestionScopeKey, todayKey, translations, words]);
+
+  const dismissSuggestion = (id: string) => {
+    const dismissedKey = `lexi:definitions:daily-dismissed:${todayKey}:${suggestionScopeKey}`;
+    const dismissed = new Set(parseJsonArray(window.localStorage.getItem(dismissedKey)));
+    dismissed.add(id);
+    window.localStorage.setItem(dismissedKey, JSON.stringify(Array.from(dismissed)));
+    setDefinitionSuggestions((current) => current.filter((entry) => entry.id !== id));
+  };
+
+  const applySuggestion = async (suggestion: DefinitionSuggestion) => {
+    setAddingSuggestionId(suggestion.id);
+    try {
+      await addWord({
+        word: suggestion.word,
+        definition: suggestion.definition,
+        language: suggestion.language,
+        tags: Array.from(new Set([...(suggestion.tags || []), "suggested"])),
+        aiGenerated: false,
+        groupIds: groupFilterId !== "none" ? [groupFilterId] : [],
+      });
+      setDefinitionSuggestions((current) => current.filter((entry) => entry.id !== suggestion.id));
+    } finally {
+      setAddingSuggestionId(null);
+    }
+  };
+
   return (
     <>
       <div className="grid h-full grid-cols-1 gap-3 xl:grid-cols-[1.04fr_1fr]">
@@ -232,8 +330,9 @@ export default function Definitions() {
 
       <section className="frost-panel flex min-h-0 flex-col overflow-hidden animate-slide-in-up">
         <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-5 md:p-6">
-          {selectedWord ? (
-            <div className="space-y-6">
+          <div className="space-y-6">
+            {selectedWord ? (
+              <>
               <div>
                 <h2 className="detail-title">{selectedWord.word}</h2>
                 <p className="subtle-caption mt-2">Definition Workspace</p>
@@ -280,15 +379,72 @@ export default function Definitions() {
                   {selectedWord.aiGenerated ? "AI generated" : "Manually curated"}
                 </span>
               </div>
+            </>
+            ) : (
+              <div className="flex h-full min-h-[220px] flex-col items-center justify-center text-center">
+                <p className="section-title">Pick an entry</p>
+                <p className="subtle-caption mt-2 max-w-sm">
+                  Compare definitions and examples in one place.
+                </p>
+              </div>
+            )}
+
+            <div className="ghost-divider" />
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="font-medium">Definition Suggestions</p>
+                <Sparkles className="size-4 text-muted-foreground" />
+              </div>
+              {definitionSuggestions.length === 0 ? (
+                <div className="frost-panel-soft p-3 text-sm text-muted-foreground">
+                  No suggestions left for today.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {definitionSuggestions.map((suggestion) => (
+                    <div key={suggestion.id} className="frost-panel-soft space-y-2 p-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="serif-display text-2xl leading-[0.95]">{suggestion.word}</p>
+                          <p className="subtle-caption">{suggestion.language}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="border-white/15 bg-white/6 hover:bg-white/14"
+                            disabled={addingSuggestionId === suggestion.id}
+                            onClick={() => void applySuggestion(suggestion)}
+                          >
+                            {addingSuggestionId === suggestion.id ? "Adding..." : "Add"}
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="border-white/15 bg-white/6 hover:bg-white/14"
+                            onClick={() => dismissSuggestion(suggestion.id)}
+                          >
+                            Dismiss
+                          </Button>
+                        </div>
+                      </div>
+                      <p className="word-sub">{suggestion.definition}</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {suggestion.tags.map((tag) => (
+                          <span key={`${suggestion.id}-${tag}`} className="lexi-chip">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="flex h-full min-h-[320px] flex-col items-center justify-center text-center">
-              <p className="section-title">Pick an entry</p>
-              <p className="subtle-caption mt-2 max-w-sm">
-                Compare definitions and examples in one place.
-              </p>
-            </div>
-          )}
+          </div>
         </div>
 
         <div className="flex items-center justify-between border-t border-white/10 p-2">

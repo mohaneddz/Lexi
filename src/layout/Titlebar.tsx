@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { listen } from "@tauri-apps/api/event";
+import { Minus, X, Square } from "lucide-react";
 import { getSettings } from "@/utils/storage";
 
 export default function Titlebar() {
@@ -91,7 +92,7 @@ export default function Titlebar() {
   }, []);
 
   const btnBase =
-    "inline-flex h-[30px] w-[30px] items-center justify-center select-none z-[1000] [filter:invert(1)]";
+    "inline-flex h-[30px] w-[30px] items-center justify-center select-none z-[1000] text-white group";
 
   const btnHover = "hover:bg-gray-300";
 
@@ -108,12 +109,7 @@ export default function Titlebar() {
             id="titlebar-minimize"
             type="button"
           >
-            <img
-              src="https://api.iconify.design/mdi:window-minimize.svg"
-              alt="minimize"
-              className="h-4 w-4 pointer-events-none"
-              draggable={false}
-            />
+            <Minus className="h-4 w-4 pointer-events-none group-hover:text-black" aria-hidden="true" />
           </button>
 
           <button
@@ -126,26 +122,16 @@ export default function Titlebar() {
             type="button"
           >
             {!isMaximized ? (
-              <img
-                src="https://api.iconify.design/mdi:window-maximize.svg"
-                alt="maximize"
-                className="h-4 w-4 pointer-events-none"
-                draggable={false}
-              />
+              <Square className="h-4 w-4 pointer-events-none group-hover:text-black" aria-hidden="true" />
             ) : (
-              <img
-                src="https://api.iconify.design/mdi:window-restore.svg"
-                alt="restore"
-                className="h-4 w-4 pointer-events-none"
-                draggable={false}
-              />
+              <Square className="h-4 w-4 pointer-events-none group-hover:text-black" aria-hidden="true" />
             )}
           </button>
 
           <button
             onClick={() => {
               if (hideToTray) {
-                void invoke("hide_to_tray").catch(() => appWindow.hide());
+                void invoke("hide_to_tray").catch(() => appWindow.close());
                 return;
               }
               void appWindow.close();
@@ -154,12 +140,7 @@ export default function Titlebar() {
             id="titlebar-close"
             type="button"
           >
-            <img
-              src="https://api.iconify.design/mdi:close.svg"
-              alt="close"
-              className="h-4 w-4 pointer-events-none"
-              draggable={false}
-            />
+            <X className="h-4 w-4 pointer-events-none group-hover:text-black" aria-hidden="true" />
           </button>
         </>
       )}
