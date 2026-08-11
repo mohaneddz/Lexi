@@ -4,6 +4,8 @@
 </h1>
 Lexi is a modern, privacy-first, AI-assisted vocabulary desktop app for capturing words, building translations, reviewing definitions, and learning faster with global quick actions.
 
+**Status:** Phase 1 and 2 (capture, definitions, translations, groups, review, stats) are complete and working. The working tree currently has an unfinished, uncommitted "Books" reading feature and some other in-progress changes on top of the last commit — treat anything not covered by Phase 1/2 above as unstable until that work is committed and reconciled.
+
 ---
 
 ## Tech Used 🧑‍💻
