@@ -1,349 +1,247 @@
-// AddWordDialog component with AI features
+import { useEffect, useState } from "react";
+import { Check, Loader2, Sparkles } from "lucide-react";
 
-import { useEffect, useState } from 'react';
-import { Sparkles, Loader2, Plus, X } from 'lucide-react';
+import { Button } from "@/components/ui/button";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { useAI } from '@/hooks/useAI';
-import { getSettings, updateSettings } from '@/utils/storage';
-import { validateWord, validateDefinition, sanitizeInput } from '@/utils/validators';
-import { useGroups } from '@/hooks/useGroups';
+  Dialog,
+  DialogContent,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAI } from "@/hooks/useAI";
+import { getSettings, updateSettings } from "@/utils/storage";
+import { sanitizeInput, validateDefinition, validateWord } from "@/utils/validators";
 
 interface AddWordDialogProps {
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
-    onAdd: (word: {
-        word: string;
-        definition: string;
-        language: string;
-        tags: string[];
-        aiGenerated: boolean;
-        examples?: string[];
-        groupIds?: string[];
-    }) => Promise<unknown>;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onAdd: (word: {
+    word: string;
+    definition: string;
+    language: string;
+    tags: string[];
+    aiGenerated: boolean;
+    examples?: string[];
+    groupIds?: string[];
+  }) => Promise<unknown>;
 }
+
+const LANGUAGES = [
+  "English",
+  "French",
+  "Spanish",
+  "German",
+  "Italian",
+  "Portuguese",
+  "Russian",
+  "Japanese",
+  "Korean",
+  "Chinese",
+  "Arabic",
+  "Hindi",
+];
 
 export function AddWordDialog({ open, onOpenChange, onAdd }: AddWordDialogProps) {
-    const [word, setWord] = useState('');
-    const [definition, setDefinition] = useState('');
-    const [language, setLanguage] = useState('English');
-    const [defaultLanguage, setDefaultLanguage] = useState('English');
-    const [tags, setTags] = useState<string[]>([]);
-    const [examples, setExamples] = useState<string[]>([]);
-    const [tagInput, setTagInput] = useState('');
-    const [aiGenerated, setAiGenerated] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [selectedGroupId, setSelectedGroupId] = useState<string>("");
-    const [errors, setErrors] = useState<{ word?: string; definition?: string }>({});
+  const { defineWord, loading: aiLoading } = useAI();
 
-    const { detectLanguage, defineWord, suggestTags, getExamples, suggestGroup, loading: aiLoading } = useAI();
-    const { groups } = useGroups();
+  const [word, setWord] = useState("");
+  const [definition, setDefinition] = useState("");
+  const [language, setLanguage] = useState("English");
+  const [defaultLanguage, setDefaultLanguage] = useState("English");
+  const [aiGenerated, setAiGenerated] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [errors, setErrors] = useState<{ word?: string; definition?: string }>({});
 
-    useEffect(() => {
-        if (!open) {
-            return;
-        }
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
 
-        getSettings().then((settings) => {
-            const fallbackLanguage = settings.defaultDefinitionLanguage || settings.defaultLanguage || 'English';
-            setDefaultLanguage(fallbackLanguage);
-            setLanguage(fallbackLanguage);
+    void getSettings().then((settings) => {
+      const fallbackLanguage = settings.defaultDefinitionLanguage || settings.defaultLanguage || "English";
+      setDefaultLanguage(fallbackLanguage);
+      setLanguage(fallbackLanguage);
+    });
+  }, [open]);
+
+  const handleRun = async () => {
+    const trimmed = word.trim();
+    if (!trimmed) {
+      setErrors((current) => ({ ...current, word: "This field cannot be empty." }));
+      return;
+    }
+
+    setMessage(null);
+    setErrors((current) => ({ ...current, word: undefined }));
+    const result = await defineWord(trimmed, language || defaultLanguage || "English");
+    if (result.success) {
+      setDefinition(result.data);
+      setAiGenerated(true);
+      setErrors((current) => ({ ...current, definition: undefined }));
+      return;
+    }
+
+    setMessage(result.error ?? "Unable to define this term.");
+  };
+
+  const resetAndClose = () => {
+    setWord("");
+    setDefinition("");
+    setLanguage(defaultLanguage || "English");
+    setAiGenerated(false);
+    setSaving(false);
+    setMessage(null);
+    setErrors({});
+    onOpenChange(false);
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    setMessage(null);
+    try {
+      const sourceValidation = validateWord(word);
+      const outputValidation = validateDefinition(definition);
+
+      if (!sourceValidation.valid || !outputValidation.valid) {
+        setErrors({
+          word: sourceValidation.error,
+          definition: outputValidation.error,
         });
-    }, [open]);
+        return;
+      }
 
-    const handleAIDefine = async () => {
-        if (!word.trim()) return;
+      await onAdd({
+        word: sanitizeInput(word),
+        definition: sanitizeInput(definition),
+        language: language || defaultLanguage || "English",
+        tags: [],
+        aiGenerated,
+        groupIds: [],
+      });
+      await updateSettings({ defaultDefinitionLanguage: language || defaultLanguage || "English" });
+      resetAndClose();
+    } finally {
+      setSaving(false);
+    }
+  };
 
-        const languageResult = await detectLanguage(word);
-        const detectedLanguage = languageResult.success ? languageResult.data : (language || defaultLanguage || 'English');
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="glass-strong max-w-2xl">
+        <div className="frost-panel flex max-h-[78vh] min-h-[32rem] flex-col overflow-hidden">
+          <div className="border-b border-white/10 p-3">
+            <div className="space-y-1">
+              <h1 className="serif-display text-2xl">Add New Definition</h1>
+              <p className="subtle-caption">Capture a new word definition quickly.</p>
+            </div>
+          </div>
 
-        if (languageResult.success) {
-            setLanguage(languageResult.data);
-        }
+          <div className="custom-scrollbar space-y-4 overflow-y-auto p-3">
+            <div className="space-y-2">
+              <div className="text-sm font-medium">Word</div>
+              <Input
+                className="frost-input"
+                value={word}
+                onChange={(event) => {
+                  setWord(event.target.value);
+                  setErrors((current) => ({ ...current, word: undefined }));
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    void handleRun();
+                  }
+                }}
+                placeholder="Enter word..."
+                autoFocus
+              />
+              {errors.word ? <p className="text-xs text-destructive">{errors.word}</p> : null}
+            </div>
 
-        const result = await defineWord(word, detectedLanguage);
-        if (result.success) {
-            setDefinition(result.data);
-            setAiGenerated(true);
+            <div className="space-y-2">
+              <div className="text-sm font-medium">Language</div>
+              <Select
+                value={language}
+                onValueChange={(value) => {
+                  setLanguage(value);
+                  setAiGenerated(false);
+                }}
+              >
+                <SelectTrigger className="frost-select form-select w-44">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="glass-strong">
+                  {LANGUAGES.map((entry) => (
+                    <SelectItem key={entry} value={entry}>
+                      {entry}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-            // Auto-suggest tags
-            const tagResult = await suggestTags(word, result.data);
-            if (tagResult.success) {
-                setTags(tagResult.data);
-            }
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-medium">Definition</div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => void handleRun()}
+                  disabled={!word.trim() || aiLoading}
+                  className="gap-2 glass border-glass-border"
+                >
+                  {aiLoading ? <Loader2 className="size-3 animate-spin" /> : <Sparkles className="size-3" />}
+                  AI Define
+                </Button>
+              </div>
+              <textarea
+                className="frost-input form-textarea"
+                value={definition}
+                onChange={(event) => {
+                  setDefinition(event.target.value);
+                  setAiGenerated(false);
+                  setErrors((current) => ({ ...current, definition: undefined }));
+                }}
+                onKeyDown={(event) => {
+                  if (event.ctrlKey && event.key === "Enter") {
+                    event.preventDefault();
+                    void handleSave();
+                  }
+                }}
+                placeholder="Enter or generate definition..."
+                rows={4}
+              />
+              {errors.definition ? <p className="text-xs text-destructive">{errors.definition}</p> : null}
+            </div>
 
-            const exampleResult = await getExamples(word, detectedLanguage);
-            if (exampleResult.success) {
-                const cleanedExamples = Array.from(new Set(exampleResult.data.map((item) => sanitizeInput(item)).filter(Boolean))).slice(0, 5);
-                setExamples(cleanedExamples);
-            }
+            {message ? <p className="subtle-caption">{message}</p> : null}
+          </div>
 
-            // Auto-suggest group if groups are available
-            if (groups.length > 0) {
-                const groupResult = await suggestGroup(word, result.data, groups);
-                if (groupResult.success && groupResult.data) {
-                    setSelectedGroupId(groupResult.data);
-                }
-            }
-        }
-    };
+          <div className="mt-auto flex items-center justify-between border-t border-white/10 p-3">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={saving}
+              className="border-white/15 bg-white/6 hover:bg-white/14"
+              onClick={() => resetAndClose()}
+            >
+              Close
+            </Button>
 
-    const handleAddTag = () => {
-        const nextTags = Array.from(
-            new Set(
-                tagInput
-                    .split(',')
-                    .map((item) => sanitizeInput(item))
-                    .filter(Boolean),
-            ),
-        ).filter((tag) => !tags.includes(tag));
-
-        if (nextTags.length > 0) {
-            setTags([...tags, ...nextTags]);
-            setTagInput('');
-        }
-    };
-
-    const handleRemoveTag = (tagToRemove: string) => {
-        setTags(tags.filter(t => t !== tagToRemove));
-    };
-
-    const handleSubmit = async () => {
-        // Validate
-        const wordValidation = validateWord(word);
-        const defValidation = validateDefinition(definition);
-
-        if (!wordValidation.valid || !defValidation.valid) {
-            setErrors({
-                word: wordValidation.error,
-                definition: defValidation.error,
-            });
-            return;
-        }
-
-        setIsSubmitting(true);
-        try {
-            await onAdd({
-                word: sanitizeInput(word),
-                definition: sanitizeInput(definition),
-                language: language || defaultLanguage || 'English',
-                tags,
-                aiGenerated,
-                examples: examples.length > 0 ? examples : undefined,
-                groupIds: selectedGroupId ? [selectedGroupId] : [],
-            });
-            await updateSettings({ defaultDefinitionLanguage: language || defaultLanguage || 'English' });
-
-            // Reset form
-            setWord('');
-            setDefinition('');
-            setLanguage(defaultLanguage || 'English');
-            setTags([]);
-            setTagInput('');
-            setExamples([]);
-            setSelectedGroupId("");
-            setAiGenerated(false);
-            setErrors({});
-            onOpenChange(false);
-        } catch (error) {
-            console.error('Failed to add word:', error);
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="glass-strong max-w-2xl">
-                <DialogHeader>
-                    <DialogTitle className="text-2xl">Add New Word</DialogTitle>
-                    <DialogDescription>
-                        Add a new word to your vocabulary. Use AI to auto-generate definitions!
-                    </DialogDescription>
-                </DialogHeader>
-
-                <div className="space-y-5 py-3">
-                    {/* Word Input */}
-                    <div className="space-y-2">
-                        <div className="text-sm font-medium">Word</div>
-                        <Input
-                            value={word}
-                            onChange={(e) => {
-                                setWord(e.target.value);
-                                setErrors({ ...errors, word: undefined });
-                            }}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault();
-                                    void handleAIDefine();
-                                }
-                            }}
-                            placeholder="Enter a word..."
-                            className="frost-input"
-                        />
-                        {errors.word && (
-                            <p className="text-xs text-destructive">{errors.word}</p>
-                        )}
-                    </div>
-
-                    {/* Language (Auto-detected) */}
-                    {language && (
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm text-muted-foreground">Detected language:</span>
-                            <Badge variant="glass">{language}</Badge>
-                        </div>
-                    )}
-
-                    {/* Definition */}
-                    <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                            <div className="text-sm font-medium">Definition</div>
-                            <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                onClick={handleAIDefine}
-                                disabled={!word.trim() || aiLoading}
-                                className="gap-2 glass border-glass-border"
-                            >
-                                {aiLoading ? (
-                                    <Loader2 className="h-3 w-3 animate-spin" />
-                                ) : (
-                                    <Sparkles className="h-3 w-3" />
-                                )}
-                                AI Define
-                            </Button>
-                        </div>
-                        <textarea
-                            value={definition}
-                            onChange={(e) => {
-                                setDefinition(e.target.value);
-                                setErrors({ ...errors, definition: undefined });
-                            }}
-                            onKeyDown={(e) => {
-                                if (e.ctrlKey && e.key === 'Enter') {
-                                    e.preventDefault();
-                                    void handleAIDefine();
-                                }
-                            }}
-                            placeholder="Enter or generate definition..."
-                            rows={4}
-                            className="frost-input form-textarea"
-                        />
-                        {errors.definition && (
-                            <p className="text-xs text-destructive">{errors.definition}</p>
-                        )}
-                    </div>
-
-                    {examples.length > 0 && (
-                        <div className="space-y-2">
-                            <p className="text-sm font-medium">Examples</p>
-                            <div className="space-y-1.5 p-1">
-                                {examples.map((example, index) => (
-                                    <p key={`${example}-${index}`} className="text-sm text-muted-foreground">
-                                        {example}
-                                    </p>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Tags */}
-                    <div className="space-y-2">
-                        <div className="text-sm font-medium">Tags</div>
-                        <div className="flex gap-2">
-                            <Input
-                                value={tagInput}
-                                onChange={(e) => setTagInput(e.target.value)}
-                                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
-                                placeholder="Add tags (comma separated)..."
-                                className="frost-input flex-1 min-w-0"
-                            />
-                            <Button
-                                type="button"
-                                size="icon"
-                                variant="outline"
-                                onClick={handleAddTag}
-                                className="h-[2.36rem] w-[2.36rem] shrink-0 border border-white/15 bg-white/6 text-muted-foreground hover:bg-white/12 hover:text-foreground"
-                            >
-                                <Plus className="h-4 w-4" />
-                            </Button>
-                        </div>
-                        {tags.length > 0 && (
-                            <div className="flex flex-wrap gap-2 mt-2">
-                                {tags.map((tag) => (
-                                    <Badge
-                                        key={tag}
-                                        variant="outline"
-                                        className="cursor-pointer hover:bg-destructive/20 transition-colors"
-                                        onClick={() => handleRemoveTag(tag)}
-                                    >
-                                        {tag}
-                                        <X className="h-3 w-3 ml-1" />
-                                    </Badge>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Group Selection */}
-                    {groups.length > 0 && (
-                        <div className="space-y-2">
-                            <div className="text-sm font-medium">Group</div>
-                            <select
-                                value={selectedGroupId}
-                                onChange={(e) => setSelectedGroupId(e.target.value)}
-                                className="frost-input form-select"
-                            >
-                                <option value="">No Group</option>
-                                {groups.map((group) => (
-                                    <option key={group.id} value={group.id}>{group.name}</option>
-                                ))}
-                            </select>
-                            {selectedGroupId && aiGenerated && (
-                                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                                    <Sparkles className="h-3 w-3" />
-                                    AI suggested this group
-                                </p>
-                            )}
-                        </div>
-                    )}
-                </div>
-
-                <DialogFooter>
-                    <Button
-                        variant="outline"
-                        onClick={() => onOpenChange(false)}
-                        disabled={isSubmitting}
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        onClick={handleSubmit}
-                        disabled={isSubmitting || !word.trim() || !definition.trim()}
-                        className="bg-gradient-primary hover:opacity-90"
-                    >
-                        {isSubmitting ? (
-                            <>
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                Adding...
-                            </>
-                        ) : (
-                            'Add Word'
-                        )}
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    );
+            <Button
+              type="button"
+              disabled={saving || !word.trim() || !definition.trim()}
+              className="border border-white/20 bg-white/16 hover:bg-white/22"
+              onClick={() => void handleSave()}
+            >
+              {saving ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Check className="mr-2 size-4" />}
+              Add Definition
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 }
-

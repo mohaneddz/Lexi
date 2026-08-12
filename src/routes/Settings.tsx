@@ -61,7 +61,7 @@ const SHORTCUTS = [
   { keys: "Ctrl+Shift+<", action: "Toggle tray hide/show and open Inbox" },
   { keys: `${PRIMARY_MODIFIER_div}+Shift+;`, action: "Global quick define popup toggle" },
   { keys: `${PRIMARY_MODIFIER_div}+Shift+'`, action: "Global quick translate popup toggle" },
-  { keys: "Alt+1..8", action: "Navigate top tabs" },
+  { keys: "Alt+1..9", action: "Navigate top tabs" },
   { keys: "J / K", action: "Move selection in lists" },
   { keys: "1 / 2 / 3", action: "Set status New/Learning/Mastered" },
   { keys: "Enter (Capture)", action: "Run AI define/translate from source term field" },

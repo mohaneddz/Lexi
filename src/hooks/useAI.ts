@@ -78,6 +78,12 @@ export function useAI() {
     [runCall],
   );
 
+  const suggestGroupIcon = useCallback(
+    async (groupName: string, groupDescription: string | undefined, availableIconNames: string[]) =>
+      runCall(() => aiService.suggestGroupIcon(groupName, groupDescription, availableIconNames), ""),
+    [runCall],
+  );
+
   const suggestDistractorDefinitions = useCallback(
     async (word: string, definition: string, language: string) =>
       runCall(() => aiService.suggestDistractorDefinitions(word, definition, language), []),
@@ -94,6 +100,7 @@ export function useAI() {
     getExamples,
     testConnection,
     suggestGroup,
+    suggestGroupIcon,
     suggestDistractorDefinitions,
   };
 }

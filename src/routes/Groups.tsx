@@ -1,22 +1,28 @@
 import { useMemo, useState } from "react";
-import { ArrowDown, ArrowUp, CircleDot, FolderTree, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, CircleDot, FolderTree, Loader2, Pencil, Plus, Search, Trash2, WandSparkles } from "lucide-react";
 
+import { GroupBadge } from "@/components/lexi/GroupBadge";
 import { Button } from "@/components/ui/button";
+import { useAI } from "@/hooks/useAI";
 import { useGroups } from "@/hooks/useGroups";
 import { useTranslations } from "@/hooks/useTranslations";
 import { useWords } from "@/hooks/useWords";
+import { getGroupIcon, GROUP_ICON_LOAD_ERROR, GROUP_ICON_NAMES, GROUP_ICON_SOURCE, iconLabelFromName } from "@/lib/group-icons";
 import { cn } from "@/lib/utils";
 import type { LexiGroup } from "@/types";
 import { formatDate } from "@/utils/formatters";
 
 export default function Groups() {
   const { groups, loading, addGroup, updateGroup, deleteGroup, moveGroup } = useGroups();
+  const { suggestGroupIcon, loading: aiLoading } = useAI();
   const { words } = useWords();
   const { translations } = useTranslations();
 
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [draftName, setDraftName] = useState("");
   const [draftDescription, setDraftDescription] = useState("");
+  const [draftIconName, setDraftIconName] = useState("Folder");
+  const [iconQuery, setIconQuery] = useState("");
   const [editingGroup, setEditingGroup] = useState<LexiGroup | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -53,10 +59,27 @@ export default function Groups() {
     [groups, selectedGroupId],
   );
 
+  const filteredIcons = useMemo(() => {
+    const normalizedQuery = iconQuery.trim().toLowerCase();
+    if (GROUP_ICON_NAMES.length === 0) {
+      return [];
+    }
+
+    if (!normalizedQuery) {
+      return GROUP_ICON_NAMES.slice(0, 420);
+    }
+
+    return GROUP_ICON_NAMES.filter((iconName) => iconLabelFromName(iconName).toLowerCase().includes(normalizedQuery)).slice(0, 420);
+  }, [iconQuery]);
+
+  const DraftIcon = getGroupIcon(draftIconName);
+
   const startCreate = () => {
     setEditingGroup(null);
     setDraftName("");
     setDraftDescription("");
+    setDraftIconName("Folder");
+    setIconQuery("");
     setFormError(null);
   };
 
@@ -64,6 +87,8 @@ export default function Groups() {
     setEditingGroup(group);
     setDraftName(group.name);
     setDraftDescription(group.description ?? "");
+    setDraftIconName(group.iconName || "Folder");
+    setIconQuery("");
     setFormError(null);
   };
 
@@ -78,13 +103,15 @@ export default function Groups() {
     try {
       if (editingGroup) {
         await updateGroup(editingGroup.id, {
-          name: draftName,
-          description: draftDescription || undefined,
+          name: draftName.trim(),
+          iconName: draftIconName,
+          description: draftDescription.trim() || undefined,
         });
       } else {
         await addGroup({
-          name: draftName,
-          description: draftDescription || undefined,
+          name: draftName.trim(),
+          iconName: draftIconName,
+          description: draftDescription.trim() || undefined,
         });
       }
       startCreate();
@@ -93,6 +120,22 @@ export default function Groups() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleAutoIcon = async () => {
+    if (!draftName.trim()) {
+      setFormError("Enter a group name first so AI can pick an icon.");
+      return;
+    }
+
+    setFormError(null);
+    const result = await suggestGroupIcon(draftName, draftDescription || undefined, GROUP_ICON_NAMES);
+    if (!result.success || !result.data) {
+      setFormError(result.error ?? "Could not auto-select an icon.");
+      return;
+    }
+
+    setDraftIconName(result.data);
   };
 
   const handleDelete = async (group: LexiGroup) => {
@@ -110,12 +153,12 @@ export default function Groups() {
   };
 
   return (
-    <div className="grid h-full grid-cols-1 gap-3 xl:grid-cols-[1fr_0.92fr]">
+    <div className="grid h-full grid-cols-1 gap-3 xl:grid-cols-[1fr_0.96fr]">
       <section className="frost-panel flex min-h-0 flex-col overflow-hidden animate-slide-in-up">
         <div className="flex items-center justify-between border-b border-white/10 p-4">
           <div>
             <h2 className="section-title">Groups</h2>
-            <p className="subtle-caption mt-2">Organize words and translations into custom buckets.</p>
+            <p className="subtle-caption mt-2">Organize words and translations into custom buckets with icon labels.</p>
           </div>
           <Button
             type="button"
@@ -148,10 +191,10 @@ export default function Groups() {
                   tabIndex={0}
                   onClick={() => setSelectedGroupId(group.id)}
                 >
-                  <div className="min-w-0">
-                    <p className="serif-display truncate text-[1.7rem] leading-[0.95]">{group.name}</p>
-                    <p className="word-sub mt-1.5 truncate text-sm">{group.description || "No description yet."}</p>
-                    <p className="subtle-caption mt-2">{usage.words} words • {usage.translations} translations</p>
+                  <div className="min-w-0 space-y-2">
+                    <GroupBadge group={group} className="w-fit" />
+                    <p className="word-sub truncate text-sm">{group.description || "No description yet."}</p>
+                    <p className="subtle-caption">{usage.words} words • {usage.translations} translations</p>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <button
@@ -214,10 +257,19 @@ export default function Groups() {
       <section className="frost-panel flex min-h-0 flex-col overflow-hidden animate-slide-in-up">
         <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-5 md:p-6">
           <div className="space-y-6">
-            
             <div>
               <h3 className="detail-title">{editingGroup ? "Edit Group" : "Create Group"}</h3>
-              <p className="subtle-caption mt-2">Use groups in filters and right-click context actions.</p>
+              <p className="subtle-caption mt-2">Groups appear in filters, chips, and action menus across the app.</p>
+            </div>
+
+            <div className="frost-panel-soft flex items-center gap-3 p-4">
+              <div className="flex size-12 items-center justify-center rounded-xl border border-white/10 bg-white/5">
+                <DraftIcon className="size-6" />
+              </div>
+              <div>
+                <p className="font-medium">{draftName.trim() || "Group Preview"}</p>
+                <p className="subtle-caption">{iconLabelFromName(draftIconName)}</p>
+              </div>
             </div>
 
             <div className="mb-6">
@@ -239,6 +291,66 @@ export default function Groups() {
                 className="w-full rounded-md border border-glass-border bg-transparent px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="What this group is for"
               />
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-sm font-medium">Group icon</span>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="border-white/15 bg-white/6 hover:bg-white/14"
+                    disabled={aiLoading || !draftName.trim() || GROUP_ICON_NAMES.length === 0}
+                    onClick={() => void handleAutoIcon()}
+                  >
+                    {aiLoading ? <Loader2 className="mr-1.5 size-3.5 animate-spin" /> : <WandSparkles className="mr-1.5 size-3.5" />}
+                    Auto
+                  </Button>
+                  <div className="search-field-wrap max-w-[260px]">
+                    <Search className="search-field-icon" />
+                    <input
+                      value={iconQuery}
+                      onChange={(event) => setIconQuery(event.target.value)}
+                      className="frost-input search-field-input"
+                      placeholder={`Search icons (${GROUP_ICON_NAMES.length})`}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid max-h-[320px] grid-cols-4 gap-1.5 overflow-y-auto rounded-xl border border-white/10 bg-white/4 p-1.5 sm:grid-cols-5 md:grid-cols-6">
+                {filteredIcons.length === 0 ? (
+                  <div className="col-span-full rounded-md border border-dashed border-white/20 bg-white/4 px-3 py-5 text-center text-xs text-muted-foreground">
+                    {GROUP_ICON_NAMES.length === 0 ? "Icons could not be loaded." : "No icons match this search."}
+                  </div>
+                ) : (
+                  filteredIcons.map((iconName) => {
+                    const Icon = getGroupIcon(iconName);
+                    const active = draftIconName === iconName;
+
+                    return (
+                      <button
+                        key={iconName}
+                        type="button"
+                        className={cn(
+                          "flex flex-col items-center gap-1 rounded-md border px-1.5 py-2 text-center transition hover:bg-white/8",
+                          active ? "border-white/30 bg-white/12" : "border-white/8 bg-white/4",
+                        )}
+                        onClick={() => setDraftIconName(iconName)}
+                        title={iconLabelFromName(iconName)}
+                      >
+                        <Icon className="size-[18px]" />
+                        <span className="line-clamp-1 text-[10px] leading-tight text-muted-foreground">{iconLabelFromName(iconName)}</span>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+              <p className={cn("subtle-caption", GROUP_ICON_LOAD_ERROR ? "text-amber-300/90" : undefined)}>
+                {GROUP_ICON_LOAD_ERROR ?? `Loaded ${GROUP_ICON_NAMES.length} icons (${GROUP_ICON_SOURCE}).`}
+              </p>
             </div>
 
             <div className="flex gap-2">
@@ -266,9 +378,9 @@ export default function Groups() {
             {selectedGroup ? (
               <>
                 <div className="ghost-divider" />
-                <div className="frost-panel-soft space-y-2 p-4">
+                <div className="frost-panel-soft space-y-3 p-4">
                   <p className="font-medium">Selected Group</p>
-                  <p className="serif-display text-3xl leading-[0.95]">{selectedGroup.name}</p>
+                  <GroupBadge group={selectedGroup} className="w-fit text-base" />
                   <p className="subtle-caption">Created {formatDate(selectedGroup.dateAdded)}</p>
                   <p className="word-sub">{selectedGroup.description || "No description."}</p>
                 </div>
