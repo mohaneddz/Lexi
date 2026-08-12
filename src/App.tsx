@@ -9,6 +9,7 @@ import Groups from "@/routes/Groups";
 import Inbox from "@/routes/Inbox";
 import QuickAction from "@/routes/QuickAction";
 import Review from "@/routes/Review";
+import Books from "@/routes/Books";
 import Settings from "@/routes/Settings";
 import Stats from "@/routes/Stats";
 import Translations from "@/routes/Translations";
@@ -40,6 +41,7 @@ function AppRoutes() {
         <Route path="/groups" element={<Groups />} />
         <Route path="/translations" element={<Translations />} />
         <Route path="/definitions" element={<Definitions />} />
+        <Route path="/books" element={<Books />} />
         <Route path="/review" element={<Review />} />
         <Route path="/stats" element={<Stats />} />
         <Route path="/settings" element={<Settings />} />

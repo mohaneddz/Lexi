@@ -73,6 +73,9 @@
         },
         {
           "url": "https://huggingface.co/**"
+        },
+        {
+          "url": "https://**"
         }
       ],
       "deny": []
