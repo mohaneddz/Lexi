@@ -36,13 +36,14 @@ export function useWords() {
   // Add a new word
   const addWord = useCallback(async (word: Omit<Word, 'id' | 'dateAdded'>) => {
     try {
-      const newWord: Word = {
-        ...word,
-        word: capitalizeLeadingCharacter(word.word),
-        id: crypto.randomUUID(),
-        dateAdded: Date.now(),
-        groupIds: word.groupIds || [],
-      };
+            const newWord: Word = {
+                ...word,
+                word: capitalizeLeadingCharacter(word.word),
+                id: crypto.randomUUID(),
+                dateAdded: Date.now(),
+                favorite: Boolean(word.favorite),
+                groupIds: word.groupIds || [],
+            };
       await storage.addWord(newWord);
       setWords(prev => [...prev, newWord]);
       return newWord;
