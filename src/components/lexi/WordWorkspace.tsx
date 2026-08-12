@@ -4,17 +4,24 @@ import {
   CircleDot,
   Copy,
   FolderPlus,
+  Grid2x2,
   Languages,
+  LayoutGrid,
+  List,
+  Minus,
   MoreHorizontal,
   Pencil,
+  Plus,
   RefreshCcw,
   Search,
   SlidersHorizontal,
   Sparkles,
   Trash2,
+  ZoomIn,
 } from "lucide-react";
 
 import { AddWordDialog } from "@/components/AddWordDialog";
+import { GroupBadge } from "@/components/lexi/GroupBadge";
 import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 import { EditWordDialog } from "@/components/EditWordDialog";
 import { Button } from "@/components/ui/button";
@@ -27,17 +34,16 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAI } from "@/hooks/useAI";
 import { useGroups } from "@/hooks/useGroups";
+import { useSurfaceViewPreference } from "@/hooks/useSurfaceViewPreference";
 import { useTranslations } from "@/hooks/useTranslations";
 import { useWords } from "@/hooks/useWords";
+import { cardMinWidthFor, nextSurfaceZoomStep } from "@/lib/surface-view";
 import { cn } from "@/lib/utils";
-import type { Word } from "@/types";
+import type { ViewMode, Word } from "@/types";
 import { formatDate, truncateText } from "@/utils/formatters";
 import { buildPhonetic, getReviewStatus, setReviewStatus, type ReviewStatus } from "@/utils/review";
 import { getSettings, updateSettings } from "@/utils/storage";
@@ -50,21 +56,14 @@ type SortMode = "recent" | "oldest" | "az" | "za" | "status" | "language";
 type GroupMode = "none" | "status" | "language" | "alphabet";
 type StatusFilter = "All" | ReviewStatus;
 type SourceFilter = "All" | "AI" | "Manual";
-
-type ContextMenuState = {
+type ActionMenuState = {
   word: Word;
   x: number;
   y: number;
 };
-
-const SORT_OPTIONS: Array<{ div: string; value: SortMode }> = [
-  { div: "Recent", value: "recent" },
-  { div: "Oldest", value: "oldest" },
-  { div: "A-Z", value: "az" },
-  { div: "Z-A", value: "za" },
-  { div: "By Status", value: "status" },
-  { div: "By Language", value: "language" },
-];
+const ACTION_MENU_WIDTH = 272;
+const ACTION_MENU_HEIGHT = 380;
+const ACTION_MENU_GAP = 4;
 
 type DailySuggestion = {
   word: string;
@@ -72,6 +71,21 @@ type DailySuggestion = {
   language: string;
   tags: string[];
 };
+
+const SORT_OPTIONS: Array<{ label: string; value: SortMode }> = [
+  { label: "Recent", value: "recent" },
+  { label: "Oldest", value: "oldest" },
+  { label: "A-Z", value: "az" },
+  { label: "Z-A", value: "za" },
+  { label: "By Status", value: "status" },
+  { label: "By Language", value: "language" },
+];
+
+const VIEW_OPTIONS: Array<{ label: string; value: ViewMode; icon: typeof List }> = [
+  { label: "List", value: "list", icon: List },
+  { label: "Grid", value: "grid", icon: LayoutGrid },
+  { label: "Tiles", value: "tiles", icon: Grid2x2 },
+];
 
 const DAILY_SUGGESTION_BANK: DailySuggestion[] = [
   { word: "scrutinize", definition: "to examine closely and critically", language: "English", tags: ["analysis", "precision"] },
@@ -117,12 +131,7 @@ function isTypingTarget(target: EventTarget | null): boolean {
     return false;
   }
 
-  return (
-    target.tagName === "INPUT" ||
-    target.tagName === "TEXTAREA" ||
-    target.tagName === "SELECT" ||
-    target.isContentEditable
-  );
+  return target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT" || target.isContentEditable;
 }
 
 function sortWords(words: Word[], mode: SortMode): Word[] {
@@ -149,11 +158,7 @@ function groupKey(word: Word, mode: GroupMode): string {
 }
 
 function toggleGroupMembership(ids: string[], groupId: string): string[] {
-  if (ids.includes(groupId)) {
-    return ids.filter((id) => id !== groupId);
-  }
-
-  return [...ids, groupId];
+  return ids.includes(groupId) ? ids.filter((id) => id !== groupId) : [...ids, groupId];
 }
 
 export function WordWorkspace({ mode }: WordWorkspaceProps) {
@@ -164,6 +169,7 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
   const { translations } = useTranslations();
   const { groups, addGroup } = useGroups();
   const { getExamples } = useAI();
+  const { viewMode, setViewMode, zoom, setZoom, stepZoom, canZoom } = useSurfaceViewPreference(mode, "list", 100);
 
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(mode === "inbox" ? "New" : "All");
@@ -174,7 +180,6 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
   const [groupMode, setGroupMode] = useState<GroupMode>("none");
   const [groupFilterId, setGroupFilterId] = useState("none");
   const [filtersOpen, setFiltersOpen] = useState(false);
-
   const [selectedWordId, setSelectedWordId] = useState<string | null>(null);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(true);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -182,8 +187,10 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
   const [editingWord, setEditingWord] = useState<Word | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingWord, setDeletingWord] = useState<Word | null>(null);
-  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
-
+  const [actionMenu, setActionMenu] = useState<ActionMenuState | null>(null);
+  const [bulkMode, setBulkMode] = useState(false);
+  const [selectedWordIds, setSelectedWordIds] = useState<string[]>([]);
+  const [bulkDeletePending, setBulkDeletePending] = useState(false);
   const [actionWordId, setActionWordId] = useState<string | null>(null);
   const [exampleError, setExampleError] = useState<string | null>(null);
   const [dailySuggestions, setDailySuggestions] = useState<DailySuggestion[]>([]);
@@ -214,16 +221,12 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
       languageWeights.set(language, (languageWeights.get(language) || 0) + weight);
     };
 
-    for (const word of words) {
-      addLanguageWeight(word.language, 1);
-    }
+    for (const word of words) addLanguageWeight(word.language, 1);
     for (const translation of translations) {
       addLanguageWeight(translation.sourceLanguage, 1);
       addLanguageWeight(translation.targetLanguage, 1);
     }
-    for (const word of scopedWords) {
-      addLanguageWeight(word.language, 3);
-    }
+    for (const word of scopedWords) addLanguageWeight(word.language, 3);
     for (const translation of scopedTranslations) {
       addLanguageWeight(translation.sourceLanguage, 3);
       addLanguageWeight(translation.targetLanguage, 3);
@@ -242,16 +245,8 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
       tagWeights.set(key, (tagWeights.get(key) || 0) + weight);
     };
 
-    for (const word of words) {
-      for (const tag of word.tags || []) {
-        addTagWeight(tag, 1);
-      }
-    }
-    for (const word of scopedWords) {
-      for (const tag of word.tags || []) {
-        addTagWeight(tag, 2);
-      }
-    }
+    for (const word of words) for (const tag of word.tags || []) addTagWeight(tag, 1);
+    for (const word of scopedWords) for (const tag of word.tags || []) addTagWeight(tag, 2);
 
     const dismissed = new Set(parseJsonArray(window.localStorage.getItem(dismissedKey)).map((item) => item.toLowerCase()));
     const applied = parseJsonArray(window.localStorage.getItem(appliedKey));
@@ -260,14 +255,15 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
     const persisted = suggestionsRevision === 0 ? parseJsonArray(window.localStorage.getItem(generatedKey)) : [];
     if (persisted.length > 0) {
       const persistedSet = new Set(persisted.map((item) => item.toLowerCase()));
-      const suggestions = DAILY_SUGGESTION_BANK.filter(
-        (entry) =>
-          persistedSet.has(entry.word.toLowerCase()) &&
-          !existingWords.has(entry.word.toLowerCase()) &&
-          !dismissed.has(entry.word.toLowerCase()) &&
-          knownLanguages.has(entry.language),
+      setDailySuggestions(
+        DAILY_SUGGESTION_BANK.filter(
+          (entry) =>
+            persistedSet.has(entry.word.toLowerCase()) &&
+            !existingWords.has(entry.word.toLowerCase()) &&
+            !dismissed.has(entry.word.toLowerCase()) &&
+            knownLanguages.has(entry.language),
+        ),
       );
-      setDailySuggestions(suggestions);
       return;
     }
 
@@ -282,20 +278,21 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
       });
 
     const ranked = shuffleArray(rankedCandidates.slice(0, 8)).slice(0, 4);
-
     setDailySuggestions(ranked);
     window.localStorage.setItem(generatedKey, JSON.stringify(ranked.map((item) => item.word)));
   }, [groupFilterId, mode, suggestionScopeKey, suggestionsRevision, todayKey, translations, words]);
 
-  const activeFilterCount = useMemo(() => {
-    let count = 0;
-    if (statusFilter !== (mode === "inbox" ? "New" : "All")) count += 1;
-    if (languageFilter !== "All") count += 1;
-    if (sourceFilter !== "All") count += 1;
-    if (selectedTags.length > 0) count += 1;
-    if (groupFilterId !== "none") count += 1;
-    return count;
-  }, [groupFilterId, languageFilter, mode, selectedTags.length, sourceFilter, statusFilter]);
+  useEffect(() => {
+    void getSettings().then((settings) => setShowDeleteConfirmation(settings.showDeleteConfirmation));
+    const onSettingsUpdated = (event: Event) => {
+      const custom = event as CustomEvent<{ showDeleteConfirmation?: boolean }>;
+      if (typeof custom.detail?.showDeleteConfirmation === "boolean") {
+        setShowDeleteConfirmation(custom.detail.showDeleteConfirmation);
+      }
+    };
+    window.addEventListener("lexi:settings-updated", onSettingsUpdated);
+    return () => window.removeEventListener("lexi:settings-updated", onSettingsUpdated);
+  }, []);
 
   const filteredWords = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -314,38 +311,21 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
   }, [groupFilterId, languageFilter, mode, query, selectedTags, sortMode, sourceFilter, statusFilter, words]);
 
   const groupedWords = useMemo(() => {
-    const groups = new Map<string, Word[]>();
+    const map = new Map<string, Word[]>();
     for (const word of filteredWords) {
       const key = groupKey(word, groupMode);
-      const arr = groups.get(key) || [];
+      const arr = map.get(key) || [];
       arr.push(word);
-      groups.set(key, arr);
+      map.set(key, arr);
     }
-    return Array.from(groups.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([key, items]) => ({ key, items }));
+    return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b)).map(([key, items]) => ({ key, items }));
   }, [filteredWords, groupMode]);
-
-  useEffect(() => {
-    getSettings().then((settings) => setShowDeleteConfirmation(settings.showDeleteConfirmation));
-
-    const onSettingsUpdated = (event: Event) => {
-      const custom = event as CustomEvent<{ showDeleteConfirmation?: boolean }>;
-      if (typeof custom.detail?.showDeleteConfirmation === "boolean") {
-        setShowDeleteConfirmation(custom.detail.showDeleteConfirmation);
-      }
-    };
-
-    window.addEventListener("lexi:settings-updated", onSettingsUpdated);
-    return () => window.removeEventListener("lexi:settings-updated", onSettingsUpdated);
-  }, []);
 
   useEffect(() => {
     if (filteredWords.length === 0) {
       setSelectedWordId(null);
       return;
     }
-
     if (!selectedWordId || !filteredWords.some((w) => w.id === selectedWordId)) {
       setSelectedWordId(filteredWords[0].id);
     }
@@ -354,23 +334,17 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
   useEffect(() => {
     const onCapture = (event: Event) => {
       const custom = event as CustomEvent<{ path?: string }>;
-      if (custom.detail?.path === capturePath) {
-        setAddDialogOpen(true);
-      }
+      if (custom.detail?.path === capturePath) setAddDialogOpen(true);
     };
 
     const onSearchFocus = (event: Event) => {
       const custom = event as CustomEvent<{ path?: string }>;
-      if (custom.detail?.path === capturePath) {
-        searchInputRef.current?.focus();
-      }
+      if (custom.detail?.path === capturePath) searchInputRef.current?.focus();
     };
 
     const onGroupFilterChanged = (event: Event) => {
       const custom = event as CustomEvent<{ groupId?: string }>;
-      if (custom.detail?.groupId !== undefined) {
-        setGroupFilterId(custom.detail.groupId);
-      }
+      if (custom.detail?.groupId !== undefined) setGroupFilterId(custom.detail.groupId);
     };
 
     window.addEventListener("lexi:capture", onCapture);
@@ -396,41 +370,18 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
 
       if (event.key.toLowerCase() === "j" || event.key === "ArrowDown") {
         event.preventDefault();
-        const nextIndex = Math.min(filteredWords.length - 1, currentIndex + 1);
-        setSelectedWordId(filteredWords[nextIndex].id);
+        setSelectedWordId(filteredWords[Math.min(filteredWords.length - 1, currentIndex + 1)].id);
       }
 
       if (event.key.toLowerCase() === "k" || event.key === "ArrowUp") {
         event.preventDefault();
-        const nextIndex = Math.max(0, currentIndex - 1);
-        setSelectedWordId(filteredWords[nextIndex].id);
+        setSelectedWordId(filteredWords[Math.max(0, currentIndex - 1)].id);
       }
 
-      if (event.key === "1" || event.code === "Numpad1") {
-        if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
-          return;
-        }
+      if (["1", "2", "3"].includes(event.key) && !event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
         event.preventDefault();
-        const selected = filteredWords[currentIndex];
-        void updateWord(selected.id, { tags: setReviewStatus(selected.tags, "New") });
-      }
-
-      if (event.key === "2" || event.code === "Numpad2") {
-        if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
-          return;
-        }
-        event.preventDefault();
-        const selected = filteredWords[currentIndex];
-        void updateWord(selected.id, { tags: setReviewStatus(selected.tags, "Learning") });
-      }
-
-      if (event.key === "3" || event.code === "Numpad3") {
-        if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
-          return;
-        }
-        event.preventDefault();
-        const selected = filteredWords[currentIndex];
-        void updateWord(selected.id, { tags: setReviewStatus(selected.tags, "Mastered") });
+        const status = event.key === "1" ? "New" : event.key === "2" ? "Learning" : "Mastered";
+        void updateWord(filteredWords[currentIndex].id, { tags: setReviewStatus(filteredWords[currentIndex].tags, status) });
       }
     };
 
@@ -439,47 +390,67 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
   }, [filteredWords, selectedWordId, updateWord]);
 
   useEffect(() => {
-    if (!contextMenu) {
-      return;
-    }
-
-    const close = () => setContextMenu(null);
+    if (!actionMenu) return;
+    const close = () => setActionMenu(null);
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setContextMenu(null);
-      }
+      if (event.key === "Escape") setActionMenu(null);
     };
-
     window.addEventListener("click", close);
     window.addEventListener("scroll", close, true);
     window.addEventListener("keydown", onKeyDown);
-
     return () => {
       window.removeEventListener("click", close);
       window.removeEventListener("scroll", close, true);
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [contextMenu]);
+  }, [actionMenu]);
 
-  const selectedWord = useMemo(() => filteredWords.find((w) => w.id === selectedWordId) ?? null, [filteredWords, selectedWordId]);
+  useEffect(() => {
+    setSelectedWordIds((current) => current.filter((id) => words.some((word) => word.id === id)));
+  }, [words]);
+
+  useEffect(() => {
+    if (bulkMode && selectedWordIds.length === 0) {
+      setBulkMode(false);
+    }
+  }, [bulkMode, selectedWordIds.length]);
+
+  const selectedWord = useMemo(() => filteredWords.find((word) => word.id === selectedWordId) ?? null, [filteredWords, selectedWordId]);
+  const selectedWordGroups = useMemo(() => {
+    if (!selectedWord) return [];
+    const ids = selectedWord.groupIds || [];
+    return groups.filter((group) => ids.includes(group.id));
+  }, [groups, selectedWord]);
   const relatedTranslations = useMemo(() => {
     if (!selectedWord) return [];
     const normalized = selectedWord.word.toLowerCase();
     return translations.filter((t) => t.sourceWord.toLowerCase() === normalized || t.targetWord.toLowerCase() === normalized).slice(0, 6);
   }, [selectedWord, translations]);
 
-  const selectedWordGroups = useMemo(() => {
-    if (!selectedWord) {
-      return [];
-    }
-    const ids = selectedWord.groupIds || [];
-    return groups.filter((group) => ids.includes(group.id));
-  }, [groups, selectedWord]);
+  const openActionMenu = (word: Word, x: number, y: number) => {
+    const nextX = Math.max(8, Math.min(x + ACTION_MENU_GAP, window.innerWidth - ACTION_MENU_WIDTH));
+    const nextY = Math.max(8, Math.min(y + ACTION_MENU_GAP, window.innerHeight - ACTION_MENU_HEIGHT));
+    setSelectedWordId(word.id);
+    setActionMenu({ word, x: nextX, y: nextY });
+  };
 
   const handleCopyWord = async (word: Word) => {
     setActionWordId(word.id);
     try {
-      await navigator.clipboard.writeText(word.word);
+      await navigator.clipboard.writeText(`${word.word}: ${word.definition}`);
+    } finally {
+      setActionWordId(null);
+    }
+  };
+
+  const generateExamplesForWord = async (word: Word) => {
+    setActionWordId(word.id);
+    setExampleError(null);
+    try {
+      const response = await getExamples(word.word, word.language);
+      await updateWord(word.id, { examples: response.data.slice(0, 4) });
+    } catch (error) {
+      setExampleError(error instanceof Error ? error.message : "Failed to generate examples.");
     } finally {
       setActionWordId(null);
     }
@@ -487,6 +458,45 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
 
   const handleSaveEdit = async (id: string, updates: Partial<Word>) => {
     await updateWord(id, updates);
+    setEditDialogOpen(false);
+    setEditingWord(null);
+  };
+
+  const toggleWordGroup = async (word: Word, groupId: string) => {
+    await updateWord(word.id, { groupIds: toggleGroupMembership(word.groupIds || [], groupId) });
+  };
+
+  const createGroupAndAssign = async (word: Word) => {
+    const name = window.prompt("New group name");
+    if (!name || !name.trim()) return;
+    const group = await addGroup({ name: name.trim(), iconName: "Folder" });
+    const nextGroupIds = Array.from(new Set([...(word.groupIds || []), group.id]));
+    await updateWord(word.id, { groupIds: nextGroupIds });
+  };
+
+  const enterBulkMode = (wordId: string) => {
+    setBulkMode(true);
+    setSelectedWordIds((current) => (current.includes(wordId) ? current : [wordId, ...current]));
+  };
+
+  const toggleBulkWord = (wordId: string) => {
+    setSelectedWordIds((current) => (current.includes(wordId) ? current.filter((id) => id !== wordId) : [...current, wordId]));
+  };
+
+  const exitBulkMode = () => {
+    setBulkMode(false);
+    setSelectedWordIds([]);
+  };
+
+  const selectAllVisible = () => setSelectedWordIds(filteredWords.map((word) => word.id));
+
+  const requestDelete = (word: Word) => {
+    if (!showDeleteConfirmation) {
+      void handleDeleteWord(word, false);
+      return;
+    }
+    setDeletingWord(word);
+    setDeleteDialogOpen(true);
   };
 
   const handleDeleteWord = async (word: Word, disableConfirmation: boolean) => {
@@ -499,63 +509,100 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
       }
 
       await deleteWord(word.id);
-      if (selectedWordId === word.id) {
-        setSelectedWordId(null);
-      }
+      if (selectedWordId === word.id) setSelectedWordId(null);
     } finally {
       setActionWordId(null);
-      setDeleteDialogOpen(false);
       setDeletingWord(null);
+      setDeleteDialogOpen(false);
     }
   };
 
-  const requestDelete = (word: Word) => {
+  const requestBulkDelete = () => {
+    if (selectedWordIds.length === 0) return;
     if (!showDeleteConfirmation) {
-      void handleDeleteWord(word, false);
+      void handleBulkDelete(false);
       return;
     }
-
-    setDeletingWord(word);
+    setBulkDeletePending(true);
     setDeleteDialogOpen(true);
   };
 
-  const generateExamplesForWord = async (word: Word) => {
-    setActionWordId(word.id);
-    setExampleError(null);
-
+  const handleBulkDelete = async (disableConfirmation: boolean) => {
+    if (selectedWordIds.length === 0) return;
     try {
-      const response = await getExamples(word.word, word.language);
-      if (!response.success || response.data.length === 0) {
-        setExampleError(response.error ?? "Could not generate examples right now.");
-        return;
+      if (disableConfirmation) {
+        await updateSettings({ showDeleteConfirmation: false });
+        setShowDeleteConfirmation(false);
+        window.dispatchEvent(new CustomEvent("lexi:settings-updated", { detail: { showDeleteConfirmation: false } }));
       }
 
-      const nextExamples = Array.from(new Set(response.data.map((item) => item.trim()).filter(Boolean))).slice(0, 5);
-      await updateWord(word.id, { examples: nextExamples });
+      await Promise.all(selectedWordIds.map(async (id) => deleteWord(id)));
+      setSelectedWordId(null);
+      exitBulkMode();
     } finally {
-      setActionWordId(null);
+      setBulkDeletePending(false);
+      setDeleteDialogOpen(false);
     }
   };
 
-  const toggleWordGroup = async (word: Word, groupId: string) => {
-    const nextGroupIds = toggleGroupMembership(word.groupIds || [], groupId);
-    await updateWord(word.id, { groupIds: nextGroupIds });
+  const bulkAssignGroup = async (groupId: string) => {
+    const selectedMap = new Map(words.map((word) => [word.id, word]));
+    await Promise.all(selectedWordIds.map(async (id) => {
+      const word = selectedMap.get(id);
+      if (!word) return;
+      const next = Array.from(new Set([...(word.groupIds || []), groupId]));
+      await updateWord(id, { groupIds: next });
+    }));
   };
 
-  const createGroupAndAssign = async (word: Word) => {
-    const name = window.prompt("New group name");
-    if (!name || !name.trim()) {
-      return;
-    }
-
-    try {
-      const group = await addGroup({ name: name.trim() });
-      const nextGroupIds = Array.from(new Set([...(word.groupIds || []), group.id]));
-      await updateWord(word.id, { groupIds: nextGroupIds });
-    } catch (error) {
-      setExampleError(error instanceof Error ? error.message : "Could not create group.");
-    }
+  const bulkClearGroups = async () => {
+    await Promise.all(selectedWordIds.map(async (id) => updateWord(id, { groupIds: [] })));
   };
+
+  const bulkSetStatus = async (status: ReviewStatus) => {
+    const selectedMap = new Map(words.map((word) => [word.id, word]));
+    await Promise.all(selectedWordIds.map(async (id) => {
+      const word = selectedMap.get(id);
+      if (!word) return;
+      await updateWord(id, { tags: setReviewStatus(word.tags, status) });
+    }));
+  };
+
+  const addDailySuggestion = async (suggestion: DailySuggestion) => {
+    const appliedKey = `lexi:inbox:daily-applied:${todayKey}:${suggestionScopeKey}`;
+    await addWord({
+      word: suggestion.word,
+      definition: suggestion.definition,
+      language: suggestion.language,
+      tags: suggestion.tags,
+      aiGenerated: false,
+      groupIds: groupFilterId !== "none" ? [groupFilterId] : [],
+      examples: [],
+    });
+    const nextApplied = [...new Set([...appliedDailyWords, suggestion.word])];
+    setAppliedDailyWords(nextApplied);
+    window.localStorage.setItem(appliedKey, JSON.stringify(nextApplied));
+    setDailySuggestions((current) => current.filter((entry) => entry.word !== suggestion.word));
+  };
+
+  const dismissDailySuggestion = (suggestion: DailySuggestion) => {
+    const dismissedKey = `lexi:inbox:daily-dismissed:${todayKey}:${suggestionScopeKey}`;
+    const dismissed = new Set(parseJsonArray(window.localStorage.getItem(dismissedKey)));
+    dismissed.add(suggestion.word);
+    window.localStorage.setItem(dismissedKey, JSON.stringify(Array.from(dismissed)));
+    setDailySuggestions((current) => current.filter((entry) => entry.word !== suggestion.word));
+    setDismissingSuggestionWord(null);
+  };
+
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (statusFilter !== (mode === "inbox" ? "New" : "All")) count += 1;
+    if (languageFilter !== "All") count += 1;
+    if (sourceFilter !== "All") count += 1;
+    if (selectedTags.length > 0) count += 1;
+    if (groupFilterId !== "none") count += 1;
+    return count;
+  }, [groupFilterId, languageFilter, mode, selectedTags.length, sourceFilter, statusFilter]);
 
   const clearAllFilters = () => {
     setQuery("");
@@ -567,279 +614,255 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
     setGroupMode("none");
   };
 
-  const addDailySuggestion = async (suggestion: DailySuggestion) => {
-    const normalizedWord = suggestion.word.trim().toLowerCase();
-    if (words.some((entry) => entry.word.trim().toLowerCase() === normalizedWord)) {
-      return;
-    }
-
-    await addWord({
-      word: suggestion.word,
-      definition: suggestion.definition,
-      language: suggestion.language,
-      tags: Array.from(new Set([...suggestion.tags, "new", "daily-suggestion"])),
-      aiGenerated: false,
-      examples: [],
-      groupIds: groupFilterId !== "none" ? [groupFilterId] : [],
-    });
-    const nextApplied = Array.from(new Set([...appliedDailyWords, suggestion.word]));
-    setAppliedDailyWords(nextApplied);
-    window.localStorage.setItem(`lexi:inbox:daily-applied:${todayKey}:${suggestionScopeKey}`, JSON.stringify(nextApplied));
-    setDailySuggestions((prev) => prev.filter((entry) => entry.word !== suggestion.word));
+  const contentGridStyle = {
+    gridTemplateColumns: `repeat(auto-fill, minmax(${cardMinWidthFor(viewMode, zoom)}px, 1fr))`,
   };
 
-  const dismissDailySuggestion = (suggestion: DailySuggestion) => {
-    const key = `lexi:inbox:daily-dismissed:${todayKey}:${suggestionScopeKey}`;
-    const existing = new Set(parseJsonArray(window.localStorage.getItem(key)).map((item) => item.toLowerCase()));
-    existing.add(suggestion.word.toLowerCase());
-    window.localStorage.setItem(key, JSON.stringify(Array.from(existing)));
-    setDailySuggestions((prev) => prev.filter((entry) => entry.word !== suggestion.word));
-    setDismissingSuggestionWord(null);
-  };
+  const renderListRow = (word: Word) => (
+      <div
+      key={word.id}
+      className={cn(
+        "word-row",
+        bulkMode ? "grid-cols-[28px_minmax(0,1.35fr)_108px_26px]" : "grid-cols-[minmax(0,1.35fr)_108px_26px]",
+        selectedWordId === word.id && "word-row-active",
+      )}
+      role="button"
+      tabIndex={0}
+      onClick={() => {
+        if (bulkMode) {
+          toggleBulkWord(word.id);
+          return;
+        }
+        setSelectedWordId(word.id);
+      }}
+      onContextMenu={(event) => {
+        event.preventDefault();
+        openActionMenu(word, event.clientX, event.clientY);
+      }}
+    >
+      {bulkMode ? (
+        <div className="flex items-center">
+          <input type="checkbox" checked={selectedWordIds.includes(word.id)} onChange={() => toggleBulkWord(word.id)} onClick={(event) => event.stopPropagation()} className="size-4 accent-white" />
+        </div>
+      ) : null}
+      <div className="min-w-0">
+        <p className="serif-display truncate text-[1.6rem] leading-[0.95]">{word.word}</p>
+        <div className="mt-1.5 flex flex-wrap gap-1.5">
+          <span className="lexi-chip">{word.language}</span>
+        </div>
+        <p className="word-sub mt-1.5 text-sm">{truncateText(word.definition, 95)}</p>
+      </div>
+      <span className={cn("status-pill", getReviewStatus(word) === "Mastered" ? "status-mastered" : getReviewStatus(word) === "Learning" ? "status-learning" : "status-new")}>{getReviewStatus(word)}</span>
+      <button type="button" className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-white/10" onClick={(event) => { event.stopPropagation(); openActionMenu(word, event.clientX, event.clientY); }}>
+        <MoreHorizontal className="size-4" />
+      </button>
+    </div>
+  );
+
+  const renderCard = (word: Word) => (
+    <article
+      key={word.id}
+      className={cn("lexi-browser-card", viewMode === "tiles" && "tile", selectedWordId === word.id && "active")}
+      role="button"
+      tabIndex={0}
+      onClick={() => {
+        if (bulkMode) {
+          toggleBulkWord(word.id);
+          return;
+        }
+        setSelectedWordId(word.id);
+      }}
+      onContextMenu={(event) => {
+        event.preventDefault();
+        openActionMenu(word, event.clientX, event.clientY);
+      }}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="serif-display text-[2rem] leading-[0.92]">{word.word}</p>
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            <span className="lexi-chip">{word.language}</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {bulkMode ? <input type="checkbox" checked={selectedWordIds.includes(word.id)} onChange={() => toggleBulkWord(word.id)} onClick={(event) => event.stopPropagation()} className="size-4 accent-white" /> : null}
+          <button type="button" className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-white/10" onClick={(event) => { event.stopPropagation(); openActionMenu(word, event.clientX, event.clientY); }}>
+            <MoreHorizontal className="size-4" />
+          </button>
+        </div>
+      </div>
+      <p className={cn("word-sub mt-3", viewMode === "tiles" ? "line-clamp-5" : "line-clamp-4")}>{word.definition}</p>
+      <div className="mt-auto flex items-end justify-between gap-2 pt-4">
+        <div className="flex flex-wrap gap-2">
+          {(word.groupIds || []).slice(0, 2).map((groupId) => {
+            const group = groups.find((entry) => entry.id === groupId);
+            return group ? <GroupBadge key={group.id} group={group} className="max-w-full" /> : null;
+          })}
+        </div>
+        <span className={cn("status-pill ml-auto", getReviewStatus(word) === "Mastered" ? "status-mastered" : getReviewStatus(word) === "Learning" ? "status-learning" : "status-new")}>{getReviewStatus(word)}</span>
+      </div>
+    </article>
+  );
 
   return (
     <>
       <div className="grid h-full grid-cols-1 gap-3 xl:grid-cols-[1.18fr_1fr]">
         <section className="frost-panel flex min-h-0 flex-col overflow-hidden animate-slide-in-up">
           <div className="flex flex-wrap items-center gap-2 border-b border-white/10 p-3">
-            <div className="search-field-wrap min-w-[220px] flex-[1_1_340px]">
+            <div className="search-field-wrap min-w-[170px] flex-[1_1_250px] sm:min-w-[220px] sm:flex-[1_1_340px]">
               <Search className="search-field-icon" />
-              <input
-                ref={searchInputRef}
-                type="search"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                className="frost-input search-field-input"
-                placeholder={mode === "inbox" ? "Search incoming words" : "Search your vocabulary"}
-              />
+              <input ref={searchInputRef} value={query} onChange={(event) => setQuery(event.target.value)} className="frost-input search-field-input" placeholder={mode === "inbox" ? "Search inbox words" : "Search words"} />
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              disabled={activeFilterCount === 0}
-              onClick={clearAllFilters}
-              className="h-[2.36rem] w-[2.36rem] border-white/15 bg-white/5 text-muted-foreground disabled:opacity-45"
-              title={activeFilterCount > 0 ? "Clear all filters" : "No active filters"}
-            >
-              <Check className="size-4" />
-            </Button>
+
+            <select value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)} className="frost-input toolbar-select max-[520px]:max-w-none max-[520px]:flex-1">
+              {SORT_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            </select>
+
+            <div className="flex items-center rounded-lg border border-white/12 bg-white/6 p-1">
+              {VIEW_OPTIONS.map((option) => {
+                const Icon = option.icon;
+                return (
+                  <button key={option.value} type="button" className={cn("inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm", viewMode === option.value && "bg-white/14")} onClick={() => void setViewMode(option.value)}>
+                    <Icon className="size-4" />
+                    <span className="hidden sm:inline">{option.label}</span>
+                  </button>
+                );
+              })}
+            </div>
 
             <DropdownMenu open={filtersOpen} onOpenChange={setFiltersOpen}>
               <DropdownMenuTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="relative h-[2.36rem] w-[2.36rem] border-white/15 bg-white/5 text-muted-foreground"
-                  title="Filters"
-                >
-                  <SlidersHorizontal className="size-4" />
-                  {activeFilterCount > 0 ? (
-                    <span className="absolute -right-1 -top-1 inline-flex size-4 items-center justify-center rounded-full bg-white/90 text-[10px] font-semibold text-black">
-                      {activeFilterCount}
-                    </span>
-                  ) : null}
+                <Button type="button" variant="outline" className="border-white/15 bg-white/6 hover:bg-white/14">
+                  <SlidersHorizontal className="mr-2 size-4" />
+                  <span className="hidden min-[520px]:inline">Filters {activeFilterCount > 0 ? `(${activeFilterCount})` : ""}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-72">
                 <DropdownMenudiv>Status</DropdownMenudiv>
                 <DropdownMenuRadioGroup value={statusFilter} onValueChange={(value) => setStatusFilter(value as StatusFilter)}>
-                  {["All", "New", "Learning", "Mastered"].map((status) => (
-                    <DropdownMenuRadioItem key={status} value={status}>{status}</DropdownMenuRadioItem>
-                  ))}
+                  {(["All", "New", "Learning", "Mastered"] as StatusFilter[]).map((status) => <DropdownMenuRadioItem key={status} value={status}>{status}</DropdownMenuRadioItem>)}
                 </DropdownMenuRadioGroup>
                 <DropdownMenuSeparator />
-
                 <DropdownMenudiv>Language</DropdownMenudiv>
                 <DropdownMenuRadioGroup value={languageFilter} onValueChange={setLanguageFilter}>
-                  {availableLanguages.map((language) => (
-                    <DropdownMenuRadioItem key={language} value={language}>{language}</DropdownMenuRadioItem>
-                  ))}
+                  {availableLanguages.map((language) => <DropdownMenuRadioItem key={language} value={language}>{language}</DropdownMenuRadioItem>)}
                 </DropdownMenuRadioGroup>
                 <DropdownMenuSeparator />
-
                 <DropdownMenudiv>Source</DropdownMenudiv>
                 <DropdownMenuRadioGroup value={sourceFilter} onValueChange={(value) => setSourceFilter(value as SourceFilter)}>
-                  {["All", "AI", "Manual"].map((source) => (
-                    <DropdownMenuRadioItem key={source} value={source}>{source}</DropdownMenuRadioItem>
-                  ))}
+                  {(["All", "AI", "Manual"] as SourceFilter[]).map((source) => <DropdownMenuRadioItem key={source} value={source}>{source}</DropdownMenuRadioItem>)}
                 </DropdownMenuRadioGroup>
-
                 {availableTags.length > 0 ? (
                   <>
                     <DropdownMenuSeparator />
                     <DropdownMenudiv>Tags</DropdownMenudiv>
-                    {availableTags.slice(0, 20).map((tag) => (
-                      <DropdownMenuCheckboxItem
-                        key={tag}
-                        checked={selectedTags.includes(tag)}
-                        onCheckedChange={() => setSelectedTags((prev) => prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag])}
-                      >
+                    {availableTags.map((tag) => (
+                      <DropdownMenuCheckboxItem key={tag} checked={selectedTags.includes(tag)} onCheckedChange={() => setSelectedTags((current) => current.includes(tag) ? current.filter((entry) => entry !== tag) : [...current, tag])}>
                         {tag}
                       </DropdownMenuCheckboxItem>
                     ))}
                   </>
                 ) : null}
                 <DropdownMenuSeparator />
-                <DropdownMenudiv>List Grouping</DropdownMenudiv>
+                <DropdownMenudiv>Grouping</DropdownMenudiv>
                 <DropdownMenuRadioGroup value={groupMode} onValueChange={(value) => setGroupMode(value as GroupMode)}>
                   <DropdownMenuRadioItem value="none">No Grouping</DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="status">By Status</DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="language">By Language</DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="alphabet">A-Z</DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
-
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={clearAllFilters}>
-                  Clear Filters
-                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={clearAllFilters}>Clear filters</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-
-            <select className="frost-input toolbar-select h-[2.36rem] py-0" value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)}>
-              {SORT_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.div}</option>)}
-            </select>
           </div>
 
-          <div className="table-head grid-cols-[minmax(0,1.35fr)_120px_108px_26px]">
-            <span>{mode === "inbox" ? "Captured" : "Word"}</span>
-            <span>Language</span>
-            <span>Status</span>
-            <span />
-          </div>
+          {bulkMode ? (
+            <div className="flex flex-wrap items-center gap-2 border-b border-white/10 px-3 py-2">
+              <span className="sync-pill">{selectedWordIds.length} selected</span>
+              <Button type="button" size="sm" variant="outline" className="border-white/15 bg-white/6 hover:bg-white/14" onClick={selectAllVisible}>Select visible</Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button type="button" size="sm" variant="outline" className="border-white/15 bg-white/6 hover:bg-white/14">Groups</Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56">
+                  {groups.map((group) => <DropdownMenuItem key={group.id} onSelect={() => void bulkAssignGroup(group.id)}>{group.name}</DropdownMenuItem>)}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onSelect={() => void bulkClearGroups()}>Remove from all groups</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button type="button" size="sm" variant="outline" className="border-white/15 bg-white/6 hover:bg-white/14">Status</Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-44">
+                  {(["New", "Learning", "Mastered"] as ReviewStatus[]).map((status) => (
+                    <DropdownMenuItem key={status} onSelect={() => void bulkSetStatus(status)}>Set {status}</DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Button type="button" size="sm" variant="outline" className="border-white/15 bg-white/6 hover:bg-white/14" onClick={exitBulkMode}>Exit</Button>
+              <Button type="button" size="sm" variant="destructive" onClick={requestBulkDelete}>Delete</Button>
+            </div>
+          ) : null}
 
-          <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto">
+          {viewMode === "list" ? (
+            <div className={cn("table-head", bulkMode ? "grid-cols-[28px_minmax(0,1.35fr)_108px_26px]" : "grid-cols-[minmax(0,1.35fr)_108px_26px]")}>
+              <span>Word</span>
+              <span>Status</span>
+              <span />
+            </div>
+          ) : null}
+
+          <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto" onWheel={(event) => {
+            if (!(event.ctrlKey || event.metaKey) || !canZoom) return;
+            event.preventDefault();
+            void setZoom(nextSurfaceZoomStep(zoom, event.deltaY < 0 ? "in" : "out"));
+          }}>
             {loading ? (
-              <div className="space-y-3 p-3">{[1, 2, 3, 4, 5].map((i) => <div key={i} className="h-16 rounded-lg bg-white/6" />)}</div>
+              <div className="space-y-2 p-3">{[1, 2, 3, 4].map((index) => <div key={index} className="h-16 rounded-lg bg-white/6" />)}</div>
             ) : filteredWords.length === 0 ? (
-              <div className="flex h-full min-h-[280px] flex-col items-center justify-center gap-3 p-5 text-center">
-                <p className="serif-display text-2xl">No words found</p>
-                <Button type="button" variant="outline" onClick={() => setAddDialogOpen(true)} className="border-white/18 bg-white/6 text-foreground hover:bg-white/14">
-                  Add Word
-                </Button>
+              <div className="flex h-full min-h-[260px] flex-col items-center justify-center text-center">
+                <p className="section-title">No entries</p>
+                <p className="subtle-caption mt-2 max-w-sm px-4">{mode === "inbox" ? "No inbox entries match the current filters." : "Capture words first to build your collection."}</p>
               </div>
-            ) : (
+            ) : viewMode === "list" ? (
               groupedWords.map((group) => (
                 <div key={group.key}>
-                  {groupMode !== "none" ? (
-                    <div className="sticky top-0 z-10 flex items-center justify-between border-y border-white/8 bg-black/20 px-3 py-1.5 text-xs text-muted-foreground backdrop-blur-md">
-                      <span>{group.key}</span>
-                      <span>{group.items.length}</span>
-                    </div>
-                  ) : null}
-
-                  {group.items.map((word) => {
-                    const status = getReviewStatus(word);
-                    return (
-                      <div
-                        key={word.id}
-                        className={cn("word-row grid-cols-[minmax(0,1.35fr)_120px_108px_26px]", selectedWordId === word.id && "word-row-active")}
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => {
-                          setSelectedWordId(word.id);
-                          setExampleError(null);
-                        }}
-                        onContextMenu={(event) => {
-                          event.preventDefault();
-                          setSelectedWordId(word.id);
-                          setContextMenu({
-                            word,
-                            x: event.clientX,
-                            y: event.clientY,
-                          });
-                        }}
-                      >
-                        <div className="min-w-0">
-                          <p className="serif-display truncate text-[1.8rem] leading-[0.92]">{word.word}</p>
-                          <p className="word-sub mt-2 truncate text-sm">{truncateText(word.definition, 88)}</p>
-                        </div>
-
-                        <span className="truncate text-sm text-muted-foreground">{word.language}</span>
-                        <span className={cn("status-pill", status === "Mastered" ? "status-mastered" : status === "Learning" ? "status-learning" : "status-new")}>{status}</span>
-
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button type="button" className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-white/10" onClick={(event) => event.stopPropagation()}>
-                              <MoreHorizontal className="size-4" />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-56" onClick={(event) => event.stopPropagation()}>
-                            <DropdownMenuItem onSelect={() => { setEditingWord(word); setEditDialogOpen(true); }}>
-                              <Pencil className="size-4" />
-                              Edit word
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => void handleCopyWord(word)} disabled={actionWordId === word.id}>
-                              <Copy className="size-4" />
-                              Copy word
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-
-                            <DropdownMenuSub>
-                              <DropdownMenuSubTrigger>
-                                <FolderPlus className="size-4" />
-                                Groups
-                              </DropdownMenuSubTrigger>
-                              <DropdownMenuSubContent className="w-56">
-                                {groups.length === 0 ? (
-                                  <DropdownMenuItem onSelect={() => void createGroupAndAssign(word)}>
-                                    Create first group
-                                  </DropdownMenuItem>
-                                ) : (
-                                  groups.map((groupEntry) => {
-                                    const assigned = (word.groupIds || []).includes(groupEntry.id);
-                                    return (
-                                      <DropdownMenuItem key={groupEntry.id} onSelect={() => void toggleWordGroup(word, groupEntry.id)}>
-                                        <Check className={cn("size-4", !assigned && "opacity-0")} />
-                                        {groupEntry.name}
-                                      </DropdownMenuItem>
-                                    );
-                                  })
-                                )}
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onSelect={() => void createGroupAndAssign(word)}>
-                                  Create group and add
-                                </DropdownMenuItem>
-                                {(word.groupIds || []).length > 0 ? (
-                                  <DropdownMenuItem onSelect={() => void updateWord(word.id, { groupIds: [] })}>
-                                    Remove from all groups
-                                  </DropdownMenuItem>
-                                ) : null}
-                              </DropdownMenuSubContent>
-                            </DropdownMenuSub>
-
-                            <DropdownMenuSeparator />
-                            {(["New", "Learning", "Mastered"] as ReviewStatus[]).map((value) => (
-                              <DropdownMenuItem key={value} onSelect={() => void updateWord(word.id, { tags: setReviewStatus(word.tags, value) })}>
-                                Set {value}
-                              </DropdownMenuItem>
-                            ))}
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onSelect={() => void generateExamplesForWord(word)}>
-                              <RefreshCcw className="size-4" />
-                              Generate AI examples
-                            </DropdownMenuItem>
-                            <DropdownMenuItem variant="destructive" onSelect={() => requestDelete(word)}>
-                              <Trash2 className="size-4" />
-                              Delete word
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    );
-                  })}
+                  {groupMode !== "none" ? <div className="sticky top-0 z-10 flex items-center justify-between border-y border-white/8 bg-black/20 px-3 py-1.5 text-xs text-muted-foreground backdrop-blur-md"><span>{group.key}</span><span>{group.items.length}</span></div> : null}
+                  {group.items.map(renderListRow)}
                 </div>
               ))
+            ) : (
+              <div className="space-y-4 p-3">
+                {groupedWords.map((group) => (
+                  <div key={group.key} className="space-y-3">
+                    {groupMode !== "none" ? <div className="flex items-center justify-between px-1"><p className="font-medium">{group.key}</p><span className="subtle-caption">{group.items.length}</span></div> : null}
+                    <div className="grid gap-3" style={contentGridStyle}>{group.items.map(renderCard)}</div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
 
-          <div className="flex items-center justify-between border-t border-white/10 p-2">
+          <div className="flex items-center justify-between gap-3 border-t border-white/10 p-2">
             <span className="sync-pill"><CircleDot className="size-3" />Synced, just now</span>
-            <span className="subtle-caption">Shortcuts: `J/K` move, `1-3` status</span>
+            {canZoom ? (
+              <div className="flex items-center gap-2">
+                <ZoomIn className="size-4 text-muted-foreground" />
+                <button type="button" className="inline-flex size-8 items-center justify-center rounded-md border border-white/12 bg-white/5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground" onClick={() => void stepZoom("out")} aria-label="Zoom out">
+                  <Minus className="size-4" />
+                </button>
+                <span className="sync-pill min-w-[4.25rem] justify-center">{zoom}%</span>
+                <button type="button" className="inline-flex size-8 items-center justify-center rounded-md border border-white/12 bg-white/5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground" onClick={() => void stepZoom("in")} aria-label="Zoom in">
+                  <Plus className="size-4" />
+                </button>
+              </div>
+            ) : (
+              <span className="subtle-caption">Shortcuts: `J/K` move, `1-3` status</span>
+            )}
           </div>
         </section>
-
         <section className="frost-panel flex min-h-0 flex-col overflow-hidden animate-slide-in-up">
           <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-5 md:p-6">
             {selectedWord ? (
@@ -853,39 +876,24 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
                 </div>
 
                 <div className="ghost-divider" />
-
                 <div className="space-y-4">
                   <p className="detail-text">{selectedWord.definition}</p>
-
                   <div className="space-y-3 p-1">
                     <div className="flex items-center justify-between">
                       <p className="font-medium">Examples</p>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        disabled={actionWordId === selectedWord.id}
-                        className="border-white/15 bg-white/6 hover:bg-white/14"
-                        onClick={() => void generateExamplesForWord(selectedWord)}
-                      >
+                      <Button type="button" variant="outline" size="sm" disabled={actionWordId === selectedWord.id} className="border-white/15 bg-white/6 hover:bg-white/14" onClick={() => void generateExamplesForWord(selectedWord)}>
                         <RefreshCcw className="mr-1.5 size-3.5" />
                         Generate
                       </Button>
                     </div>
-
                     {selectedWord.examples && selectedWord.examples.length > 0 ? (
                       <div className="space-y-1.5">
-                        {selectedWord.examples.map((example, index) => (
-                          <p key={`${example}-${index}`} className="word-sub text-base leading-relaxed text-muted-foreground/95">
-                            {example}
-                          </p>
-                        ))}
+                        {selectedWord.examples.map((example, index) => <p key={`${example}-${index}`} className="word-sub text-base leading-relaxed text-muted-foreground/95">{example}</p>)}
                       </div>
                     ) : (
                       <p className="subtle-caption">No examples yet. Generate examples for this word.</p>
                     )}
                   </div>
-
                   <p className="detail-note">Added {formatDate(selectedWord.dateAdded)} from {selectedWord.language} collection.</p>
                   {exampleError ? <p className="subtle-caption text-destructive">{exampleError}</p> : null}
                 </div>
@@ -898,20 +906,10 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
                         <h3 className="serif-display text-4xl">Inbox Suggestions</h3>
                         <div className="flex items-center gap-2">
                           <span className="subtle-caption">{todayKey}</span>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="border-white/14 bg-white/7 hover:bg-white/14"
-                            onClick={() => setSuggestionsRevision((prev) => prev + 1)}
-                          >
-                            New Suggestions
-                          </Button>
+                          <Button type="button" variant="outline" size="sm" className="border-white/14 bg-white/7 hover:bg-white/14" onClick={() => setSuggestionsRevision((prev) => prev + 1)}>New Suggestions</Button>
                         </div>
                       </div>
-                      <p className="subtle-caption">
-                        Daily suggestions based on your current vocabulary trends.
-                      </p>
+                      <p className="subtle-caption">Daily suggestions based on your current vocabulary trends.</p>
                       {dailySuggestions.length === 0 ? (
                         <div className="frost-panel-soft p-3 text-sm text-muted-foreground">
                           No remaining suggestions for today.
@@ -927,25 +925,8 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
                                   <p className="subtle-caption">{suggestion.language}</p>
                                 </div>
                                 <div className="flex items-center gap-1.5">
-                                  <Button
-                                    type="button"
-                                    size="sm"
-                                    variant="outline"
-                                    className="border-white/14 bg-white/7 hover:bg-white/14"
-                                    onClick={() => void addDailySuggestion(suggestion)}
-                                  >
-                                    Add to Words
-                                  </Button>
-                                  <Button
-                                    type="button"
-                                    size="sm"
-                                    variant="ghost"
-                                    className="text-muted-foreground hover:text-foreground"
-                                    onClick={() => {
-                                      setDismissingSuggestionWord(suggestion.word);
-                                      dismissDailySuggestion(suggestion);
-                                    }}
-                                  >
+                                  <Button type="button" size="sm" variant="outline" className="border-white/14 bg-white/7 hover:bg-white/14" onClick={() => void addDailySuggestion(suggestion)}>Add to Words</Button>
+                                  <Button type="button" size="sm" variant="ghost" className="text-muted-foreground hover:text-foreground" onClick={() => { setDismissingSuggestionWord(suggestion.word); dismissDailySuggestion(suggestion); }}>
                                     {dismissingSuggestionWord === suggestion.word ? "..." : "Dismiss"}
                                   </Button>
                                 </div>
@@ -956,15 +937,6 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
                               </div>
                             </div>
                           ))}
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="border-white/14 bg-white/7 hover:bg-white/14"
-                            onClick={() => void Promise.all(dailySuggestions.map(async (suggestion) => addDailySuggestion(suggestion)))}
-                          >
-                            Add All Suggestions
-                          </Button>
                         </div>
                       )}
                     </div>
@@ -972,30 +944,24 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
                 ) : null}
 
                 <div className="ghost-divider" />
-
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <h3 className="serif-display text-4xl">Groups</h3>
                     <FolderPlus className="size-4 text-muted-foreground" />
                   </div>
-
                   {selectedWordGroups.length === 0 ? (
-                    <div className="frost-panel-soft p-3 text-sm text-muted-foreground">No group assigned yet. Right-click the word to manage groups.</div>
+                    <div className="frost-panel-soft p-3 text-sm text-muted-foreground">No group assigned yet. Open the action menu to manage groups.</div>
                   ) : (
-                    <div className="flex flex-wrap gap-1.5">
-                      {selectedWordGroups.map((group) => <span key={group.id} className="lexi-chip">{group.name}</span>)}
-                    </div>
+                    <div className="flex flex-wrap gap-1.5">{selectedWordGroups.map((group) => <GroupBadge key={group.id} group={group} />)}</div>
                   )}
                 </div>
 
                 <div className="ghost-divider" />
-
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <h3 className="serif-display text-4xl">Translations</h3>
                     <Languages className="size-4 text-muted-foreground" />
                   </div>
-
                   {relatedTranslations.length === 0 ? (
                     <div className="frost-panel-soft p-3 text-sm text-muted-foreground">No direct translation pair yet.</div>
                   ) : (
@@ -1015,57 +981,8 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
               </div>
             ) : (
               <div className="flex h-full min-h-[380px] flex-col items-center justify-center text-center">
-                {mode === "inbox" ? (
-                  <div className="w-full max-w-xl space-y-3 text-left">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="section-title text-center">Inbox Suggestions</p>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="border-white/14 bg-white/7 hover:bg-white/14"
-                        onClick={() => setSuggestionsRevision((prev) => prev + 1)}
-                      >
-                        New Suggestions
-                      </Button>
-                    </div>
-                    <p className="subtle-caption text-center">Daily suggestions based on your current vocabulary history.</p>
-                    {dailySuggestions.length === 0 ? (
-                      <div className="frost-panel-soft p-3 text-sm text-muted-foreground">
-                        No remaining suggestions for today.
-                        {appliedDailyWords.length > 0 ? ` Added today: ${appliedDailyWords.join(", ")}.` : ""}
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        {dailySuggestions.map((suggestion) => (
-                          <div key={suggestion.word} className="frost-panel-soft space-y-2 p-3">
-                            <div className="flex items-start justify-between gap-2">
-                              <div>
-                                <p className="serif-display text-3xl leading-[0.95]">{suggestion.word}</p>
-                                <p className="subtle-caption">{suggestion.language}</p>
-                              </div>
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                className="border-white/14 bg-white/7 hover:bg-white/14"
-                                onClick={() => void addDailySuggestion(suggestion)}
-                              >
-                                Add to Words
-                              </Button>
-                            </div>
-                            <p className="word-sub">{suggestion.definition}</p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <>
-                    <p className="section-title">Choose a word</p>
-                    <p className="subtle-caption mt-2 max-w-sm">Select an entry to inspect definitions, context examples, and translation links.</p>
-                  </>
-                )}
+                <p className="section-title">{mode === "inbox" ? "Inbox" : "Choose a word"}</p>
+                <p className="subtle-caption mt-2 max-w-sm">Select an entry to inspect definitions, examples, and translation links.</p>
               </div>
             )}
           </div>
@@ -1077,121 +994,45 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
         </section>
       </div>
 
-      {contextMenu ? (
-        <div
-          className="fixed inset-0 z-[70]"
-          onClick={() => setContextMenu(null)}
-          onContextMenu={(event) => {
-            event.preventDefault();
-            setContextMenu(null);
-          }}
-        >
+      {actionMenu ? (
+        <div className="fixed inset-0 z-[70]" onClick={() => setActionMenu(null)} onContextMenu={(event) => { event.preventDefault(); setActionMenu(null); }}>
           <div
             className="absolute w-64 rounded-md border border-white/15 bg-black/85 p-1 shadow-xl backdrop-blur-md"
-            style={{
-              left: Math.max(8, Math.min(contextMenu.x, window.innerWidth - 272)),
-              top: Math.max(8, Math.min(contextMenu.y, window.innerHeight - 360)),
-            }}
+            style={{ left: actionMenu.x, top: actionMenu.y }}
             onClick={(event) => event.stopPropagation()}
           >
-            <button
-              type="button"
-              className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-white/10"
-              onClick={() => {
-                setSelectedWordId(contextMenu.word.id);
-                setContextMenu(null);
-              }}
-            >
-              <Search className="size-4" />
-              Open details
-            </button>
-
-            <button
-              type="button"
-              className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-white/10"
-              onClick={() => {
-                void generateExamplesForWord(contextMenu.word);
-                setContextMenu(null);
-              }}
-            >
-              <RefreshCcw className="size-4" />
-              Generate examples
-            </button>
-
+            <button type="button" className="menu-action" onClick={() => { setSelectedWordId(actionMenu.word.id); setActionMenu(null); }}><Search className="size-4" />Open details</button>
+            <button type="button" className="menu-action" onClick={() => { setEditingWord(actionMenu.word); setEditDialogOpen(true); setActionMenu(null); }}><Pencil className="size-4" />Edit word</button>
+            <button type="button" className="menu-action" onClick={() => { void handleCopyWord(actionMenu.word); setActionMenu(null); }}><Copy className="size-4" />Copy word</button>
+            <button type="button" className="menu-action" onClick={() => { enterBulkMode(actionMenu.word.id); setActionMenu(null); }}><Check className="size-4" />Start multi-select</button>
             <div className="my-1 h-px bg-white/10" />
-            <p className="px-2 py-1 text-xs text-muted-foreground">Status</p>
+            <p className="menu-section-label">Status</p>
             {(["New", "Learning", "Mastered"] as ReviewStatus[]).map((status) => (
-              <button
-                key={status}
-                type="button"
-                className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-white/10"
-                onClick={() => {
-                  void updateWord(contextMenu.word.id, { tags: setReviewStatus(contextMenu.word.tags, status) });
-                  setContextMenu(null);
-                }}
-              >
-                <Check className={cn("size-4", getReviewStatus(contextMenu.word) !== status && "opacity-0")} />
+              <button key={status} type="button" className="menu-action" onClick={() => { void updateWord(actionMenu.word.id, { tags: setReviewStatus(actionMenu.word.tags, status) }); setActionMenu(null); }}>
+                <Check className={cn("size-4", getReviewStatus(actionMenu.word) !== status && "opacity-0")} />
                 {status}
               </button>
             ))}
-
             <div className="my-1 h-px bg-white/10" />
-            <p className="px-2 py-1 text-xs text-muted-foreground">Groups</p>
+            <p className="menu-section-label">Groups</p>
             {groups.length === 0 ? (
-              <button
-                type="button"
-                className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-white/10"
-                onClick={() => {
-                  void createGroupAndAssign(contextMenu.word);
-                  setContextMenu(null);
-                }}
-              >
-                <FolderPlus className="size-4" />
-                Create first group
-              </button>
+              <button type="button" className="menu-action" onClick={() => { void createGroupAndAssign(actionMenu.word); setActionMenu(null); }}><FolderPlus className="size-4" />Create first group</button>
             ) : (
               groups.map((group) => {
-                const assigned = (contextMenu.word.groupIds || []).includes(group.id);
+                const assigned = (actionMenu.word.groupIds || []).includes(group.id);
                 return (
-                  <button
-                    key={group.id}
-                    type="button"
-                    className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-white/10"
-                    onClick={() => {
-                      void toggleWordGroup(contextMenu.word, group.id);
-                      setContextMenu(null);
-                    }}
-                  >
+                  <button key={group.id} type="button" className="menu-action" onClick={() => { void toggleWordGroup(actionMenu.word, group.id); setActionMenu(null); }}>
                     <Check className={cn("size-4", !assigned && "opacity-0")} />
-                    {group.name}
+                    <GroupBadge group={group} />
                   </button>
                 );
               })
             )}
-            <button
-              type="button"
-              className="mt-1 flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-white/10"
-              onClick={() => {
-                void createGroupAndAssign(contextMenu.word);
-                setContextMenu(null);
-              }}
-            >
-              <FolderPlus className="size-4" />
-              Create group and add
-            </button>
-
+            <button type="button" className="menu-action" onClick={() => { void createGroupAndAssign(actionMenu.word); setActionMenu(null); }}><FolderPlus className="size-4" />Create group and add</button>
+            {(actionMenu.word.groupIds || []).length > 0 ? <button type="button" className="menu-action" onClick={() => { void updateWord(actionMenu.word.id, { groupIds: [] }); setActionMenu(null); }}><Trash2 className="size-4" />Remove from all groups</button> : null}
             <div className="my-1 h-px bg-white/10" />
-            <button
-              type="button"
-              className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm text-red-200 hover:bg-red-400/10"
-              onClick={() => {
-                requestDelete(contextMenu.word);
-                setContextMenu(null);
-              }}
-            >
-              <Trash2 className="size-4" />
-              Delete word
-            </button>
+            <button type="button" className="menu-action" onClick={() => { void generateExamplesForWord(actionMenu.word); setActionMenu(null); }}><RefreshCcw className="size-4" />Generate examples</button>
+            <button type="button" className="menu-action destructive" onClick={() => { requestDelete(actionMenu.word); setActionMenu(null); }}><Trash2 className="size-4" />Delete word</button>
           </div>
         </div>
       ) : null}
@@ -1200,10 +1041,14 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
       <EditWordDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} word={editingWord} onSave={handleSaveEdit} />
       <DeleteConfirmationDialog
         open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
+        onOpenChange={(open) => { setDeleteDialogOpen(open); if (!open) { setDeletingWord(null); setBulkDeletePending(false); } }}
         title="Delete Word?"
-        description={deletingWord ? `Delete "${deletingWord.word}"? This cannot be undone.` : "Delete this word?"}
+        description={bulkDeletePending ? `Delete ${selectedWordIds.length} selected words? This cannot be undone.` : deletingWord ? `Delete "${deletingWord.word}"? This cannot be undone.` : "Delete this word?"}
         onConfirm={(skipNextTime) => {
+          if (bulkDeletePending) {
+            void handleBulkDelete(skipNextTime);
+            return;
+          }
           if (deletingWord) {
             void handleDeleteWord(deletingWord, skipNextTime);
           }
