@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CircleDot, Copy, RefreshCcw, Search, Sparkles } from "lucide-react";
+import { CircleDot, Copy, Grid2x2, LayoutGrid, List, Minus, Plus, RefreshCcw, Search, Sparkles, ZoomIn } from "lucide-react";
 
 import { AddWordDialog } from "@/components/AddWordDialog";
 import { Button } from "@/components/ui/button";
+import { useSurfaceViewPreference } from "@/hooks/useSurfaceViewPreference";
+import { cardMinWidthFor, nextSurfaceZoomStep } from "@/lib/surface-view";
 import { useTranslations } from "@/hooks/useTranslations";
 import { useWords } from "@/hooks/useWords";
 import { cn } from "@/lib/utils";
+import type { ViewMode } from "@/types";
 import { getReviewStatus } from "@/utils/review";
 import { truncateText } from "@/utils/formatters";
 import {
@@ -17,23 +20,25 @@ import {
   type DefinitionSuggestion,
 } from "@/utils/suggestions";
 
+const VIEW_OPTIONS: Array<{ label: string; value: ViewMode; icon: typeof List }> = [
+  { label: "List", value: "list", icon: List },
+  { label: "Grid", value: "grid", icon: LayoutGrid },
+  { label: "Tiles", value: "tiles", icon: Grid2x2 },
+];
+
 function isTypingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) {
     return false;
   }
 
-  return (
-    target.tagName === "INPUT" ||
-    target.tagName === "TEXTAREA" ||
-    target.tagName === "SELECT" ||
-    target.isContentEditable
-  );
+  return target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT" || target.isContentEditable;
 }
 
 export default function Definitions() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { words, loading, addWord } = useWords();
   const { translations } = useTranslations();
+  const { viewMode, setViewMode, zoom, setZoom, stepZoom, canZoom } = useSurfaceViewPreference("definitions", "list", 100);
 
   const [query, setQuery] = useState("");
   const [groupFilterId, setGroupFilterId] = useState("none");
@@ -52,14 +57,8 @@ export default function Definitions() {
     return [...words]
       .filter((word) => groupFilterId === "none" || (word.groupIds || []).includes(groupFilterId))
       .filter((word) => {
-        if (!normalizedQuery) {
-          return true;
-        }
-
-        return (
-          word.word.toLowerCase().includes(normalizedQuery) ||
-          word.definition.toLowerCase().includes(normalizedQuery)
-        );
+        if (!normalizedQuery) return true;
+        return word.word.toLowerCase().includes(normalizedQuery) || word.definition.toLowerCase().includes(normalizedQuery);
       })
       .sort((a, b) => a.word.localeCompare(b.word));
   }, [groupFilterId, query, words]);
@@ -69,7 +68,6 @@ export default function Definitions() {
       setSelectedId(null);
       return;
     }
-
     if (!selectedId || !filteredWords.some((word) => word.id === selectedId)) {
       setSelectedId(filteredWords[0].id);
     }
@@ -78,22 +76,12 @@ export default function Definitions() {
   useEffect(() => {
     const onCapture = (event: Event) => {
       const customEvent = event as CustomEvent<{ path?: string }>;
-      if (customEvent.detail?.path !== "/definitions") {
-        return;
-      }
-
-      setAddDialogOpen(true);
+      if (customEvent.detail?.path === "/definitions") setAddDialogOpen(true);
     };
-
     const onSearchFocus = (event: Event) => {
       const customEvent = event as CustomEvent<{ path?: string }>;
-      if (customEvent.detail?.path !== "/definitions") {
-        return;
-      }
-
-      searchInputRef.current?.focus();
+      if (customEvent.detail?.path === "/definitions") searchInputRef.current?.focus();
     };
-
     window.addEventListener("lexi:capture", onCapture);
     window.addEventListener("lexi:focus-search", onSearchFocus);
     return () => {
@@ -105,54 +93,33 @@ export default function Definitions() {
   useEffect(() => {
     const onGroupFilterChanged = (event: Event) => {
       const customEvent = event as CustomEvent<{ groupId?: string }>;
-      if (typeof customEvent.detail?.groupId === "string") {
-        setGroupFilterId(customEvent.detail.groupId);
-      }
+      if (typeof customEvent.detail?.groupId === "string") setGroupFilterId(customEvent.detail.groupId);
     };
-
     window.addEventListener("lexi:group-filter-changed", onGroupFilterChanged);
     return () => window.removeEventListener("lexi:group-filter-changed", onGroupFilterChanged);
   }, []);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (isTypingTarget(event.target) || !selectedId) {
-        return;
-      }
-
+      if (isTypingTarget(event.target) || !selectedId) return;
       const currentIndex = filteredWords.findIndex((word) => word.id === selectedId);
-      if (currentIndex === -1) {
-        return;
-      }
-
+      if (currentIndex === -1) return;
       if (event.key.toLowerCase() === "j" || event.key === "ArrowDown") {
         event.preventDefault();
-        const next = Math.min(filteredWords.length - 1, currentIndex + 1);
-        setSelectedId(filteredWords[next].id);
-        return;
+        setSelectedId(filteredWords[Math.min(filteredWords.length - 1, currentIndex + 1)].id);
       }
-
       if (event.key.toLowerCase() === "k" || event.key === "ArrowUp") {
         event.preventDefault();
-        const next = Math.max(0, currentIndex - 1);
-        setSelectedId(filteredWords[next].id);
+        setSelectedId(filteredWords[Math.max(0, currentIndex - 1)].id);
       }
     };
-
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [filteredWords, selectedId]);
 
-  const selectedWord = useMemo(
-    () => filteredWords.find((word) => word.id === selectedId) ?? null,
-    [filteredWords, selectedId],
-  );
-
+  const selectedWord = useMemo(() => filteredWords.find((word) => word.id === selectedId) ?? null, [filteredWords, selectedId]);
   const selectedExample = useMemo(() => {
-    if (!selectedWord) {
-      return "";
-    }
-
+    if (!selectedWord) return "";
     if (selectedWord.examples && selectedWord.examples.length > 0) {
       return selectedWord.examples[exampleVersion % selectedWord.examples.length];
     }
@@ -160,10 +127,7 @@ export default function Definitions() {
   }, [exampleVersion, selectedWord]);
 
   const copyDefinition = async () => {
-    if (!selectedWord) {
-      return;
-    }
-
+    if (!selectedWord) return;
     await navigator.clipboard.writeText(`${selectedWord.word}: ${selectedWord.definition}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
@@ -181,49 +145,32 @@ export default function Definitions() {
       languageWeights.set(language, (languageWeights.get(language) || 0) + weight);
     };
 
-    for (const word of words) {
-      addLanguageWeight(word.language, 1);
-    }
+    for (const word of words) addLanguageWeight(word.language, 1);
     for (const translation of translations) {
       addLanguageWeight(translation.sourceLanguage, 1);
       addLanguageWeight(translation.targetLanguage, 1);
     }
-    for (const word of scopedWords) {
-      addLanguageWeight(word.language, 3);
-    }
+    for (const word of scopedWords) addLanguageWeight(word.language, 3);
     for (const translation of scopedTranslations) {
       addLanguageWeight(translation.sourceLanguage, 3);
       addLanguageWeight(translation.targetLanguage, 3);
     }
 
     const knownLanguages = new Set(languageWeights.keys());
-    if (knownLanguages.size === 0) {
-      knownLanguages.add("English");
-    }
+    if (knownLanguages.size === 0) knownLanguages.add("English");
 
     const dismissed = new Set(parseJsonArray(window.localStorage.getItem(dismissedKey)));
     const persisted = parseJsonArray(window.localStorage.getItem(generatedKey));
 
     if (persisted.length > 0) {
       const persistedSet = new Set(persisted);
-      const nextPersisted = DEFINITION_SUGGESTION_BANK.filter((entry) => {
-        if (!persistedSet.has(entry.id)) return false;
-        if (dismissed.has(entry.id)) return false;
-        if (!knownLanguages.has(entry.language)) return false;
-        return !existingWordSet.has(wordFingerprint({ word: entry.word, language: entry.language }));
-      });
-      setDefinitionSuggestions(nextPersisted);
+      setDefinitionSuggestions(DEFINITION_SUGGESTION_BANK.filter((entry) => persistedSet.has(entry.id) && !dismissed.has(entry.id) && knownLanguages.has(entry.language) && !existingWordSet.has(wordFingerprint({ word: entry.word, language: entry.language }))));
       return;
     }
 
     const nextFresh = shuffleArray(
-      DEFINITION_SUGGESTION_BANK.filter((entry) => {
-        if (dismissed.has(entry.id)) return false;
-        if (!knownLanguages.has(entry.language)) return false;
-        return !existingWordSet.has(wordFingerprint({ word: entry.word, language: entry.language }));
-      }),
+      DEFINITION_SUGGESTION_BANK.filter((entry) => !dismissed.has(entry.id) && knownLanguages.has(entry.language) && !existingWordSet.has(wordFingerprint({ word: entry.word, language: entry.language }))),
     ).slice(0, 4);
-
     setDefinitionSuggestions(nextFresh);
     window.localStorage.setItem(generatedKey, JSON.stringify(nextFresh.map((entry) => entry.id)));
   }, [groupFilterId, suggestionScopeKey, todayKey, translations, words]);
@@ -253,208 +200,104 @@ export default function Definitions() {
     }
   };
 
+  const contentGridStyle = {
+    gridTemplateColumns: `repeat(auto-fill, minmax(${cardMinWidthFor(viewMode, zoom)}px, 1fr))`,
+  };
+
   return (
     <>
       <div className="grid h-full grid-cols-1 gap-3 xl:grid-cols-[1.04fr_1fr]">
-      <section className="frost-panel flex min-h-0 flex-col overflow-hidden animate-slide-in-up">
-        <div className="border-b border-white/10 p-3">
-          <div className="search-field-wrap">
-            <Search className="search-field-icon" />
-            <input
-              ref={searchInputRef}
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              className="frost-input search-field-input"
-              placeholder="Search definitions"
-            />
+        <section className="frost-panel flex min-h-0 flex-col overflow-hidden animate-slide-in-up">
+          <div className="flex flex-wrap items-center gap-2 border-b border-white/10 p-3">
+            <div className="search-field-wrap min-w-[170px] flex-[1_1_250px] sm:min-w-[220px] sm:flex-[1_1_340px]">
+              <Search className="search-field-icon" />
+              <input ref={searchInputRef} value={query} onChange={(event) => setQuery(event.target.value)} className="frost-input search-field-input" placeholder="Search definitions" />
+            </div>
+            <div className="flex items-center rounded-lg border border-white/12 bg-white/6 p-1">
+              {VIEW_OPTIONS.map((option) => {
+                const Icon = option.icon;
+                return <button key={option.value} type="button" className={cn("inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm", viewMode === option.value && "bg-white/14")} onClick={() => void setViewMode(option.value)}><Icon className="size-4" /><span className="hidden sm:inline">{option.label}</span></button>;
+              })}
+            </div>
           </div>
-        </div>
 
-        <div className="table-head grid-cols-[minmax(0,1fr)_88px]">
-          <span>Definition Entry</span>
-          <span>Status</span>
-        </div>
+          {viewMode === "list" ? <div className="table-head grid-cols-[minmax(0,1fr)_88px]"><span>Definition Entry</span><span>Status</span></div> : null}
 
-        <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto">
-          {loading ? (
-            <div className="space-y-2 p-3">
-              {[1, 2, 3, 4].map((index) => (
-                <div key={index} className="h-16 rounded-lg bg-white/6" />
-              ))}
-            </div>
-          ) : filteredWords.length === 0 ? (
-            <div className="flex h-full min-h-[260px] flex-col items-center justify-center text-center">
-              <p className="section-title">No entries</p>
-              <p className="subtle-caption mt-2 max-w-sm px-4">
-                Add words first to build your definitions handbook.
-              </p>
-            </div>
-          ) : (
-            filteredWords.map((word) => {
-              const status = getReviewStatus(word);
-
-              return (
-                <div
-                  key={word.id}
-                  className={cn(
-                    "word-row grid-cols-[minmax(0,1fr)_88px]",
-                    selectedId === word.id && "word-row-active",
-                  )}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => {
-                    setSelectedId(word.id);
-                    setExampleVersion(0);
-                  }}
-                >
-                  <div className="min-w-0">
-                    <p className="serif-display truncate text-[1.6rem] leading-[0.95]">{word.word}</p>
-                    <p className="word-sub mt-1.5 text-sm">{truncateText(word.definition, 95)}</p>
+          <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto" onWheel={(event) => { if (!(event.ctrlKey || event.metaKey) || !canZoom) return; event.preventDefault(); void setZoom(nextSurfaceZoomStep(zoom, event.deltaY < 0 ? "in" : "out")); }}>
+            {loading ? (
+              <div className="space-y-2 p-3">{[1, 2, 3, 4].map((index) => <div key={index} className="h-16 rounded-lg bg-white/6" />)}</div>
+            ) : filteredWords.length === 0 ? (
+              <div className="flex h-full min-h-[260px] flex-col items-center justify-center text-center"><p className="section-title">No entries</p><p className="subtle-caption mt-2 max-w-sm px-4">Add words first to build your definitions handbook.</p></div>
+            ) : viewMode === "list" ? (
+              filteredWords.map((word) => {
+                const status = getReviewStatus(word);
+                return (
+                  <div key={word.id} className={cn("word-row grid-cols-[minmax(0,1fr)_88px]", selectedId === word.id && "word-row-active")} role="button" tabIndex={0} onClick={() => { setSelectedId(word.id); setExampleVersion(0); }}>
+                    <div className="min-w-0"><p className="serif-display truncate text-[1.6rem] leading-[0.95]">{word.word}</p><div className="mt-1.5 flex flex-wrap gap-1.5"><span className="lexi-chip">{word.language}</span></div><p className="word-sub mt-1.5 text-sm">{truncateText(word.definition, 95)}</p></div>
+                    <span className={cn("status-pill", status === "Mastered" ? "status-mastered" : status === "Learning" ? "status-learning" : "status-new")}>{status}</span>
                   </div>
-                  <span className={cn("status-pill", status === "Mastered" ? "status-mastered" : status === "Learning" ? "status-learning" : "status-new")}>
-                    {status}
-                  </span>
-                </div>
-              );
-            })
-          )}
-        </div>
-
-        <div className="border-t border-white/10 p-2">
-          <span className="sync-pill">
-            <CircleDot className="size-3" />
-            Synced, just now
-          </span>
-        </div>
-      </section>
-
-      <section className="frost-panel flex min-h-0 flex-col overflow-hidden animate-slide-in-up">
-        <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-5 md:p-6">
-          <div className="space-y-6">
-            {selectedWord ? (
-              <>
-              <div>
-                <h2 className="detail-title">{selectedWord.word}</h2>
-                <p className="subtle-caption mt-2">Definition Workspace</p>
-              </div>
-
-              <div className="ghost-divider" />
-
-              <p className="detail-text">{selectedWord.definition}</p>
-
-                <div className="frost-panel-soft space-y-3 p-4">
-                  <div className="flex items-center justify-between">
-                    <p className="font-medium">Usage Example</p>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      disabled={!selectedWord.examples || selectedWord.examples.length <= 1}
-                      className="border-white/15 bg-white/6 hover:bg-white/14"
-                      onClick={() => setExampleVersion((current) => current + 1)}
-                    >
-                      <RefreshCcw className="mr-1.5 size-3.5" />
-                      Rotate
-                    </Button>
-                  </div>
-                {selectedExample ? (
-                  <p className="serif-display text-2xl italic text-muted-foreground">{selectedExample}</p>
-                ) : (
-                  <p className="subtle-caption">No examples yet. Generate examples from the Words page.</p>
-                )}
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="border-white/15 bg-white/6 hover:bg-white/14"
-                  onClick={() => void copyDefinition()}
-                >
-                  <Copy className="mr-2 size-3.5" />
-                  {copied ? "Copied" : "Copy Definition"}
-                </Button>
-                <span className="sync-pill">
-                  <Sparkles className="size-3" />
-                  {selectedWord.aiGenerated ? "AI generated" : "Manually curated"}
-                </span>
-              </div>
-            </>
+                );
+              })
             ) : (
-              <div className="flex h-full min-h-[220px] flex-col items-center justify-center text-center">
-                <p className="section-title">Pick an entry</p>
-                <p className="subtle-caption mt-2 max-w-sm">
-                  Compare definitions and examples in one place.
-                </p>
+              <div className="grid gap-3 p-3" style={contentGridStyle}>
+                {filteredWords.map((word) => (
+                  <article key={word.id} className={cn("lexi-browser-card", viewMode === "tiles" && "tile", selectedId === word.id && "active")} role="button" tabIndex={0} onClick={() => { setSelectedId(word.id); setExampleVersion(0); }}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0"><p className="serif-display text-[2rem] leading-[0.92]">{word.word}</p><div className="mt-1.5 flex flex-wrap gap-1.5"><span className="lexi-chip">{word.language}</span></div></div>
+                    </div>
+                    <p className="word-sub mt-3 line-clamp-5">{word.definition}</p>
+                    <div className="mt-auto flex justify-end pt-4">
+                      <span className={cn("status-pill", getReviewStatus(word) === "Mastered" ? "status-mastered" : getReviewStatus(word) === "Learning" ? "status-learning" : "status-new")}>{getReviewStatus(word)}</span>
+                    </div>
+                  </article>
+                ))}
               </div>
             )}
+          </div>
 
-            <div className="ghost-divider" />
-
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="font-medium">Definition Suggestions</p>
-                <Sparkles className="size-4 text-muted-foreground" />
+          <div className="flex items-center justify-between gap-3 border-t border-white/10 p-2">
+            <span className="sync-pill"><CircleDot className="size-3" />Synced, just now</span>
+            {canZoom ? (
+              <div className="flex items-center gap-2">
+                <ZoomIn className="size-4 text-muted-foreground" />
+                <button type="button" className="inline-flex size-8 items-center justify-center rounded-md border border-white/12 bg-white/5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground" onClick={() => void stepZoom("out")} aria-label="Zoom out">
+                  <Minus className="size-4" />
+                </button>
+                <span className="sync-pill min-w-[4.25rem] justify-center">{zoom}%</span>
+                <button type="button" className="inline-flex size-8 items-center justify-center rounded-md border border-white/12 bg-white/5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground" onClick={() => void stepZoom("in")} aria-label="Zoom in">
+                  <Plus className="size-4" />
+                </button>
               </div>
-              {definitionSuggestions.length === 0 ? (
-                <div className="frost-panel-soft p-3 text-sm text-muted-foreground">
-                  No suggestions left for today.
-                </div>
+            ) : <span className="subtle-caption">`Ctrl/Cmd + wheel` zooms cards</span>}
+          </div>
+        </section>
+
+        <section className="frost-panel flex min-h-0 flex-col overflow-hidden animate-slide-in-up">
+          <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-5 md:p-6">
+            <div className="space-y-6">
+              {selectedWord ? (
+                <>
+                  <div><h2 className="detail-title">{selectedWord.word}</h2><p className="subtle-caption mt-2">Definition Workspace</p></div>
+                  <div className="ghost-divider" />
+                  <p className="detail-text">{selectedWord.definition}</p>
+                  <div className="frost-panel-soft space-y-3 p-4">
+                    <div className="flex items-center justify-between"><p className="font-medium">Usage Example</p><Button type="button" size="sm" variant="outline" disabled={!selectedWord.examples || selectedWord.examples.length <= 1} className="border-white/15 bg-white/6 hover:bg-white/14" onClick={() => setExampleVersion((current) => current + 1)}><RefreshCcw className="mr-1.5 size-3.5" />Rotate</Button></div>
+                    {selectedExample ? <p className="serif-display text-2xl italic text-muted-foreground">{selectedExample}</p> : <p className="subtle-caption">No examples yet. Generate examples from the Words page.</p>}
+                  </div>
+                  <div className="flex flex-wrap gap-2"><Button type="button" variant="outline" className="border-white/15 bg-white/6 hover:bg-white/14" onClick={() => void copyDefinition()}><Copy className="mr-2 size-3.5" />{copied ? "Copied" : "Copy Definition"}</Button><span className="sync-pill"><Sparkles className="size-3" />{selectedWord.aiGenerated ? "AI generated" : "Manually curated"}</span></div>
+                </>
               ) : (
-                <div className="space-y-2">
-                  {definitionSuggestions.map((suggestion) => (
-                    <div key={suggestion.id} className="frost-panel-soft space-y-2 p-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <p className="serif-display text-2xl leading-[0.95]">{suggestion.word}</p>
-                          <p className="subtle-caption">{suggestion.language}</p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            className="border-white/15 bg-white/6 hover:bg-white/14"
-                            disabled={addingSuggestionId === suggestion.id}
-                            onClick={() => void applySuggestion(suggestion)}
-                          >
-                            {addingSuggestionId === suggestion.id ? "Adding..." : "Add"}
-                          </Button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            className="border-white/15 bg-white/6 hover:bg-white/14"
-                            onClick={() => dismissSuggestion(suggestion.id)}
-                          >
-                            Dismiss
-                          </Button>
-                        </div>
-                      </div>
-                      <p className="word-sub">{suggestion.definition}</p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {suggestion.tags.map((tag) => (
-                          <span key={`${suggestion.id}-${tag}`} className="lexi-chip">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <div className="flex h-full min-h-[220px] flex-col items-center justify-center text-center"><p className="section-title">Pick an entry</p><p className="subtle-caption mt-2 max-w-sm">Compare definitions and examples in one place.</p></div>
               )}
+              <div className="ghost-divider" />
+              <div className="space-y-3">
+                <div className="flex items-center justify-between"><p className="font-medium">Definition Suggestions</p><Sparkles className="size-4 text-muted-foreground" /></div>
+                {definitionSuggestions.length === 0 ? <div className="frost-panel-soft p-3 text-sm text-muted-foreground">No suggestions left for today.</div> : <div className="space-y-2">{definitionSuggestions.map((suggestion) => <div key={suggestion.id} className="frost-panel-soft space-y-2 p-3"><div className="flex items-start justify-between gap-2"><div><p className="serif-display text-2xl leading-[0.95]">{suggestion.word}</p><p className="subtle-caption">{suggestion.language}</p></div><div className="flex gap-2"><Button type="button" size="sm" variant="outline" className="border-white/15 bg-white/6 hover:bg-white/14" disabled={addingSuggestionId === suggestion.id} onClick={() => void applySuggestion(suggestion)}>{addingSuggestionId === suggestion.id ? "Adding..." : "Add"}</Button><Button type="button" size="sm" variant="outline" className="border-white/15 bg-white/6 hover:bg-white/14" onClick={() => dismissSuggestion(suggestion.id)}>Dismiss</Button></div></div><p className="word-sub">{suggestion.definition}</p><div className="flex flex-wrap gap-1.5">{suggestion.tags.map((tag) => <span key={`${suggestion.id}-${tag}`} className="lexi-chip">{tag}</span>)}</div></div>)}</div>}
+              </div>
             </div>
           </div>
-        </div>
-
-        <div className="flex items-center justify-between border-t border-white/10 p-2">
-          <span className="sync-pill">
-            <Sparkles className="size-3" />
-            Dynamic examples enabled
-          </span>
-          <span className="subtle-caption">`J/K` move through entries</span>
-        </div>
-      </section>
+          <div className="flex items-center justify-between border-t border-white/10 p-2"><span className="sync-pill"><Sparkles className="size-3" />Dynamic examples enabled</span><span className="subtle-caption">`J/K` move through entries</span></div>
+        </section>
       </div>
       <AddWordDialog open={addDialogOpen} onOpenChange={setAddDialogOpen} onAdd={addWord} />
     </>
