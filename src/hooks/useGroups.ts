@@ -56,6 +56,7 @@ export function useGroups() {
       id: crypto.randomUUID(),
       dateAdded: Date.now(),
       name: trimmedName,
+      iconName: group.iconName || "Folder",
       description: group.description?.trim() || undefined,
     };
 
@@ -69,6 +70,7 @@ export function useGroups() {
     await storage.updateGroup(id, {
       ...updates,
       name: updates.name?.trim(),
+      iconName: updates.iconName,
       description: updates.description?.trim() || undefined,
     });
     setGroups((prev) => prev.map((group) => (group.id === id ? { ...group, ...updates } : group)));

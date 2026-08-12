@@ -1,42 +1,49 @@
-import { type ComponentType, type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { type ComponentType, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   BookCheck,
+  BookMarked,
   BookOpenText,
   BookText,
   ChartColumn,
+  ChevronLeft,
+  ChevronRight,
   FolderTree,
+  ImageOff,
   Inbox,
   Languages,
   Menu,
   Plus,
   Search,
   Settings,
+  Type,
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { cn } from "@/lib/utils";
-import { getSettings } from "@/utils/storage";
+import { getGroupIcon } from "@/lib/group-icons";
 import { useGroups } from "@/hooks/useGroups";
+import { getSettings, updateSettings } from "@/utils/storage";
 
 type NavItem = {
-  div: string;
+  label: string;
   path: string;
   icon: ComponentType<{ className?: string }>;
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { div: "Inbox", path: "/inbox", icon: Inbox },
-  { div: "Words", path: "/words", icon: BookOpenText },
-  { div: "Definitions", path: "/definitions", icon: BookText },
-  { div: "Translations", path: "/translations", icon: Languages },
-  { div: "Review", path: "/review", icon: BookCheck },
-  { div: "Stats", path: "/stats", icon: ChartColumn },
-  { div: "Groups", path: "/groups", icon: FolderTree },
-  { div: "Settings", path: "/settings", icon: Settings },
+  { label: "Inbox", path: "/inbox", icon: Inbox },
+  { label: "Words", path: "/words", icon: BookOpenText },
+  { label: "Definitions", path: "/definitions", icon: BookText },
+  { label: "Translations", path: "/translations", icon: Languages },
+  { label: "Books", path: "/books", icon: BookMarked },
+  { label: "Review", path: "/review", icon: BookCheck },
+  { label: "Stats", path: "/stats", icon: ChartColumn },
+  { label: "Groups", path: "/groups", icon: FolderTree },
+  { label: "Settings", path: "/settings", icon: Settings },
 ];
 
 const CAPTURE_PATHS = new Set(["/inbox", "/words", "/translations", "/definitions"]);
-const PRIMARY_MODIFIER_div = navigator.platform.toLowerCase().includes("mac") ? "Cmd" : "Ctrl";
+const PRIMARY_MODIFIER_LABEL = navigator.platform.toLowerCase().includes("mac") ? "Cmd" : "Ctrl";
 
 function isPathActive(pathname: string, targetPath: string): boolean {
   return pathname === targetPath || pathname.startsWith(`${targetPath}/`);
@@ -51,12 +58,7 @@ function isTypingTarget(target: EventTarget | null): boolean {
     return false;
   }
 
-  return (
-    target.tagName === "INPUT" ||
-    target.tagName === "TEXTAREA" ||
-    target.tagName === "SELECT" ||
-    target.isContentEditable
-  );
+  return target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT" || target.isContentEditable;
 }
 
 interface AppShellProps {
@@ -66,14 +68,35 @@ interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   const location = useLocation();
   const navigate = useNavigate();
+  const tabsRef = useRef<HTMLDivElement>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [shortcutsEnabled, setShortcutsEnabled] = useState(true);
   const [selectedGroupFilter, setSelectedGroupFilter] = useState("all");
+  const [groupTabsIconOnly, setGroupTabsIconOnly] = useState(false);
+  const [groupTabsOverflowing, setGroupTabsOverflowing] = useState(false);
+  const [canScrollTabsLeft, setCanScrollTabsLeft] = useState(false);
+  const [canScrollTabsRight, setCanScrollTabsRight] = useState(false);
   const { groups } = useGroups();
-  const groupTabsDisabled = location.pathname === "/groups" || location.pathname === "/stats" || location.pathname === "/settings";
+  const groupTabsDisabled =
+    location.pathname === "/groups" ||
+    location.pathname === "/stats" ||
+    location.pathname === "/settings" ||
+    location.pathname === "/books";
 
   const navLookup = useMemo(() => NAV_ITEMS.map((item) => item.path), []);
+
+  const updateGroupTabsOverflow = useCallback(() => {
+    const element = tabsRef.current;
+    if (!element) {
+      return;
+    }
+
+    const overflowing = element.scrollWidth - element.clientWidth > 8;
+    setGroupTabsOverflowing(overflowing);
+    setCanScrollTabsLeft(element.scrollLeft > 4);
+    setCanScrollTabsRight(element.scrollLeft + element.clientWidth < element.scrollWidth - 4);
+  }, []);
 
   const triggerCapture = useCallback(() => {
     if (CAPTURE_PATHS.has(location.pathname)) {
@@ -82,8 +105,28 @@ export function AppShell({ children }: AppShellProps) {
     }
 
     navigate("/definitions");
-    setTimeout(() => emitAppEvent("lexi:capture", "/definitions"), 0);
+    window.setTimeout(() => emitAppEvent("lexi:capture", "/definitions"), 0);
   }, [location.pathname, navigate]);
+
+  const toggleGroupTabsIconOnly = useCallback(async () => {
+    const nextValue = !groupTabsIconOnly;
+    setGroupTabsIconOnly(nextValue);
+    await updateSettings({ groupTabsIconOnly: nextValue });
+    window.dispatchEvent(new CustomEvent("lexi:settings-updated", { detail: { groupTabsIconOnly: nextValue } }));
+  }, [groupTabsIconOnly]);
+
+  const scrollTabsBy = useCallback((direction: "left" | "right") => {
+    const element = tabsRef.current;
+    if (!element) {
+      return;
+    }
+
+    const amount = Math.max(180, Math.round(element.clientWidth * 0.65));
+    element.scrollBy({
+      left: direction === "left" ? -amount : amount,
+      behavior: "smooth",
+    });
+  }, []);
 
   useEffect(() => {
     try {
@@ -94,14 +137,18 @@ export function AppShell({ children }: AppShellProps) {
   }, []);
 
   useEffect(() => {
-    getSettings().then((settings) => {
+    void getSettings().then((settings) => {
       setShortcutsEnabled(settings.shortcutsEnabled);
+      setGroupTabsIconOnly(settings.groupTabsIconOnly);
     });
 
     const onSettingsUpdated = (event: Event) => {
-      const customEvent = event as CustomEvent<{ shortcutsEnabled?: boolean }>;
+      const customEvent = event as CustomEvent<{ shortcutsEnabled?: boolean; groupTabsIconOnly?: boolean }>;
       if (typeof customEvent.detail?.shortcutsEnabled === "boolean") {
         setShortcutsEnabled(customEvent.detail.shortcutsEnabled);
+      }
+      if (typeof customEvent.detail?.groupTabsIconOnly === "boolean") {
+        setGroupTabsIconOnly(customEvent.detail.groupTabsIconOnly);
       }
     };
 
@@ -145,7 +192,7 @@ export function AppShell({ children }: AppShellProps) {
       if (isMeta && event.shiftKey && event.key.toLowerCase() === "t") {
         event.preventDefault();
         navigate("/translations");
-        setTimeout(() => emitAppEvent("lexi:capture", "/translations"), 0);
+        window.setTimeout(() => emitAppEvent("lexi:capture", "/translations"), 0);
         return;
       }
 
@@ -184,6 +231,29 @@ export function AppShell({ children }: AppShellProps) {
     window.addEventListener("lexi:open-inbox", onOpenInbox);
     return () => window.removeEventListener("lexi:open-inbox", onOpenInbox);
   }, [navigate]);
+
+  useEffect(() => {
+    updateGroupTabsOverflow();
+  }, [groups.length, groupTabsIconOnly, location.pathname, updateGroupTabsOverflow]);
+
+  useEffect(() => {
+    const element = tabsRef.current;
+    if (!element) {
+      return;
+    }
+
+    const onScroll = () => updateGroupTabsOverflow();
+    const resizeObserver = new ResizeObserver(() => updateGroupTabsOverflow());
+    resizeObserver.observe(element);
+    element.addEventListener("scroll", onScroll);
+    window.addEventListener("resize", updateGroupTabsOverflow);
+
+    return () => {
+      resizeObserver.disconnect();
+      element.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", updateGroupTabsOverflow);
+    };
+  }, [updateGroupTabsOverflow]);
 
   return (
     <div className="lexi-stage">
@@ -227,7 +297,7 @@ export function AppShell({ children }: AppShellProps) {
                   onClick={() => setSidebarOpen(false)}
                 >
                   <ItemIcon className="size-4" />
-                  <span>{item.div}</span>
+                  <span>{item.label}</span>
                 </Link>
               );
             })}
@@ -238,7 +308,7 @@ export function AppShell({ children }: AppShellProps) {
               <span className="size-1.5 rounded-full bg-foreground/75" />
               Synced, just now
             </span>
-            <p className="subtle-caption px-1">{PRIMARY_MODIFIER_div}+K search, {PRIMARY_MODIFIER_div}+N capture, Alt+1..8 navigate</p>
+            <p className="subtle-caption px-1">{PRIMARY_MODIFIER_LABEL}+K search, {PRIMARY_MODIFIER_LABEL}+N capture, Alt+1..9 navigate</p>
           </div>
         </aside>
 
@@ -262,53 +332,103 @@ export function AppShell({ children }: AppShellProps) {
               <Menu className="size-4" />
             </button>
 
-            <nav className="lexi-tabs custom-scrollbar">
-              <button
-                type="button"
-                className={cn("lexi-tab", selectedGroupFilter === "all" && "is-active", groupTabsDisabled && "cursor-not-allowed opacity-45")}
-                disabled={groupTabsDisabled}
-                onClick={() => {
-                  setSelectedGroupFilter("all");
-                  window.dispatchEvent(new CustomEvent("lexi:group-filter-changed", { detail: { groupId: "none" } }));
-                }}
-              >
-                All
-              </button>
-              {groups.map((group) => (
+            <div className="lexi-tabs-shell">
+              {groupTabsOverflowing ? (
                 <button
-                  key={group.id}
                   type="button"
-                  className={cn("lexi-tab", selectedGroupFilter === group.id && "is-active", groupTabsDisabled && "cursor-not-allowed opacity-45")}
+                  className="lexi-tabs-arrow"
+                  onClick={() => scrollTabsBy("left")}
+                  disabled={!canScrollTabsLeft}
+                  aria-label="Scroll groups left"
+                >
+                  <ChevronLeft className="size-4" />
+                </button>
+              ) : null}
+
+              <nav ref={tabsRef} className={cn("lexi-tabs custom-scrollbar", groupTabsIconOnly && "icon-only")}>
+                <button
+                  type="button"
+                  className={cn("lexi-tab", selectedGroupFilter === "all" && "is-active", groupTabsDisabled && "cursor-not-allowed opacity-45", groupTabsIconOnly && "icon-tab")}
                   disabled={groupTabsDisabled}
                   onClick={() => {
-                    setSelectedGroupFilter(group.id);
-                    window.dispatchEvent(new CustomEvent("lexi:group-filter-changed", { detail: { groupId: group.id } }));
+                    setSelectedGroupFilter("all");
+                    window.dispatchEvent(new CustomEvent("lexi:group-filter-changed", { detail: { groupId: "none" } }));
                   }}
+                  title="All groups"
+                  aria-label="All groups"
                 >
-                  {group.name}
+                  {groupTabsIconOnly ? <FolderTree className="size-4" /> : <span>All</span>}
                 </button>
-              ))}
-            </nav>
+                {groups.map((group) => {
+                  const GroupIcon = getGroupIcon(group.iconName);
+
+                  return (
+                    <button
+                      key={group.id}
+                      type="button"
+                      className={cn(
+                        "lexi-tab",
+                        selectedGroupFilter === group.id && "is-active",
+                        groupTabsDisabled && "cursor-not-allowed opacity-45",
+                        groupTabsIconOnly && "icon-tab",
+                      )}
+                      disabled={groupTabsDisabled}
+                      onClick={() => {
+                        setSelectedGroupFilter(group.id);
+                        window.dispatchEvent(new CustomEvent("lexi:group-filter-changed", { detail: { groupId: group.id } }));
+                      }}
+                      title={group.name}
+                      aria-label={group.name}
+                    >
+                      <GroupIcon className="size-4 shrink-0" />
+                      {groupTabsIconOnly ? null : <span>{group.name}</span>}
+                    </button>
+                  );
+                })}
+              </nav>
+
+              {groupTabsOverflowing ? (
+                <button
+                  type="button"
+                  className="lexi-tabs-arrow"
+                  onClick={() => scrollTabsBy("right")}
+                  disabled={!canScrollTabsRight}
+                  aria-label="Scroll groups right"
+                >
+                  <ChevronRight className="size-4" />
+                </button>
+              ) : null}
+            </div>
 
             <div className="ml-auto flex items-center gap-2">
               <button
                 type="button"
-                className="inline-flex size-10 items-center justify-center rounded-lg border border-white/12 bg-white/5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground"
+                className="topbar-icon-btn inline-flex size-10 items-center justify-center rounded-lg border border-white/12 bg-white/5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground"
+                onClick={() => void toggleGroupTabsIconOnly()}
+                aria-label={groupTabsIconOnly ? "Show group names" : "Hide group names"}
+                title={groupTabsIconOnly ? "Show group names" : "Hide group names"}
+              >
+                {groupTabsIconOnly ? <Type className="size-4" /> : <ImageOff className="size-4" />}
+              </button>
+
+              <button
+                type="button"
+                className="topbar-icon-btn inline-flex size-10 items-center justify-center rounded-lg border border-white/12 bg-white/5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground"
                 onClick={() => emitAppEvent("lexi:focus-search", location.pathname)}
                 aria-label="Search"
-                title={`${PRIMARY_MODIFIER_div}+K`}
+                title={`${PRIMARY_MODIFIER_LABEL}+K`}
               >
                 <Search className="size-4" />
               </button>
 
               <button
                 type="button"
-                className="inline-flex h-10 items-center gap-2 rounded-lg border border-white/14 bg-white/10 px-3.5 text-sm font-semibold text-foreground transition hover:bg-white/16"
+                className="topbar-capture-btn inline-flex h-10 items-center gap-2 rounded-lg border border-white/14 bg-white/10 px-3.5 text-sm font-semibold text-foreground transition hover:bg-white/16"
                 onClick={triggerCapture}
-                title={`${PRIMARY_MODIFIER_div}+N`}
+                title={`${PRIMARY_MODIFIER_LABEL}+N`}
               >
                 <Plus className="size-4" />
-                Capture
+                <span className="hidden sm:inline">Capture</span>
               </button>
             </div>
           </header>
