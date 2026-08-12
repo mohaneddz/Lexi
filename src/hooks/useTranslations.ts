@@ -44,6 +44,7 @@ export function useTranslations() {
                 targetWord: capitalizeLeadingCharacter(translation.targetWord),
                 id: crypto.randomUUID(),
                 dateAdded: Date.now(),
+                favorite: Boolean(translation.favorite),
                 groupIds: translation.groupIds || [],
             };
             await storage.addTranslation(newTranslation);
