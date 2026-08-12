@@ -5,6 +5,7 @@
 
 :root {
   --radius: 0.9rem;
+  --titlebar-safe-top: 30px;
 
   --font-sans: "Manrope", "Avenir Next", "Segoe UI", sans-serif;
   --font-serif: "Newsreader", "Iowan Old Style", "Palatino Linotype", serif;
@@ -86,6 +87,9 @@
   --app-chip-fg: oklch(0.9 0.01 255);
   --app-sync-bg: oklch(0.2 0.02 253 / 0.7);
   --app-sync-border: oklch(1 0 0 / 0.12);
+  --elevation-soft: 0 2px 8px oklch(0 0 0 / 0.16);
+  --elevation-mid: 0 5px 14px oklch(0 0 0 / 0.2);
+  --elevation-inset: inset 0 1px 0 oklch(1 0 0 / 0.06);
 }
 
 .dark {
@@ -167,6 +171,9 @@
   --app-chip-fg: oklch(0.28 0.02 253);
   --app-sync-bg: oklch(0.92 0.012 252 / 0.95);
   --app-sync-border: oklch(0.75 0.01 252 / 0.7);
+  --elevation-soft: 0 3px 10px oklch(0.45 0.02 248 / 0.1);
+  --elevation-mid: 0 8px 20px oklch(0.45 0.02 248 / 0.12);
+  --elevation-inset: inset 0 1px 0 oklch(1 0 0 / 0.9);
 }
 
 @theme inline {
@@ -251,6 +258,7 @@ textarea {
   width: 100%;
   height: 100%;
   padding: clamp(0.75rem, 1.8vw, 1.4rem);
+  padding-top: calc(clamp(0.75rem, 1.8vw, 1.4rem) + var(--titlebar-safe-top));
 }
 
 .lexi-stage::before,
@@ -280,7 +288,7 @@ textarea {
   width: 100%;
   height: 100%;
   margin: 0 auto;
-  margin-top: 16px;
+  margin-top: 0;
   border: 1px solid var(--app-border);
   border-radius: 1.2rem;
   background: var(--app-window-bg);
@@ -420,16 +428,51 @@ textarea {
   border-bottom: 1px solid oklch(1 0 0 / 0.08);
 }
 
+.lexi-tabs-shell {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  flex: 1;
+}
+
 .lexi-tabs {
   display: flex;
   align-items: center;
   gap: 0.3rem;
   overflow-x: auto;
   padding-bottom: 0.25rem;
+  min-width: 0;
+  flex: 1;
+  scroll-behavior: smooth;
+}
+
+.lexi-tabs.icon-only .lexi-tab {
+  min-width: 2.6rem;
+  justify-content: center;
+}
+
+.lexi-tabs-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  border: 1px solid oklch(1 0 0 / 0.1);
+  background: oklch(1 0 0 / 0.05);
+  color: var(--muted-foreground);
+}
+
+.lexi-tabs-arrow:disabled {
+  opacity: 0.35;
 }
 
 .lexi-tab {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   padding: 0.45rem 0.7rem 0.58rem;
   border-radius: 0.6rem;
   color: var(--muted-foreground);
@@ -458,6 +501,10 @@ textarea {
   background: oklch(0.9 0.01 255 / 0.85);
 }
 
+.lexi-tab.icon-tab {
+  padding-inline: 0.65rem;
+}
+
 .lexi-main-body {
   min-height: 0;
   flex: 1;
@@ -469,13 +516,14 @@ textarea {
   border: 1px solid oklch(1 0 0 / 0.11);
   border-radius: 0.72rem;
   backdrop-filter: blur(24px);
-  box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.06), 0 8px 30px oklch(0 0 0 / 0.22);
+  box-shadow: var(--elevation-inset), var(--elevation-mid);
 }
 
 .frost-panel-soft {
   background: var(--app-frost-soft-bg);
   border: 1px solid oklch(1 0 0 / 0.08);
   border-radius: 0.72rem;
+  box-shadow: var(--elevation-soft);
 }
 
 .frost-input {
@@ -487,6 +535,12 @@ textarea {
   color: var(--foreground);
   padding: 0.5rem 0.82rem;
   transition: border-color 120ms ease, box-shadow 120ms ease;
+  box-shadow: var(--elevation-soft);
+}
+
+select.frost-input,
+select.frost-select {
+  padding-right: 2.2rem;
 }
 
 .frost-input::placeholder {
@@ -500,6 +554,7 @@ textarea {
   background: var(--app-input-bg);
   color: var(--foreground);
   transition: border-color 120ms ease, box-shadow 120ms ease;
+  box-shadow: var(--elevation-soft);
 }
 
 .frost-select:focus {
@@ -649,6 +704,7 @@ textarea {
   color: var(--app-chip-fg);
   padding: 0.32rem 0.62rem;
   font-size: 0.86rem;
+  box-shadow: var(--elevation-soft);
 }
 
 .status-pill {
@@ -662,6 +718,7 @@ textarea {
   font-size: 0.82rem;
   font-weight: 600;
   letter-spacing: 0.01em;
+  box-shadow: var(--elevation-soft);
 }
 
 .status-new {
@@ -693,6 +750,106 @@ textarea {
   background: var(--app-sync-bg);
   color: var(--muted-foreground);
   font-size: 0.83rem;
+  box-shadow: var(--elevation-soft);
+}
+
+.lexi-browser-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 13rem;
+  gap: 0.25rem;
+  padding: 1rem;
+  border: 1px solid oklch(1 0 0 / 0.1);
+  border-radius: 0.85rem;
+  background: linear-gradient(180deg, oklch(1 0 0 / 0.06), oklch(1 0 0 / 0.03));
+  box-shadow: var(--elevation-inset), var(--elevation-soft);
+  transition: border-color 140ms ease, background-color 140ms ease, transform 140ms ease;
+}
+
+.lexi-browser-card:hover {
+  transform: translateY(-1px);
+  border-color: oklch(1 0 0 / 0.16);
+}
+
+.lexi-browser-card.active {
+  border-color: oklch(0.8 0.03 250 / 0.88);
+  background: linear-gradient(180deg, oklch(0.38 0.03 250 / 0.2), oklch(1 0 0 / 0.05));
+}
+
+.lexi-browser-card.tile {
+  min-height: 15.5rem;
+}
+
+.zoom-step-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.menu-action {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.55rem;
+  border-radius: 0.35rem;
+  padding: 0.45rem 0.55rem;
+  color: var(--foreground);
+  text-align: left;
+  font-size: 0.92rem;
+}
+
+.menu-action:hover {
+  background: oklch(1 0 0 / 0.08);
+}
+
+.menu-action.destructive {
+  color: oklch(0.85 0.08 25);
+}
+
+.menu-action.destructive:hover {
+  background: oklch(0.55 0.14 25 / 0.12);
+}
+
+.menu-section-label {
+  padding: 0.35rem 0.55rem;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+.book-card {
+  display: grid;
+  grid-template-columns: 108px minmax(0, 1fr);
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.book-cover-frame {
+  overflow: hidden;
+  border-radius: 0.85rem;
+  border: 1px solid oklch(1 0 0 / 0.12);
+  background: oklch(1 0 0 / 0.04);
+  min-height: 148px;
+}
+
+.book-cover-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.book-cover-fallback {
+  display: flex;
+  height: 100%;
+  min-height: 148px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  color: var(--muted-foreground);
+  text-align: center;
+  font-size: 0.82rem;
 }
 
 .light .lexi-stage::before {
@@ -765,10 +922,11 @@ textarea {
   border: 1px solid oklch(1 0 0 / 0.11);
   background: linear-gradient(160deg, oklch(0.23 0.02 253 / 0.82), oklch(0.2 0.02 253 / 0.7));
   padding: 1rem;
+  box-shadow: var(--elevation-soft);
 }
 
 .stats-surface {
-  box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.04);
+  box-shadow: var(--elevation-inset), var(--elevation-soft);
 }
 
 .metric-value {
@@ -829,6 +987,7 @@ textarea {
   border: 1px solid oklch(1 0 0 / 0.12);
   border-radius: var(--radius);
   backdrop-filter: blur(22px);
+  box-shadow: var(--elevation-soft);
 }
 
 .glass-strong {
@@ -836,6 +995,7 @@ textarea {
   border: 1px solid oklch(1 0 0 / 0.16);
   border-radius: var(--radius);
   backdrop-filter: blur(26px);
+  box-shadow: var(--elevation-mid);
 }
 
 .bg-gradient-primary {
@@ -904,6 +1064,7 @@ textarea {
 @media (max-width: 1023px) {
   .lexi-stage {
     padding: 0.55rem;
+    padding-top: calc(0.55rem + var(--titlebar-safe-top));
   }
 
   .lexi-window {
@@ -962,10 +1123,185 @@ textarea {
   .lexi-topbar {
     padding-inline: 0.72rem;
     gap: 0.6rem;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    padding-bottom: 0.55rem;
+    min-height: auto;
+  }
+
+  .lexi-tabs-shell {
+    order: 2;
+    width: 100%;
+  }
+
+  .lexi-topbar > .ml-auto {
+    margin-left: 0;
+    flex: 1;
+    justify-content: flex-end;
   }
 
   .lexi-main-body {
     padding: 0.55rem;
+  }
+
+  .book-card {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .search-field-wrap {
+    min-width: 10.5rem;
+    flex-basis: 14rem;
+  }
+
+  .toolbar-select {
+    min-width: 5.8rem;
+    max-width: 8rem;
+  }
+
+  .toolbar-select-wide {
+    min-width: 6.4rem;
+    max-width: 9.2rem;
+    flex-basis: 8.3rem;
+  }
+
+  .word-row {
+    gap: 0.62rem;
+    padding-inline: 0.7rem;
+  }
+
+  .lexi-browser-card {
+    min-height: 11.25rem;
+    padding: 0.82rem;
+  }
+
+  .lexi-browser-card.tile {
+    min-height: 13rem;
+  }
+
+  .lexi-browser-card .serif-display {
+    font-size: clamp(1.3rem, 5.1vw, 1.85rem);
+    line-height: 0.96;
+  }
+
+  .detail-title {
+    font-size: clamp(1.55rem, 7vw, 2.3rem);
+  }
+
+  .detail-text {
+    font-size: clamp(1.15rem, 4.9vw, 1.6rem);
+  }
+}
+
+@media (max-width: 760px) {
+  .lexi-stage {
+    padding: 0.32rem;
+    padding-top: calc(0.32rem + var(--titlebar-safe-top));
+  }
+
+  .lexi-window {
+    border-radius: 0.72rem;
+  }
+
+  .lexi-topbar {
+    gap: 0.45rem;
+    padding-inline: 0.5rem;
+    padding-top: 0.45rem;
+  }
+
+  .lexi-tabs-arrow {
+    display: none;
+  }
+
+  .lexi-tabs {
+    padding-bottom: 0.05rem;
+    gap: 0.2rem;
+  }
+
+  .lexi-tab {
+    padding: 0.36rem 0.5rem 0.44rem;
+    font-size: 0.88rem;
+  }
+
+  .lexi-topbar > .ml-auto {
+    width: auto;
+    flex: 0 0 auto;
+    gap: 0.4rem;
+  }
+
+  .topbar-icon-btn {
+    width: 2.15rem;
+    height: 2.15rem;
+    border-radius: 0.66rem;
+  }
+
+  .topbar-capture-btn {
+    height: 2.15rem;
+    padding-inline: 0.7rem;
+    gap: 0.36rem;
+    font-size: 0.82rem;
+  }
+
+  .lexi-main-body {
+    padding: 0.4rem;
+  }
+
+  .frost-panel {
+    border-radius: 0.62rem;
+  }
+
+  .table-head {
+    padding-inline: 0.65rem;
+    gap: 0.62rem;
+  }
+
+  .word-row {
+    padding-inline: 0.58rem;
+    min-height: 3.9rem;
+  }
+
+  .sync-pill {
+    min-height: 1.55rem;
+    font-size: 0.76rem;
+    padding-inline: 0.52rem;
+  }
+}
+
+@media (max-width: 620px) {
+  .lexi-tabs {
+    gap: 0.15rem;
+  }
+
+  .lexi-tab {
+    padding-inline: 0.42rem;
+    font-size: 0.82rem;
+  }
+
+  .search-field-wrap {
+    min-width: 8rem;
+    flex-basis: 11rem;
+  }
+
+  .toolbar-select {
+    min-width: 5.1rem;
+    max-width: 6.6rem;
+    flex-basis: 6.1rem;
+  }
+
+  .toolbar-select-wide {
+    min-width: 5.8rem;
+    max-width: 7.4rem;
+    flex-basis: 6.8rem;
+  }
+
+  .lexi-browser-card {
+    padding: 0.7rem;
+    min-height: 10.65rem;
+  }
+
+  .detail-title {
+    font-size: clamp(1.35rem, 7.2vw, 1.95rem);
   }
 }
 
@@ -975,7 +1311,3 @@ textarea {
     transform: none !important;
   }
 }
-
-
-
-

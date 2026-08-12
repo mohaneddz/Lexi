@@ -44,6 +44,11 @@ const GROUP_SUGGESTION_SCHEMA = z.object({
   confidence: z.number().min(0).max(1),
 });
 
+const GROUP_ICON_SUGGESTION_SCHEMA = z.object({
+  iconName: z.string().min(1),
+  confidence: z.number().min(0).max(1),
+});
+
 const DISTRACTOR_DEFINITIONS_SCHEMA = z.object({
   distractors: z.array(z.string().min(8).max(260)).length(3),
   confidence: z.number().min(0).max(1),
@@ -600,6 +605,78 @@ export async function suggestGroup(
       success: false,
       data: "",
       error: toErrorMessage("Group suggestion failed", error),
+    };
+  }
+}
+
+export async function suggestGroupIcon(
+  groupName: string,
+  groupDescription: string | undefined,
+  availableIconNames: string[],
+): Promise<AIResponse<string>> {
+  const trimmedName = groupName.trim();
+  if (!trimmedName) {
+    return {
+      success: false,
+      data: "",
+      error: "Group name is required for icon suggestion.",
+    };
+  }
+
+  if (availableIconNames.length === 0) {
+    return {
+      success: false,
+      data: "",
+      error: "No icons available for suggestion.",
+    };
+  }
+
+  const candidateIcons = availableIconNames.slice(0, 260);
+
+  try {
+    const object = await runStructuredPrompt({
+      schema: GROUP_ICON_SUGGESTION_SCHEMA,
+      system:
+        "You pick the most semantically appropriate Lucide icon name for a given group. Return strict JSON only.",
+      prompt: [
+        `Group name: ${trimmedName}`,
+        `Group description: ${groupDescription?.trim() || "None"}`,
+        "",
+        "Choose one icon name from this exact list:",
+        candidateIcons.join(", "),
+        "",
+        "Return only one icon name from the list in iconName.",
+      ].join("\n"),
+      temperature: 0.1,
+    });
+
+    const normalized = object.iconName.replace(/\s+/g, "");
+    const matched = candidateIcons.find(
+      (name) =>
+        name === object.iconName ||
+        name === normalized ||
+        name.toLowerCase() === object.iconName.toLowerCase() ||
+        name.toLowerCase() === normalized.toLowerCase(),
+    );
+
+    if (!matched) {
+      return {
+        success: true,
+        data: "Folder",
+        confidence: 0.4,
+      };
+    }
+
+    return {
+      success: true,
+      data: matched,
+      confidence: object.confidence,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      data: "",
+      error: toErrorMessage("Group icon suggestion failed", error),
     };
   }
 }
