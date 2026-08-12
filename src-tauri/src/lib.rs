@@ -1,6 +1,7 @@
 use std::sync::{Arc, Mutex};
 use std::{env, fs};
 
+use serde::{Deserialize, Serialize};
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{
@@ -27,12 +28,88 @@ const QUICK_WINDOW_HEIGHT: f64 = 540.0;
 const GLOBAL_DEFINE_SHORTCUT: &str = "CmdOrCtrl+Shift+;";
 const GLOBAL_TRANSLATE_SHORTCUT: &str = "CmdOrCtrl+Shift+'";
 const GLOBAL_TRAY_TOGGLE_SHORTCUT: &str = "CmdOrCtrl+Shift+,";
+const WINDOW_STATE_FILE_NAME: &str = "window-state.json";
 
 #[derive(Default)]
 struct AppState {
     hide_to_tray: Arc<Mutex<bool>>,
     keep_alive_on_window_close: Arc<Mutex<bool>>,
     explicit_quit: Arc<Mutex<bool>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct SavedWindowState {
+    width: f64,
+    height: f64,
+    x: i32,
+    y: i32,
+    maximized: bool,
+}
+
+fn window_state_file_path<R: Runtime>(app: &AppHandle<R>) -> Option<std::path::PathBuf> {
+    let Ok(mut path) = app.path().app_data_dir() else {
+        return None;
+    };
+    path.push(WINDOW_STATE_FILE_NAME);
+    Some(path)
+}
+
+fn read_saved_window_state<R: Runtime>(app: &AppHandle<R>) -> Option<SavedWindowState> {
+    let path = window_state_file_path(app)?;
+    let raw = fs::read_to_string(path).ok()?;
+    serde_json::from_str::<SavedWindowState>(&raw).ok()
+}
+
+fn persist_window_state<R: Runtime>(window: &tauri::Window<R>) {
+    let app = window.app_handle();
+    let Some(path) = window_state_file_path(&app) else {
+        return;
+    };
+
+    if let Some(parent) = path.parent() {
+        if fs::create_dir_all(parent).is_err() {
+            return;
+        }
+    }
+
+    let scale_factor = window.scale_factor().unwrap_or(1.0);
+    let size = match window.outer_size() {
+        Ok(value) => value.to_logical::<f64>(scale_factor),
+        Err(_) => return,
+    };
+    let position = match window.outer_position() {
+        Ok(value) => value,
+        Err(_) => return,
+    };
+    let maximized = window.is_maximized().unwrap_or(false);
+
+    let saved = SavedWindowState {
+        width: size.width,
+        height: size.height,
+        x: position.x,
+        y: position.y,
+        maximized,
+    };
+
+    if let Ok(raw) = serde_json::to_string(&saved) {
+        let _ = fs::write(path, raw);
+    }
+}
+
+fn restore_saved_window_state<R: Runtime>(window: &tauri::WebviewWindow<R>) {
+    let app = window.app_handle();
+    let Some(saved) = read_saved_window_state(&app) else {
+        return;
+    };
+    if saved.width < 320.0 || saved.height < 420.0 {
+        return;
+    }
+
+    let _ = window.set_size(tauri::LogicalSize::new(saved.width, saved.height));
+    let _ = window.set_position(tauri::LogicalPosition::new(saved.x, saved.y));
+    if saved.maximized {
+        let _ = window.maximize();
+    }
 }
 
 fn should_hide_to_tray(state: &State<'_, AppState>) -> bool {
@@ -78,6 +155,10 @@ fn ensure_main_window<R: Runtime>(app: &AppHandle<R>) {
     .resizable(true)
     .decorations(false)
     .build();
+
+    if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
+        restore_saved_window_state(&window);
+    }
 }
 
 fn show_main_window<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
@@ -187,7 +268,13 @@ fn toggle_quick_window<R: Runtime>(
     title: &str,
 ) -> tauri::Result<()> {
     if let Some(window) = app.get_webview_window(label) {
-        window.destroy()?;
+        if window.is_visible()? {
+            window.hide()?;
+        } else {
+            window.show()?;
+            window.unminimize()?;
+            window.set_focus()?;
+        }
         return Ok(());
     }
 
@@ -392,6 +479,9 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_store::Builder::default().build())
         .setup(|app| {
+            if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
+                restore_saved_window_state(&window);
+            }
             build_tray(app.handle())?;
             if is_autostart_launch() && should_start_minimized(app.handle()) {
                 if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
@@ -401,16 +491,32 @@ pub fn run() {
             Ok(())
         })
         .on_window_event(|window, event| {
-            if window.label() != MAIN_WINDOW_LABEL {
-                return;
+            if window.label() == MAIN_WINDOW_LABEL {
+                match event {
+                    WindowEvent::Resized(_) | WindowEvent::Moved(_) => {
+                        persist_window_state(window);
+                    }
+                    _ => {}
+                }
             }
 
             if let WindowEvent::CloseRequested { api, .. } = event {
                 let state = window.state::<AppState>();
-                if should_hide_to_tray(&state) {
+                let window_label = window.label();
+                if window_label == MAIN_WINDOW_LABEL {
+                    if should_hide_to_tray(&state) {
+                        api.prevent_close();
+                        mark_keep_alive_on_window_close(&state, true);
+                        let _ = window.destroy();
+                    }
+                    return;
+                }
+
+                if window_label == QUICK_DEFINE_WINDOW_LABEL
+                    || window_label == QUICK_TRANSLATE_WINDOW_LABEL
+                {
                     api.prevent_close();
-                    mark_keep_alive_on_window_close(&state, true);
-                    let _ = window.destroy();
+                    let _ = window.hide();
                 }
             }
         })
