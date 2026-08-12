@@ -23,5 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 
-src/.env
-pnpm-lock.yamlsrc/.env
+# Local secrets
+.env
+.env.*
+!.env.example
