@@ -1,3 +1,5 @@
+![Lexi](screenshots/cover.avif)
+
 <h1 style="font-family: Arial, sans-serif; font-size: 36px; color: #ffffff; display: flex; align-items: center; border-bottom: 3px solid #ffffff; padding-bottom: 5px;">
     <img src="public/icon.png" alt="Lexi Icon" style="width: 50px; height: 50px; margin-right: 15px;">
     Lexi
