@@ -16,7 +16,6 @@ import {
   RefreshCcw,
   Search,
   SlidersHorizontal,
-  Sparkles,
   Trash2,
   ZoomIn,
 } from "lucide-react";
@@ -1028,10 +1027,6 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
                 <p className="subtle-caption mt-2 max-w-sm">Select an entry to inspect definitions, examples, and translation links.</p>
               </div>
             )}
-          </div>
-
-          <div className="flex items-center justify-between border-t border-white/10 p-2">
-            <span className="sync-pill"><Sparkles className="size-3" />Context-aware definitions</span>
           </div>
         </section>
         ) : null}
