@@ -431,7 +431,11 @@ export default function Review() {
             <Flame className="size-3" />
             Streak {streak} (Best {bestStreak})
           </span>
-          <span className="subtle-caption">`Space` reveal, `N` skip, `1-4` choose</span>
+          <span className="subtle-caption inline-flex items-center gap-1.5">
+            <kbd className="key-cap">Space</kbd> reveal
+            <kbd className="key-cap ml-1.5">N</kbd> skip
+            <kbd className="key-cap ml-1.5">1</kbd>-<kbd className="key-cap">4</kbd> choose
+          </span>
         </div>
       </section>
 

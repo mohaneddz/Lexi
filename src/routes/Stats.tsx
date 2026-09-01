@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Activity, BookOpenText, CircleDot, Globe2, Languages } from "lucide-react";
+import { Activity, BookOpenText, Globe2, Languages } from "lucide-react";
 
 import { useTranslations } from "@/hooks/useTranslations";
 import { useWords } from "@/hooks/useWords";
@@ -255,11 +255,7 @@ export default function Stats() {
           </div>
         </div>
 
-        <div className="flex items-center justify-between border-t border-white/10 p-2">
-          <span className="sync-pill">
-            <CircleDot className="size-3" />
-            Synced, just now
-          </span>
+        <div className="flex items-center justify-end border-t border-white/10 p-2">
           <span className="sync-pill">
             <Languages className="size-3" />
             {totalLanguages} active languages

@@ -304,10 +304,6 @@ export function AppShell({ children }: AppShellProps) {
           </nav>
 
           <div className="lexi-sidebar-footer space-y-1.5">
-            <span className="sync-pill">
-              <span className="size-1.5 rounded-full bg-foreground/75" />
-              Synced, just now
-            </span>
             <p className="subtle-caption px-1">{PRIMARY_MODIFIER_LABEL}+K search, {PRIMARY_MODIFIER_LABEL}+N capture, Alt+1..9 navigate</p>
           </div>
         </aside>

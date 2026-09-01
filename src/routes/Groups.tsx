@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ArrowDown, ArrowUp, CircleDot, FolderTree, Loader2, Pencil, Plus, Search, Trash2, WandSparkles } from "lucide-react";
+import { ArrowDown, ArrowUp, FolderTree, Loader2, Pencil, Plus, Search, Trash2, WandSparkles } from "lucide-react";
 
 import { GroupBadge } from "@/components/lexi/GroupBadge";
 import { Button } from "@/components/ui/button";
@@ -244,13 +244,6 @@ export default function Groups() {
               );
             })
           )}
-        </div>
-
-        <div className="border-t border-white/10 p-2">
-          <span className="sync-pill">
-            <CircleDot className="size-3" />
-            Synced, just now
-          </span>
         </div>
       </section>
 
