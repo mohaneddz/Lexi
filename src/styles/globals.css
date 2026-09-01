@@ -640,11 +640,17 @@ select.frost-select {
   padding: 0.65rem 1rem;
   border-left: 1px solid transparent;
   border-bottom: 1px solid oklch(1 0 0 / 0.065);
-  transition: background-color 120ms ease, border-color 120ms ease;
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease, transform 120ms ease;
 }
 
 .word-row:hover {
   background: oklch(1 0 0 / 0.045);
+}
+
+.word-row:active {
+  background: oklch(1 0 0 / 0.07);
+  transform: scale(0.995);
 }
 
 .word-row-active {
@@ -692,6 +698,21 @@ select.frost-select {
 
 .serif-display {
   font-family: var(--font-serif);
+}
+
+.key-cap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.3rem;
+  padding: 0.05rem 0.35rem;
+  border: 1px solid oklch(1 0 0 / 0.16);
+  border-radius: 0.32rem;
+  background: oklch(1 0 0 / 0.08);
+  box-shadow: 0 1px 0 oklch(1 0 0 / 0.08);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.78em;
+  line-height: 1.5;
 }
 
 .lexi-chip {
@@ -763,6 +784,7 @@ select.frost-select {
   border-radius: 0.85rem;
   background: linear-gradient(180deg, oklch(1 0 0 / 0.06), oklch(1 0 0 / 0.03));
   box-shadow: var(--elevation-inset), var(--elevation-soft);
+  cursor: pointer;
   transition: border-color 140ms ease, background-color 140ms ease, transform 140ms ease;
 }
 
@@ -771,13 +793,19 @@ select.frost-select {
   border-color: oklch(1 0 0 / 0.16);
 }
 
+.lexi-browser-card:active {
+  transform: translateY(0) scale(0.985);
+  border-color: oklch(1 0 0 / 0.2);
+}
+
 .lexi-browser-card.active {
   border-color: oklch(0.8 0.03 250 / 0.88);
   background: linear-gradient(180deg, oklch(0.38 0.03 250 / 0.2), oklch(1 0 0 / 0.05));
 }
 
 .lexi-browser-card.tile {
-  min-height: 15.5rem;
+  min-height: 7.5rem;
+  gap: 0.5rem;
 }
 
 .zoom-step-controls {
@@ -1177,7 +1205,7 @@ select.frost-select {
   }
 
   .lexi-browser-card.tile {
-    min-height: 13rem;
+    min-height: 6.5rem;
   }
 
   .lexi-browser-card .serif-display {
