@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
   Check,
-  CircleDot,
   Copy,
   FolderPlus,
   Grid2x2,
@@ -11,6 +10,8 @@ import {
   List,
   Minus,
   MoreHorizontal,
+  PanelRightClose,
+  PanelRightOpen,
   Pencil,
   Plus,
   Search,
@@ -104,7 +105,7 @@ export default function Translations() {
   const [bulkDeletePending, setBulkDeletePending] = useState(false);
   const todayKey = useMemo(() => dayKey(Date.now()), []);
 
-  const { viewMode, setViewMode, zoom, setZoom, stepZoom, canZoom } = useSurfaceViewPreference("translations", "list", 100);
+  const { viewMode, setViewMode, zoom, setZoom, stepZoom, canZoom, detailPanelOpen, toggleDetailPanel } = useSurfaceViewPreference("translations", "list", 100);
   const { translations, addTranslation, updateTranslation, deleteTranslation, loading } = useTranslations();
   const { words } = useWords();
   const { groups, addGroup } = useGroups();
@@ -451,10 +452,33 @@ export default function Translations() {
     </div>
   );
 
+  const renderTile = (translation: Translation) => (
+    <article
+      key={translation.id}
+      className={cn("lexi-browser-card tile", selectedId === translation.id && "active")}
+      role="button"
+      tabIndex={0}
+      onClick={() => bulkMode ? toggleBulkTranslation(translation.id) : setSelectedId(translation.id)}
+      onContextMenu={(event) => {
+        event.preventDefault();
+        openActionMenu(translation, event.clientX, event.clientY);
+      }}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <p className="serif-display truncate text-lg leading-[0.95]">{translation.sourceWord}<span className="mx-1.5 inline-flex items-center align-middle text-muted-foreground/80"><ArrowRight className="size-3.5" /></span>{translation.targetWord}</p>
+        {bulkMode ? <input type="checkbox" checked={selectedTranslationIds.includes(translation.id)} onChange={() => toggleBulkTranslation(translation.id)} onClick={(event) => event.stopPropagation()} className="size-4 accent-white" /> : null}
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        <span className="lexi-chip">{translation.sourceLanguage}</span>
+        <span className="lexi-chip">{translation.targetLanguage}</span>
+      </div>
+    </article>
+  );
+
   const renderCard = (translation: Translation) => (
     <article
       key={translation.id}
-      className={cn("lexi-browser-card", viewMode === "tiles" && "tile", selectedId === translation.id && "active")}
+      className={cn("lexi-browser-card", selectedId === translation.id && "active")}
       role="button"
       tabIndex={0}
       onClick={() => bulkMode ? toggleBulkTranslation(translation.id) : setSelectedId(translation.id)}
@@ -489,9 +513,11 @@ export default function Translations() {
     </article>
   );
 
+  const renderCardOrTile = (translation: Translation) => (viewMode === "tiles" ? renderTile(translation) : renderCard(translation));
+
   return (
     <>
-      <div className="grid h-full grid-cols-1 gap-3 xl:grid-cols-[1.12fr_1fr]">
+      <div className={cn("grid h-full grid-cols-1 gap-3", detailPanelOpen && "xl:grid-cols-[1.12fr_1fr]")}>
         <section className="frost-panel flex min-h-0 flex-col overflow-hidden animate-slide-in-up">
           <div className="flex flex-wrap items-center gap-2 border-b border-white/10 p-3">
             <div className="search-field-wrap min-w-[170px] flex-[1_1_250px] sm:min-w-[220px] sm:flex-[1_1_340px]">
@@ -512,6 +538,15 @@ export default function Translations() {
                 return <button key={option.value} type="button" className={cn("inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm", viewMode === option.value && "bg-white/14")} onClick={() => void setViewMode(option.value)}><Icon className="size-4" /><span className="hidden sm:inline">{option.label}</span></button>;
               })}
             </div>
+            <button
+              type="button"
+              className="ml-auto inline-flex size-9 items-center justify-center rounded-lg border border-white/12 bg-white/6 text-muted-foreground transition hover:bg-white/14 hover:text-foreground"
+              onClick={() => void toggleDetailPanel()}
+              aria-label={detailPanelOpen ? "Hide detail panel" : "Show detail panel"}
+              title={detailPanelOpen ? "Hide detail panel" : "Show detail panel"}
+            >
+              {detailPanelOpen ? <PanelRightClose className="size-4" /> : <PanelRightOpen className="size-4" />}
+            </button>
             <DropdownMenu open={filtersOpen} onOpenChange={setFiltersOpen}>
               <DropdownMenuTrigger asChild>
                 <Button type="button" variant="outline" className="border-white/15 bg-white/6 hover:bg-white/14"><SlidersHorizontal className="mr-2 size-4" /><span className="hidden min-[520px]:inline">Filters</span></Button>
@@ -557,11 +592,12 @@ export default function Translations() {
             ) : viewMode === "list" ? (
               groupedTranslations.map((group) => <div key={group.key}>{groupMode !== "none" ? <div className="sticky top-0 z-10 flex items-center justify-between border-y border-white/8 bg-black/20 px-3 py-1.5 text-xs text-muted-foreground backdrop-blur-md"><span>{group.key}</span><span>{group.items.length}</span></div> : null}{group.items.map(renderListRow)}</div>)
             ) : (
-              <div className="space-y-4 p-3">{groupedTranslations.map((group) => <div key={group.key} className="space-y-3">{groupMode !== "none" ? <div className="flex items-center justify-between px-1"><p className="font-medium">{group.key}</p><span className="subtle-caption">{group.items.length}</span></div> : null}<div className="grid gap-3" style={contentGridStyle}>{group.items.map(renderCard)}</div></div>)}</div>
+              <div className="space-y-4 p-3">{groupedTranslations.map((group) => <div key={group.key} className="space-y-3">{groupMode !== "none" ? <div className="flex items-center justify-between px-1"><p className="font-medium">{group.key}</p><span className="subtle-caption">{group.items.length}</span></div> : null}<div className="grid gap-3" style={contentGridStyle}>{group.items.map(renderCardOrTile)}</div></div>)}</div>
             )}
           </div>
-          <div className="flex items-center justify-between gap-3 border-t border-white/10 p-2"><span className="sync-pill"><CircleDot className="size-3" />Synced, just now</span>{canZoom ? <div className="flex items-center gap-2"><ZoomIn className="size-4 text-muted-foreground" /><button type="button" className="inline-flex size-8 items-center justify-center rounded-md border border-white/12 bg-white/5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground" onClick={() => void stepZoom("out")} aria-label="Zoom out"><Minus className="size-4" /></button><span className="sync-pill min-w-[4.25rem] justify-center">{zoom}%</span><button type="button" className="inline-flex size-8 items-center justify-center rounded-md border border-white/12 bg-white/5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground" onClick={() => void stepZoom("in")} aria-label="Zoom in"><Plus className="size-4" /></button></div> : <span className="subtle-caption">`Ctrl/Cmd + wheel` zooms cards</span>}</div>
+          <div className="flex items-center justify-end gap-3 border-t border-white/10 p-2">{canZoom ? <div className="flex items-center gap-2"><ZoomIn className="size-4 text-muted-foreground" /><button type="button" className="inline-flex size-8 items-center justify-center rounded-md border border-white/12 bg-white/5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground" onClick={() => void stepZoom("out")} aria-label="Zoom out"><Minus className="size-4" /></button><span className="sync-pill min-w-[4.25rem] justify-center">{zoom}%</span><button type="button" className="inline-flex size-8 items-center justify-center rounded-md border border-white/12 bg-white/5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground" onClick={() => void stepZoom("in")} aria-label="Zoom in"><Plus className="size-4" /></button></div> : <span className="subtle-caption inline-flex items-center gap-1.5"><kbd className="key-cap">Ctrl</kbd>/<kbd className="key-cap">Cmd</kbd> + wheel zooms cards</span>}</div>
         </section>
+        {detailPanelOpen ? (
         <section className="frost-panel flex min-h-0 flex-col overflow-hidden animate-slide-in-up">
           <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-5 md:p-6">
             <div className="space-y-6">
@@ -594,6 +630,7 @@ export default function Translations() {
           </div>
           <div className="flex items-center justify-between border-t border-white/10 p-2"><span className="sync-pill"><Languages className="size-3" />{translations.length} translation pairs</span><span className="sync-pill"><Sparkles className="size-3" />AI assisted translation</span></div>
         </section>
+        ) : null}
       </div>
 
       {actionMenu ? (

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CircleDot, Copy, Grid2x2, LayoutGrid, List, Minus, Plus, RefreshCcw, Search, Sparkles, ZoomIn } from "lucide-react";
+import { Copy, Grid2x2, LayoutGrid, List, Minus, PanelRightClose, PanelRightOpen, Plus, RefreshCcw, Search, Sparkles, ZoomIn } from "lucide-react";
 
 import { AddWordDialog } from "@/components/AddWordDialog";
 import { Button } from "@/components/ui/button";
@@ -38,7 +38,7 @@ export default function Definitions() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { words, loading, addWord } = useWords();
   const { translations } = useTranslations();
-  const { viewMode, setViewMode, zoom, setZoom, stepZoom, canZoom } = useSurfaceViewPreference("definitions", "list", 100);
+  const { viewMode, setViewMode, zoom, setZoom, stepZoom, canZoom, detailPanelOpen, toggleDetailPanel } = useSurfaceViewPreference("definitions", "list", 100);
 
   const [query, setQuery] = useState("");
   const [groupFilterId, setGroupFilterId] = useState("none");
@@ -206,7 +206,7 @@ export default function Definitions() {
 
   return (
     <>
-      <div className="grid h-full grid-cols-1 gap-3 xl:grid-cols-[1.04fr_1fr]">
+      <div className={cn("grid h-full grid-cols-1 gap-3", detailPanelOpen && "xl:grid-cols-[1.04fr_1fr]")}>
         <section className="frost-panel flex min-h-0 flex-col overflow-hidden animate-slide-in-up">
           <div className="flex flex-wrap items-center gap-2 border-b border-white/10 p-3">
             <div className="search-field-wrap min-w-[170px] flex-[1_1_250px] sm:min-w-[220px] sm:flex-[1_1_340px]">
@@ -219,6 +219,15 @@ export default function Definitions() {
                 return <button key={option.value} type="button" className={cn("inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm", viewMode === option.value && "bg-white/14")} onClick={() => void setViewMode(option.value)}><Icon className="size-4" /><span className="hidden sm:inline">{option.label}</span></button>;
               })}
             </div>
+            <button
+              type="button"
+              className="ml-auto inline-flex size-9 items-center justify-center rounded-lg border border-white/12 bg-white/6 text-muted-foreground transition hover:bg-white/14 hover:text-foreground"
+              onClick={() => void toggleDetailPanel()}
+              aria-label={detailPanelOpen ? "Hide detail panel" : "Show detail panel"}
+              title={detailPanelOpen ? "Hide detail panel" : "Show detail panel"}
+            >
+              {detailPanelOpen ? <PanelRightClose className="size-4" /> : <PanelRightOpen className="size-4" />}
+            </button>
           </div>
 
           {viewMode === "list" ? <div className="table-head grid-cols-[minmax(0,1fr)_88px]"><span>Definition Entry</span><span>Status</span></div> : null}
@@ -238,10 +247,20 @@ export default function Definitions() {
                   </div>
                 );
               })
+            ) : viewMode === "tiles" ? (
+              <div className="grid gap-3 p-3" style={contentGridStyle}>
+                {filteredWords.map((word) => (
+                  <article key={word.id} className={cn("lexi-browser-card tile", selectedId === word.id && "active")} role="button" tabIndex={0} onClick={() => { setSelectedId(word.id); setExampleVersion(0); }}>
+                    <p className="serif-display truncate text-xl leading-[0.95]">{word.word}</p>
+                    <span className="lexi-chip w-fit">{word.language}</span>
+                    <span className={cn("status-pill mt-auto w-fit", getReviewStatus(word) === "Mastered" ? "status-mastered" : getReviewStatus(word) === "Learning" ? "status-learning" : "status-new")}>{getReviewStatus(word)}</span>
+                  </article>
+                ))}
+              </div>
             ) : (
               <div className="grid gap-3 p-3" style={contentGridStyle}>
                 {filteredWords.map((word) => (
-                  <article key={word.id} className={cn("lexi-browser-card", viewMode === "tiles" && "tile", selectedId === word.id && "active")} role="button" tabIndex={0} onClick={() => { setSelectedId(word.id); setExampleVersion(0); }}>
+                  <article key={word.id} className={cn("lexi-browser-card", selectedId === word.id && "active")} role="button" tabIndex={0} onClick={() => { setSelectedId(word.id); setExampleVersion(0); }}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0"><p className="serif-display text-[2rem] leading-[0.92]">{word.word}</p><div className="mt-1.5 flex flex-wrap gap-1.5"><span className="lexi-chip">{word.language}</span></div></div>
                     </div>
@@ -255,8 +274,7 @@ export default function Definitions() {
             )}
           </div>
 
-          <div className="flex items-center justify-between gap-3 border-t border-white/10 p-2">
-            <span className="sync-pill"><CircleDot className="size-3" />Synced, just now</span>
+          <div className="flex items-center justify-end gap-3 border-t border-white/10 p-2">
             {canZoom ? (
               <div className="flex items-center gap-2">
                 <ZoomIn className="size-4 text-muted-foreground" />
@@ -268,10 +286,13 @@ export default function Definitions() {
                   <Plus className="size-4" />
                 </button>
               </div>
-            ) : <span className="subtle-caption">`Ctrl/Cmd + wheel` zooms cards</span>}
+            ) : (
+              <span className="subtle-caption inline-flex items-center gap-1.5"><kbd className="key-cap">Ctrl</kbd>/<kbd className="key-cap">Cmd</kbd> + wheel zooms cards</span>
+            )}
           </div>
         </section>
 
+        {detailPanelOpen ? (
         <section className="frost-panel flex min-h-0 flex-col overflow-hidden animate-slide-in-up">
           <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-5 md:p-6">
             <div className="space-y-6">
@@ -296,8 +317,12 @@ export default function Definitions() {
               </div>
             </div>
           </div>
-          <div className="flex items-center justify-between border-t border-white/10 p-2"><span className="sync-pill"><Sparkles className="size-3" />Dynamic examples enabled</span><span className="subtle-caption">`J/K` move through entries</span></div>
+          <div className="flex items-center justify-between border-t border-white/10 p-2">
+            <span className="sync-pill"><Sparkles className="size-3" />Dynamic examples enabled</span>
+            <span className="subtle-caption inline-flex items-center gap-1"><kbd className="key-cap">J</kbd>/<kbd className="key-cap">K</kbd> move through entries</span>
+          </div>
         </section>
+        ) : null}
       </div>
       <AddWordDialog open={addDialogOpen} onOpenChange={setAddDialogOpen} onAdd={addWord} />
     </>

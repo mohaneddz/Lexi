@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Check,
-  CircleDot,
   Copy,
   FolderPlus,
   Grid2x2,
@@ -10,6 +9,8 @@ import {
   List,
   Minus,
   MoreHorizontal,
+  PanelRightClose,
+  PanelRightOpen,
   Pencil,
   Plus,
   RefreshCcw,
@@ -169,7 +170,7 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
   const { translations } = useTranslations();
   const { groups, addGroup } = useGroups();
   const { getExamples } = useAI();
-  const { viewMode, setViewMode, zoom, setZoom, stepZoom, canZoom } = useSurfaceViewPreference(mode, "list", 100);
+  const { viewMode, setViewMode, zoom, setZoom, stepZoom, canZoom, detailPanelOpen, toggleDetailPanel } = useSurfaceViewPreference(mode, "list", 100);
 
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(mode === "inbox" ? "New" : "All");
@@ -659,10 +660,37 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
     </div>
   );
 
+  const renderTile = (word: Word) => (
+    <article
+      key={word.id}
+      className={cn("lexi-browser-card tile", selectedWordId === word.id && "active")}
+      role="button"
+      tabIndex={0}
+      onClick={() => {
+        if (bulkMode) {
+          toggleBulkWord(word.id);
+          return;
+        }
+        setSelectedWordId(word.id);
+      }}
+      onContextMenu={(event) => {
+        event.preventDefault();
+        openActionMenu(word, event.clientX, event.clientY);
+      }}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <p className="serif-display truncate text-xl leading-[0.95]">{word.word}</p>
+        {bulkMode ? <input type="checkbox" checked={selectedWordIds.includes(word.id)} onChange={() => toggleBulkWord(word.id)} onClick={(event) => event.stopPropagation()} className="size-4 accent-white" /> : null}
+      </div>
+      <span className="lexi-chip w-fit">{word.language}</span>
+      <span className={cn("status-pill mt-auto w-fit", getReviewStatus(word) === "Mastered" ? "status-mastered" : getReviewStatus(word) === "Learning" ? "status-learning" : "status-new")}>{getReviewStatus(word)}</span>
+    </article>
+  );
+
   const renderCard = (word: Word) => (
     <article
       key={word.id}
-      className={cn("lexi-browser-card", viewMode === "tiles" && "tile", selectedWordId === word.id && "active")}
+      className={cn("lexi-browser-card", selectedWordId === word.id && "active")}
       role="button"
       tabIndex={0}
       onClick={() => {
@@ -691,7 +719,7 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
           </button>
         </div>
       </div>
-      <p className={cn("word-sub mt-3", viewMode === "tiles" ? "line-clamp-5" : "line-clamp-4")}>{word.definition}</p>
+      <p className="word-sub mt-3 line-clamp-4">{word.definition}</p>
       <div className="mt-auto flex items-end justify-between gap-2 pt-4">
         <div className="flex flex-wrap gap-2">
           {(word.groupIds || []).slice(0, 2).map((groupId) => {
@@ -704,9 +732,11 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
     </article>
   );
 
+  const renderCardOrTile = (word: Word) => (viewMode === "tiles" ? renderTile(word) : renderCard(word));
+
   return (
     <>
-      <div className="grid h-full grid-cols-1 gap-3 xl:grid-cols-[1.18fr_1fr]">
+      <div className={cn("grid h-full grid-cols-1 gap-3", detailPanelOpen && "xl:grid-cols-[1.18fr_1fr]")}>
         <section className="frost-panel flex min-h-0 flex-col overflow-hidden animate-slide-in-up">
           <div className="flex flex-wrap items-center gap-2 border-b border-white/10 p-3">
             <div className="search-field-wrap min-w-[170px] flex-[1_1_250px] sm:min-w-[220px] sm:flex-[1_1_340px]">
@@ -775,6 +805,16 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
                 <DropdownMenuItem onSelect={clearAllFilters}>Clear filters</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            <button
+              type="button"
+              className="ml-auto inline-flex size-9 items-center justify-center rounded-lg border border-white/12 bg-white/6 text-muted-foreground transition hover:bg-white/14 hover:text-foreground"
+              onClick={() => void toggleDetailPanel()}
+              aria-label={detailPanelOpen ? "Hide detail panel" : "Show detail panel"}
+              title={detailPanelOpen ? "Hide detail panel" : "Show detail panel"}
+            >
+              {detailPanelOpen ? <PanelRightClose className="size-4" /> : <PanelRightOpen className="size-4" />}
+            </button>
           </div>
 
           {bulkMode ? (
@@ -838,15 +878,14 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
                 {groupedWords.map((group) => (
                   <div key={group.key} className="space-y-3">
                     {groupMode !== "none" ? <div className="flex items-center justify-between px-1"><p className="font-medium">{group.key}</p><span className="subtle-caption">{group.items.length}</span></div> : null}
-                    <div className="grid gap-3" style={contentGridStyle}>{group.items.map(renderCard)}</div>
+                    <div className="grid gap-3" style={contentGridStyle}>{group.items.map(renderCardOrTile)}</div>
                   </div>
                 ))}
               </div>
             )}
           </div>
 
-          <div className="flex items-center justify-between gap-3 border-t border-white/10 p-2">
-            <span className="sync-pill"><CircleDot className="size-3" />Synced, just now</span>
+          <div className="flex items-center justify-end gap-3 border-t border-white/10 p-2">
             {canZoom ? (
               <div className="flex items-center gap-2">
                 <ZoomIn className="size-4 text-muted-foreground" />
@@ -859,10 +898,14 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
                 </button>
               </div>
             ) : (
-              <span className="subtle-caption">Shortcuts: `J/K` move, `1-3` status</span>
+              <span className="subtle-caption inline-flex items-center gap-1.5">
+                <kbd className="key-cap">J</kbd>/<kbd className="key-cap">K</kbd> move
+                <kbd className="key-cap ml-1.5">1</kbd>-<kbd className="key-cap">3</kbd> status
+              </span>
             )}
           </div>
         </section>
+        {detailPanelOpen ? (
         <section className="frost-panel flex min-h-0 flex-col overflow-hidden animate-slide-in-up">
           <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-5 md:p-6">
             {selectedWord ? (
@@ -989,9 +1032,9 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
 
           <div className="flex items-center justify-between border-t border-white/10 p-2">
             <span className="sync-pill"><Sparkles className="size-3" />Context-aware definitions</span>
-            <span className="sync-pill"><CircleDot className="size-3" />Synced, just now</span>
           </div>
         </section>
+        ) : null}
       </div>
 
       {actionMenu ? (
