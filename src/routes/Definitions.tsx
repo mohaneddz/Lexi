@@ -4,7 +4,7 @@ import { Copy, Grid2x2, LayoutGrid, List, Minus, PanelRightClose, PanelRightOpen
 import { AddWordDialog } from "@/components/AddWordDialog";
 import { Button } from "@/components/ui/button";
 import { useSurfaceViewPreference } from "@/hooks/useSurfaceViewPreference";
-import { cardMinWidthFor, nextSurfaceZoomStep } from "@/lib/surface-view";
+import { cardMinWidthFor } from "@/lib/surface-view";
 import { useTranslations } from "@/hooks/useTranslations";
 import { useWords } from "@/hooks/useWords";
 import { cn } from "@/lib/utils";
@@ -19,6 +19,8 @@ import {
   wordFingerprint,
   type DefinitionSuggestion,
 } from "@/utils/suggestions";
+
+const GRID_CONTENT_PADDING_PX = 24;
 
 const VIEW_OPTIONS: Array<{ label: string; value: ViewMode; icon: typeof List }> = [
   { label: "List", value: "list", icon: List },
@@ -36,9 +38,10 @@ function isTypingTarget(target: EventTarget | null): boolean {
 
 export default function Definitions() {
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const gridScrollRef = useRef<HTMLDivElement>(null);
   const { words, loading, addWord } = useWords();
   const { translations } = useTranslations();
-  const { viewMode, setViewMode, zoom, setZoom, stepZoom, canZoom, detailPanelOpen, toggleDetailPanel } = useSurfaceViewPreference("definitions", "list", 100);
+  const { viewMode, setViewMode, zoom, stepZoom, canZoom, detailPanelOpen, toggleDetailPanel } = useSurfaceViewPreference("definitions", "list", 100);
 
   const [query, setQuery] = useState("");
   const [groupFilterId, setGroupFilterId] = useState("none");
@@ -206,8 +209,8 @@ export default function Definitions() {
 
   return (
     <>
-      <div className={cn("grid h-full grid-cols-1 gap-3", detailPanelOpen && "xl:grid-cols-[1.04fr_1fr]")}>
-        <section className="frost-panel flex min-h-0 flex-col overflow-hidden animate-slide-in-up">
+      <div className={cn("grid min-h-full grid-cols-1 gap-3 xl:h-full", detailPanelOpen && "xl:grid-cols-[1.04fr_1fr]")}>
+        <section className="frost-panel flex min-h-[22rem] xl:min-h-0 flex-col overflow-hidden animate-slide-in-up">
           <div className="flex flex-wrap items-center gap-2 border-b border-white/10 p-3">
             <div className="search-field-wrap min-w-[170px] flex-[1_1_250px] sm:min-w-[220px] sm:flex-[1_1_340px]">
               <Search className="search-field-icon" />
@@ -216,7 +219,7 @@ export default function Definitions() {
             <div className="flex items-center rounded-lg border border-white/12 bg-white/6 p-1">
               {VIEW_OPTIONS.map((option) => {
                 const Icon = option.icon;
-                return <button key={option.value} type="button" className={cn("inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm", viewMode === option.value && "bg-white/14")} onClick={() => void setViewMode(option.value)}><Icon className="size-4" /><span className="hidden sm:inline">{option.label}</span></button>;
+                return <button key={option.value} type="button" className={cn("inline-flex items-center justify-center rounded-md p-2", viewMode === option.value && "bg-white/14")} onClick={() => void setViewMode(option.value)} aria-label={option.label} title={option.label}><Icon className="size-4" /></button>;
               })}
             </div>
             <button
@@ -232,7 +235,7 @@ export default function Definitions() {
 
           {viewMode === "list" ? <div className="table-head grid-cols-[minmax(0,1fr)_88px]"><span>Definition Entry</span><span>Status</span></div> : null}
 
-          <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto" onWheel={(event) => { if (!(event.ctrlKey || event.metaKey) || !canZoom) return; event.preventDefault(); void setZoom(nextSurfaceZoomStep(zoom, event.deltaY < 0 ? "in" : "out")); }}>
+          <div ref={gridScrollRef} className="custom-scrollbar min-h-0 flex-1 overflow-y-auto" onWheel={(event) => { if (!(event.ctrlKey || event.metaKey) || !canZoom) return; event.preventDefault(); void stepZoom(event.deltaY < 0 ? "in" : "out", event.currentTarget.clientWidth - GRID_CONTENT_PADDING_PX); }}>
             {loading ? (
               <div className="space-y-2 p-3">{[1, 2, 3, 4].map((index) => <div key={index} className="h-16 rounded-lg bg-white/6" />)}</div>
             ) : filteredWords.length === 0 ? (
@@ -278,11 +281,11 @@ export default function Definitions() {
             {canZoom ? (
               <div className="flex items-center gap-2">
                 <ZoomIn className="size-4 text-muted-foreground" />
-                <button type="button" className="inline-flex size-8 items-center justify-center rounded-md border border-white/12 bg-white/5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground" onClick={() => void stepZoom("out")} aria-label="Zoom out">
+                <button type="button" className="inline-flex size-8 items-center justify-center rounded-md border border-white/12 bg-white/5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground" onClick={() => void stepZoom("out", (gridScrollRef.current?.clientWidth ?? 0) - GRID_CONTENT_PADDING_PX)} aria-label="Zoom out">
                   <Minus className="size-4" />
                 </button>
                 <span className="sync-pill min-w-[4.25rem] justify-center">{zoom}%</span>
-                <button type="button" className="inline-flex size-8 items-center justify-center rounded-md border border-white/12 bg-white/5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground" onClick={() => void stepZoom("in")} aria-label="Zoom in">
+                <button type="button" className="inline-flex size-8 items-center justify-center rounded-md border border-white/12 bg-white/5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground" onClick={() => void stepZoom("in", (gridScrollRef.current?.clientWidth ?? 0) - GRID_CONTENT_PADDING_PX)} aria-label="Zoom in">
                   <Plus className="size-4" />
                 </button>
               </div>
@@ -293,7 +296,7 @@ export default function Definitions() {
         </section>
 
         {detailPanelOpen ? (
-        <section className="frost-panel flex min-h-0 flex-col overflow-hidden animate-slide-in-up">
+        <section className="frost-panel flex min-h-[22rem] xl:min-h-0 flex-col overflow-hidden animate-slide-in-up">
           <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-5 md:p-6">
             <div className="space-y-6">
               {selectedWord ? (

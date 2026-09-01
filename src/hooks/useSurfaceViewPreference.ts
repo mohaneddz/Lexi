@@ -4,9 +4,8 @@ import type { SurfaceKey, ViewMode } from "@/types";
 import {
   MAX_SURFACE_ZOOM,
   MIN_SURFACE_ZOOM,
-  SURFACE_ZOOM_STEPS,
   clampSurfaceZoom,
-  nextSurfaceZoomStep,
+  nextSurfaceZoomForContainer,
   type ZoomDirection,
 } from "@/lib/surface-view";
 import { getSettings, updateSettings } from "@/utils/storage";
@@ -73,8 +72,8 @@ export function useSurfaceViewPreference(surface: SurfaceKey, defaultMode: ViewM
     await persistSurfaceViews(viewMode, clamped, detailPanelOpen);
   };
 
-  const stepZoom = async (direction: ZoomDirection) => {
-    await setZoom(nextSurfaceZoomStep(zoom, direction));
+  const stepZoom = async (direction: ZoomDirection, containerWidth: number) => {
+    await setZoom(nextSurfaceZoomForContainer(viewMode, zoom, containerWidth, direction));
   };
 
   const toggleDetailPanel = async () => {
@@ -94,7 +93,6 @@ export function useSurfaceViewPreference(surface: SurfaceKey, defaultMode: ViewM
     canZoom,
     detailPanelOpen,
     toggleDetailPanel,
-    zoomSteps: SURFACE_ZOOM_STEPS,
     minZoom: MIN_SURFACE_ZOOM,
     maxZoom: MAX_SURFACE_ZOOM,
   };

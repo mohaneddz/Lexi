@@ -40,7 +40,7 @@ import { useGroups } from "@/hooks/useGroups";
 import { useSurfaceViewPreference } from "@/hooks/useSurfaceViewPreference";
 import { useTranslations } from "@/hooks/useTranslations";
 import { useWords } from "@/hooks/useWords";
-import { cardMinWidthFor, nextSurfaceZoomStep } from "@/lib/surface-view";
+import { cardMinWidthFor } from "@/lib/surface-view";
 import { cn } from "@/lib/utils";
 import type { Translation, ViewMode } from "@/types";
 import { formatDate } from "@/utils/formatters";
@@ -65,6 +65,7 @@ type ActionMenuState = {
 const ACTION_MENU_WIDTH = 272;
 const ACTION_MENU_HEIGHT = 340;
 const ACTION_MENU_GAP = 4;
+const GRID_CONTENT_PADDING_PX = 24;
 
 const VIEW_OPTIONS: Array<{ label: string; value: ViewMode; icon: typeof List }> = [
   { label: "List", value: "list", icon: List },
@@ -82,6 +83,7 @@ function isTypingTarget(target: EventTarget | null): boolean {
 
 export default function Translations() {
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const gridScrollRef = useRef<HTMLDivElement>(null);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingTranslation, setEditingTranslation] = useState<Translation | null>(null);
@@ -105,7 +107,7 @@ export default function Translations() {
   const [bulkDeletePending, setBulkDeletePending] = useState(false);
   const todayKey = useMemo(() => dayKey(Date.now()), []);
 
-  const { viewMode, setViewMode, zoom, setZoom, stepZoom, canZoom, detailPanelOpen, toggleDetailPanel } = useSurfaceViewPreference("translations", "list", 100);
+  const { viewMode, setViewMode, zoom, stepZoom, canZoom, detailPanelOpen, toggleDetailPanel } = useSurfaceViewPreference("translations", "list", 100);
   const { translations, addTranslation, updateTranslation, deleteTranslation, loading } = useTranslations();
   const { words } = useWords();
   const { groups, addGroup } = useGroups();
@@ -517,8 +519,8 @@ export default function Translations() {
 
   return (
     <>
-      <div className={cn("grid h-full grid-cols-1 gap-3", detailPanelOpen && "xl:grid-cols-[1.12fr_1fr]")}>
-        <section className="frost-panel flex min-h-0 flex-col overflow-hidden animate-slide-in-up">
+      <div className={cn("grid min-h-full grid-cols-1 gap-3 xl:h-full", detailPanelOpen && "xl:grid-cols-[1.12fr_1fr]")}>
+        <section className="frost-panel flex min-h-[22rem] xl:min-h-0 flex-col overflow-hidden animate-slide-in-up">
           <div className="flex flex-wrap items-center gap-2 border-b border-white/10 p-3">
             <div className="search-field-wrap min-w-[170px] flex-[1_1_250px] sm:min-w-[220px] sm:flex-[1_1_340px]">
               <Search className="search-field-icon" />
@@ -535,7 +537,7 @@ export default function Translations() {
             <div className="flex items-center rounded-lg border border-white/12 bg-white/6 p-1">
               {VIEW_OPTIONS.map((option) => {
                 const Icon = option.icon;
-                return <button key={option.value} type="button" className={cn("inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm", viewMode === option.value && "bg-white/14")} onClick={() => void setViewMode(option.value)}><Icon className="size-4" /><span className="hidden sm:inline">{option.label}</span></button>;
+                return <button key={option.value} type="button" className={cn("inline-flex items-center justify-center rounded-md p-2", viewMode === option.value && "bg-white/14")} onClick={() => void setViewMode(option.value)} aria-label={option.label} title={option.label}><Icon className="size-4" /></button>;
               })}
             </div>
             <button
@@ -549,7 +551,7 @@ export default function Translations() {
             </button>
             <DropdownMenu open={filtersOpen} onOpenChange={setFiltersOpen}>
               <DropdownMenuTrigger asChild>
-                <Button type="button" variant="outline" className="border-white/15 bg-white/6 hover:bg-white/14"><SlidersHorizontal className="mr-2 size-4" /><span className="hidden min-[520px]:inline">Filters</span></Button>
+                <Button type="button" variant="outline" size="icon" className="border-white/15 bg-white/6 hover:bg-white/14" aria-label="Filters" title="Filters"><SlidersHorizontal className="size-4" /></Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64">
                 <DropdownMenudiv>Source</DropdownMenudiv>
@@ -586,7 +588,7 @@ export default function Translations() {
             </div>
           ) : null}
           {viewMode === "list" ? <div className={cn("table-head", bulkMode ? "grid-cols-[28px_minmax(0,1fr)_26px]" : "grid-cols-[minmax(0,1fr)_26px]")}><span>Translation</span><span /></div> : null}
-          <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto" onWheel={(event) => { if (!(event.ctrlKey || event.metaKey) || !canZoom) return; event.preventDefault(); void setZoom(nextSurfaceZoomStep(zoom, event.deltaY < 0 ? "in" : "out")); }}>
+          <div ref={gridScrollRef} className="custom-scrollbar min-h-0 flex-1 overflow-y-auto" onWheel={(event) => { if (!(event.ctrlKey || event.metaKey) || !canZoom) return; event.preventDefault(); void stepZoom(event.deltaY < 0 ? "in" : "out", event.currentTarget.clientWidth - GRID_CONTENT_PADDING_PX); }}>
             {loading ? <div className="space-y-2 p-3">{[1, 2, 3, 4].map((index) => <div key={index} className="h-16 rounded-lg bg-white/6" />)}</div> : filteredTranslations.length === 0 ? (
               <div className="flex h-full min-h-[260px] flex-col items-center justify-center text-center"><p className="section-title">No translations</p><p className="subtle-caption mt-2 max-w-sm px-4">Add translation pairs first to build your language map.</p></div>
             ) : viewMode === "list" ? (
@@ -595,10 +597,10 @@ export default function Translations() {
               <div className="space-y-4 p-3">{groupedTranslations.map((group) => <div key={group.key} className="space-y-3">{groupMode !== "none" ? <div className="flex items-center justify-between px-1"><p className="font-medium">{group.key}</p><span className="subtle-caption">{group.items.length}</span></div> : null}<div className="grid gap-3" style={contentGridStyle}>{group.items.map(renderCardOrTile)}</div></div>)}</div>
             )}
           </div>
-          <div className="flex items-center justify-end gap-3 border-t border-white/10 p-2">{canZoom ? <div className="flex items-center gap-2"><ZoomIn className="size-4 text-muted-foreground" /><button type="button" className="inline-flex size-8 items-center justify-center rounded-md border border-white/12 bg-white/5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground" onClick={() => void stepZoom("out")} aria-label="Zoom out"><Minus className="size-4" /></button><span className="sync-pill min-w-[4.25rem] justify-center">{zoom}%</span><button type="button" className="inline-flex size-8 items-center justify-center rounded-md border border-white/12 bg-white/5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground" onClick={() => void stepZoom("in")} aria-label="Zoom in"><Plus className="size-4" /></button></div> : <span className="subtle-caption inline-flex items-center gap-1.5"><kbd className="key-cap">Ctrl</kbd>/<kbd className="key-cap">Cmd</kbd> + wheel zooms cards</span>}</div>
+          <div className="flex items-center justify-end gap-3 border-t border-white/10 p-2">{canZoom ? <div className="flex items-center gap-2"><ZoomIn className="size-4 text-muted-foreground" /><button type="button" className="inline-flex size-8 items-center justify-center rounded-md border border-white/12 bg-white/5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground" onClick={() => void stepZoom("out", (gridScrollRef.current?.clientWidth ?? 0) - GRID_CONTENT_PADDING_PX)} aria-label="Zoom out"><Minus className="size-4" /></button><span className="sync-pill min-w-[4.25rem] justify-center">{zoom}%</span><button type="button" className="inline-flex size-8 items-center justify-center rounded-md border border-white/12 bg-white/5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground" onClick={() => void stepZoom("in", (gridScrollRef.current?.clientWidth ?? 0) - GRID_CONTENT_PADDING_PX)} aria-label="Zoom in"><Plus className="size-4" /></button></div> : <span className="subtle-caption inline-flex items-center gap-1.5"><kbd className="key-cap">Ctrl</kbd>/<kbd className="key-cap">Cmd</kbd> + wheel zooms cards</span>}</div>
         </section>
         {detailPanelOpen ? (
-        <section className="frost-panel flex min-h-0 flex-col overflow-hidden animate-slide-in-up">
+        <section className="frost-panel flex min-h-[22rem] xl:min-h-0 flex-col overflow-hidden animate-slide-in-up">
           <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-5 md:p-6">
             <div className="space-y-6">
               {selectedTranslation ? (
