@@ -160,8 +160,8 @@ export default function Books() {
   };
 
   return (
-    <div className="grid h-full grid-cols-1 gap-3 xl:grid-cols-[1.12fr_1fr]">
-      <section className="frost-panel flex min-h-0 flex-col overflow-hidden animate-slide-in-up">
+    <div className="grid min-h-full grid-cols-1 gap-3 xl:h-full xl:grid-cols-[1.12fr_1fr]">
+      <section className="frost-panel flex min-h-[22rem] xl:min-h-0 flex-col overflow-hidden animate-slide-in-up">
         <div className="border-b border-white/10 p-3 space-y-2">
           <div className="search-field-wrap">
             <Search className="search-field-icon" />
@@ -343,7 +343,7 @@ export default function Books() {
         </div>
       </section>
 
-      <section className="frost-panel flex min-h-0 flex-col overflow-hidden animate-slide-in-up">
+      <section className="frost-panel flex min-h-[22rem] xl:min-h-0 flex-col overflow-hidden animate-slide-in-up">
         <div className="border-b border-white/10 p-3 space-y-2">
           <div className="search-field-wrap">
             <Search className="search-field-icon" />

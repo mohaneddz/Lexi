@@ -153,8 +153,8 @@ export default function Groups() {
   };
 
   return (
-    <div className="grid h-full grid-cols-1 gap-3 xl:grid-cols-[1fr_0.96fr]">
-      <section className="frost-panel flex min-h-0 flex-col overflow-hidden animate-slide-in-up">
+    <div className="grid min-h-full grid-cols-1 gap-3 xl:h-full xl:grid-cols-[1fr_0.96fr]">
+      <section className="frost-panel flex min-h-[22rem] xl:min-h-0 flex-col overflow-hidden animate-slide-in-up">
         <div className="flex items-center justify-between border-b border-white/10 p-4">
           <div>
             <h2 className="section-title">Groups</h2>
@@ -247,7 +247,7 @@ export default function Groups() {
         </div>
       </section>
 
-      <section className="frost-panel flex min-h-0 flex-col overflow-hidden animate-slide-in-up">
+      <section className="frost-panel flex min-h-[22rem] xl:min-h-0 flex-col overflow-hidden animate-slide-in-up">
         <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-5 md:p-6">
           <div className="space-y-6">
             <div>

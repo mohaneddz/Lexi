@@ -347,8 +347,8 @@ export default function Review() {
   }, [mode, options, queue.length, selectedWord, showAnswer, typedAnswer]);
 
   return (
-    <div className="grid h-full grid-cols-1 gap-3 xl:grid-cols-[1.04fr_1fr]">
-      <section className="frost-panel flex min-h-0 flex-col overflow-hidden animate-slide-in-up">
+    <div className="grid min-h-full grid-cols-1 gap-3 xl:h-full xl:grid-cols-[1.04fr_1fr]">
+      <section className="frost-panel flex min-h-[22rem] xl:min-h-0 flex-col overflow-hidden animate-slide-in-up">
         <div className="space-y-3 border-b border-white/10 p-4">
           <div className="flex items-center justify-between gap-3">
             <h2 className="section-title">Revision Queue</h2>
@@ -439,7 +439,7 @@ export default function Review() {
         </div>
       </section>
 
-      <section className="frost-panel flex min-h-0 flex-col overflow-hidden animate-slide-in-up">
+      <section className="frost-panel flex min-h-[22rem] xl:min-h-0 flex-col overflow-hidden animate-slide-in-up">
         {selectedWord ? (
           <>
             <div className="space-y-3 border-b border-white/10 p-4">

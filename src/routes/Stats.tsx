@@ -106,8 +106,8 @@ export default function Stats() {
   }, [words]);
 
   return (
-    <div className="grid h-full grid-cols-1 gap-3 xl:grid-cols-[1.25fr_0.95fr]">
-      <section className="frost-panel custom-scrollbar min-h-0 overflow-y-auto p-5 md:p-6 animate-slide-in-up">
+    <div className="grid min-h-full grid-cols-1 gap-3 xl:h-full xl:grid-cols-[1.25fr_0.95fr]">
+      <section className="frost-panel custom-scrollbar min-h-[22rem] xl:min-h-0 overflow-y-auto p-5 md:p-6 animate-slide-in-up">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <article className="metric-card">
             <p className="subtle-caption">Words</p>
@@ -212,7 +212,7 @@ export default function Stats() {
         </div>
       </section>
 
-      <section className="frost-panel flex min-h-0 flex-col overflow-hidden animate-slide-in-up">
+      <section className="frost-panel flex min-h-[22rem] xl:min-h-0 flex-col overflow-hidden animate-slide-in-up">
         <div className="border-b border-white/10 p-5">
           <h2 className="section-title">Recent Activity</h2>
           <p className="subtle-caption mt-2">Most recently captured vocabulary entries.</p>

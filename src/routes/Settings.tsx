@@ -223,8 +223,8 @@ export default function Settings() {
   }
 
   return (
-    <div className="grid h-full grid-cols-1 gap-3 xl:grid-cols-[1.15fr_0.95fr]">
-      <section className="frost-panel custom-scrollbar min-h-0 overflow-y-auto p-5 md:p-6 animate-slide-in-up">
+    <div className="grid min-h-full grid-cols-1 gap-3 xl:h-full xl:grid-cols-[1.15fr_0.95fr]">
+      <section className="frost-panel custom-scrollbar min-h-[22rem] xl:min-h-0 overflow-y-auto p-5 md:p-6 animate-slide-in-up">
         <div className="space-y-6">
           <header>
             <h2 className="section-title">Settings</h2>
@@ -565,7 +565,7 @@ export default function Settings() {
         </div>
       </section>
 
-      <section className="frost-panel flex min-h-0 flex-col overflow-hidden animate-slide-in-up">
+      <section className="frost-panel flex min-h-[22rem] xl:min-h-0 flex-col overflow-hidden animate-slide-in-up">
         <div className="border-b border-white/10 p-5">
           <h2 className="section-title">System State</h2>
           <p className="subtle-caption mt-2">Runtime configuration and shortcut map.</p>

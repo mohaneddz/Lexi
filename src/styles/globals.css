@@ -509,6 +509,22 @@ textarea {
   min-height: 0;
   flex: 1;
   padding: 0.65rem 0.75rem 0.75rem;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0.7 0.01 253 / 0.3) transparent;
+}
+
+.lexi-main-body::-webkit-scrollbar {
+  width: 7px;
+}
+
+.lexi-main-body::-webkit-scrollbar-thumb {
+  background: oklch(0.72 0.01 253 / 0.3);
+  border-radius: 999px;
+}
+
+.lexi-main-body::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .frost-panel {
