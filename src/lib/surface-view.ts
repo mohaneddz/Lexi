@@ -45,9 +45,9 @@ export function cardMinWidthFor(mode: ViewMode, zoom: number): number {
     return 0;
   }
 
-  const baseWidth = mode === "tiles" ? 284 : 344;
-  const rawWidth = Math.round((baseWidth * 100) / clampSurfaceZoom(zoom));
-  const minWidth = mode === "tiles" ? 152 : 204;
-  const maxWidth = mode === "tiles" ? 332 : 426;
+  const baseWidth = mode === "tiles" ? 168 : 344;
+  const rawWidth = Math.round((baseWidth * clampSurfaceZoom(zoom)) / 100);
+  const minWidth = mode === "tiles" ? 118 : 204;
+  const maxWidth = mode === "tiles" ? 260 : 426;
   return Math.max(minWidth, Math.min(maxWidth, rawWidth));
 }

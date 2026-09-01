@@ -14,6 +14,7 @@ import { getSettings, updateSettings } from "@/utils/storage";
 export function useSurfaceViewPreference(surface: SurfaceKey, defaultMode: ViewMode = "list", defaultZoom = 100) {
   const [viewMode, setViewModeState] = useState<ViewMode>(defaultMode);
   const [zoom, setZoomState] = useState<number>(clampSurfaceZoom(defaultZoom));
+  const [detailPanelOpen, setDetailPanelOpenState] = useState<boolean>(true);
 
   useEffect(() => {
     let active = true;
@@ -26,16 +27,18 @@ export function useSurfaceViewPreference(surface: SurfaceKey, defaultMode: ViewM
       const entry = settings.surfaceViews[surface];
       setViewModeState(entry?.mode ?? defaultMode);
       setZoomState(clampSurfaceZoom(entry?.zoom ?? defaultZoom));
+      setDetailPanelOpenState(entry?.detailPanelOpen ?? true);
     });
 
     const onSettingsUpdated = (event: Event) => {
-      const customEvent = event as CustomEvent<{ surfaceViews?: Record<string, { mode: ViewMode; zoom: number }> }>;
+      const customEvent = event as CustomEvent<{ surfaceViews?: Record<string, { mode: ViewMode; zoom: number; detailPanelOpen?: boolean }> }>;
       const entry = customEvent.detail?.surfaceViews?.[surface];
       if (!entry) {
         return;
       }
       setViewModeState(entry.mode);
       setZoomState(clampSurfaceZoom(entry.zoom));
+      setDetailPanelOpenState(entry.detailPanelOpen ?? true);
     };
 
     window.addEventListener("lexi:settings-updated", onSettingsUpdated);
@@ -45,13 +48,14 @@ export function useSurfaceViewPreference(surface: SurfaceKey, defaultMode: ViewM
     };
   }, [defaultMode, defaultZoom, surface]);
 
-  const persistSurfaceViews = async (nextMode: ViewMode, nextZoom: number) => {
+  const persistSurfaceViews = async (nextMode: ViewMode, nextZoom: number, nextDetailPanelOpen: boolean) => {
     const settings = await getSettings();
     const nextSurfaceViews = {
       ...settings.surfaceViews,
       [surface]: {
         mode: nextMode,
         zoom: clampSurfaceZoom(nextZoom),
+        detailPanelOpen: nextDetailPanelOpen,
       },
     };
     await updateSettings({ surfaceViews: nextSurfaceViews });
@@ -60,17 +64,23 @@ export function useSurfaceViewPreference(surface: SurfaceKey, defaultMode: ViewM
 
   const setViewMode = async (nextMode: ViewMode) => {
     setViewModeState(nextMode);
-    await persistSurfaceViews(nextMode, zoom);
+    await persistSurfaceViews(nextMode, zoom, detailPanelOpen);
   };
 
   const setZoom = async (nextZoom: number) => {
     const clamped = clampSurfaceZoom(nextZoom);
     setZoomState(clamped);
-    await persistSurfaceViews(viewMode, clamped);
+    await persistSurfaceViews(viewMode, clamped, detailPanelOpen);
   };
 
   const stepZoom = async (direction: ZoomDirection) => {
     await setZoom(nextSurfaceZoomStep(zoom, direction));
+  };
+
+  const toggleDetailPanel = async () => {
+    const next = !detailPanelOpen;
+    setDetailPanelOpenState(next);
+    await persistSurfaceViews(viewMode, zoom, next);
   };
 
   const canZoom = useMemo(() => viewMode !== "list", [viewMode]);
@@ -82,6 +92,8 @@ export function useSurfaceViewPreference(surface: SurfaceKey, defaultMode: ViewM
     setZoom,
     stepZoom,
     canZoom,
+    detailPanelOpen,
+    toggleDetailPanel,
     zoomSteps: SURFACE_ZOOM_STEPS,
     minZoom: MIN_SURFACE_ZOOM,
     maxZoom: MAX_SURFACE_ZOOM,

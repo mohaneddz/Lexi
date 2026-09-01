@@ -40,10 +40,10 @@ const DEFAULT_SETTINGS: AppSettings = {
   defaultRevisionMode: 'flashcard',
   groupTabsIconOnly: false,
   surfaceViews: {
-    inbox: { mode: "list", zoom: 100 },
-    words: { mode: "list", zoom: 100 },
-    definitions: { mode: "list", zoom: 100 },
-    translations: { mode: "list", zoom: 100 },
+    inbox: { mode: "list", zoom: 100, detailPanelOpen: true },
+    words: { mode: "list", zoom: 100, detailPanelOpen: true },
+    definitions: { mode: "list", zoom: 100, detailPanelOpen: true },
+    translations: { mode: "list", zoom: 100, detailPanelOpen: true },
   },
 };
 
@@ -55,7 +55,8 @@ function normalizeSurfaceViewPreference(
   const mode = value?.mode === "grid" || value?.mode === "tiles" || value?.mode === "list"
     ? value.mode
     : fallback.mode;
-  return { mode, zoom };
+  const detailPanelOpen = typeof value?.detailPanelOpen === "boolean" ? value.detailPanelOpen : fallback.detailPanelOpen;
+  return { mode, zoom, detailPanelOpen };
 }
 
 function normalizeSurfaceViews(value: Partial<Record<SurfaceKey, Partial<SurfaceViewPreference>>> | undefined) {

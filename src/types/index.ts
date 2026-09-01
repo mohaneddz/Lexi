@@ -104,6 +104,7 @@ export type SurfaceKey = "inbox" | "words" | "definitions" | "translations";
 export interface SurfaceViewPreference {
   mode: ViewMode;
   zoom: number;
+  detailPanelOpen: boolean;
 }
 
 export interface LanguageStats {
