@@ -708,7 +708,7 @@ export function WordWorkspace({ mode }: WordWorkspaceProps) {
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="serif-display text-[2rem] leading-[0.92]">{word.word}</p>
+          <p className="serif-display break-words text-[2rem] leading-[0.92]">{word.word}</p>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             <span className="lexi-chip">{word.language}</span>
           </div>

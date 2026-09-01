@@ -265,7 +265,7 @@ export default function Definitions() {
                 {filteredWords.map((word) => (
                   <article key={word.id} className={cn("lexi-browser-card", selectedId === word.id && "active")} role="button" tabIndex={0} onClick={() => { setSelectedId(word.id); setExampleVersion(0); }}>
                     <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0"><p className="serif-display text-[2rem] leading-[0.92]">{word.word}</p><div className="mt-1.5 flex flex-wrap gap-1.5"><span className="lexi-chip">{word.language}</span></div></div>
+                      <div className="min-w-0"><p className="serif-display break-words text-[2rem] leading-[0.92]">{word.word}</p><div className="mt-1.5 flex flex-wrap gap-1.5"><span className="lexi-chip">{word.language}</span></div></div>
                     </div>
                     <p className="word-sub mt-3 line-clamp-5">{word.definition}</p>
                     <div className="mt-auto flex justify-end pt-4">

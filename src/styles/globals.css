@@ -691,6 +691,7 @@ select.frost-select {
   font-size: clamp(2rem, 2.65vw, 3.15rem);
   line-height: 0.95;
   letter-spacing: 0.01em;
+  overflow-wrap: break-word;
 }
 
 .detail-phonetic {
