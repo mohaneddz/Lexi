@@ -68,6 +68,125 @@
     "coverUrl": "/books/covers/trans-countries-en-es.jpg"
   },
   {
+    "id": "trans-countries-en-de",
+    "title": "Country Names (English to German)",
+    "type": "translation",
+    "version": "2.1.0",
+    "description": "Every country name in English paired with its German name, including official long forms.",
+    "source": "mledoze/countries",
+    "sourceUrl": "/books/packs/trans-countries-en-de.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "German"
+    ],
+    "sizeBytes": 32905,
+    "coverUrl": "/books/covers/trans-countries-en-de.jpg"
+  },
+  {
+    "id": "trans-countries-en-it",
+    "title": "Country Names (English to Italian)",
+    "type": "translation",
+    "version": "2.1.0",
+    "description": "Every country name in English paired with its Italian name, including official long forms.",
+    "source": "mledoze/countries",
+    "sourceUrl": "/books/packs/trans-countries-en-it.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Italian"
+    ],
+    "sizeBytes": 33906,
+    "coverUrl": "/books/covers/trans-countries-en-it.jpg"
+  },
+  {
+    "id": "trans-countries-en-pt",
+    "title": "Country Names (English to Portuguese)",
+    "type": "translation",
+    "version": "2.1.0",
+    "description": "Every country name in English paired with its Portuguese name, including official long forms.",
+    "source": "mledoze/countries",
+    "sourceUrl": "/books/packs/trans-countries-en-pt.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Portuguese"
+    ],
+    "sizeBytes": 34843,
+    "coverUrl": "/books/covers/trans-countries-en-pt.jpg"
+  },
+  {
+    "id": "trans-countries-en-ja",
+    "title": "Country Names (English to Japanese)",
+    "type": "translation",
+    "version": "2.1.0",
+    "description": "Every country name in English paired with its Japanese name, including official long forms.",
+    "source": "mledoze/countries",
+    "sourceUrl": "/books/packs/trans-countries-en-ja.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Japanese"
+    ],
+    "sizeBytes": 35413,
+    "coverUrl": "/books/covers/trans-countries-en-ja.jpg"
+  },
+  {
+    "id": "trans-countries-en-ko",
+    "title": "Country Names (English to Korean)",
+    "type": "translation",
+    "version": "2.1.0",
+    "description": "Every country name in English paired with its Korean name, including official long forms.",
+    "source": "mledoze/countries",
+    "sourceUrl": "/books/packs/trans-countries-en-ko.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Korean"
+    ],
+    "sizeBytes": 33117,
+    "coverUrl": "/books/covers/trans-countries-en-ko.jpg"
+  },
+  {
+    "id": "trans-countries-en-zh",
+    "title": "Country Names (English to Chinese)",
+    "type": "translation",
+    "version": "2.1.0",
+    "description": "Every country name in English paired with its Chinese name, including official long forms.",
+    "source": "mledoze/countries",
+    "sourceUrl": "/books/packs/trans-countries-en-zh.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Chinese"
+    ],
+    "sizeBytes": 32701,
+    "coverUrl": "/books/covers/trans-countries-en-zh.jpg"
+  },
+  {
+    "id": "trans-countries-en-ar",
+    "title": "Country Names (English to Arabic)",
+    "type": "translation",
+    "version": "2.1.0",
+    "description": "Every country name in English paired with its Arabic name, including official long forms.",
+    "source": "mledoze/countries",
+    "sourceUrl": "/books/packs/trans-countries-en-ar.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Arabic"
+    ],
+    "sizeBytes": 37181,
+    "coverUrl": "/books/covers/trans-countries-en-ar.jpg"
+  },
+  {
     "id": "dict-topic-feelings",
     "title": "Feelings and Emotions",
     "type": "dictionary",
