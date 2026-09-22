@@ -199,9 +199,16 @@ export function useBooks() {
 
   const installBook = useCallback(async (book: BookCatalogItem) => {
     setInstalling(book.id, true);
+    setError(null);
     try {
       const payload = await loadPayloadFromSourceUrl(book.sourceUrl);
       await installFromPayload(payload, book);
+    } catch (installError) {
+      setError(
+        installError instanceof Error
+          ? `Could not install "${book.title}": ${installError.message}`
+          : `Could not install "${book.title}".`,
+      );
     } finally {
       setInstalling(book.id, false);
     }
@@ -213,21 +220,30 @@ export function useBooks() {
       return;
     }
 
-    await deleteInstalledBookPayload(installed.localPath);
-    await removeInstalledBook(bookId);
+    setError(null);
+    try {
+      await deleteInstalledBookPayload(installed.localPath);
+      await removeInstalledBook(bookId);
 
-    setInstalledBooks((current) => current.filter((book) => book.id !== bookId));
-    setBookPayloads((current) => {
-      const next = { ...current };
-      delete next[bookId];
-      return next;
-    });
+      setInstalledBooks((current) => current.filter((book) => book.id !== bookId));
+      setBookPayloads((current) => {
+        const next = { ...current };
+        delete next[bookId];
+        return next;
+      });
 
-    const currentActive = await getActiveBookIds();
-    if (currentActive.includes(bookId)) {
-      const nextActive = currentActive.filter((id) => id !== bookId);
-      await saveActiveBookIds(nextActive);
-      setActiveBookIds(nextActive);
+      const currentActive = await getActiveBookIds();
+      if (currentActive.includes(bookId)) {
+        const nextActive = currentActive.filter((id) => id !== bookId);
+        await saveActiveBookIds(nextActive);
+        setActiveBookIds(nextActive);
+      }
+    } catch (uninstallError) {
+      setError(
+        uninstallError instanceof Error
+          ? `Could not remove "${installed.title}": ${uninstallError.message}`
+          : `Could not remove "${installed.title}".`,
+      );
     }
   }, [installedBooks]);
 
