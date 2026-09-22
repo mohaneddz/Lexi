@@ -7,23 +7,13 @@ export type Suggestion = {
   term: string;
   /** Its definition, or its translation when suggesting a pair. */
   detail: string;
-  bookTitle: string;
+  /** The book the definition came from, or undefined when AI wrote it because no enabled book had the term. */
+  bookTitle?: string;
   language: string;
   /** Only set for translation suggestions. */
   targetLanguage?: string;
   /** Saved words this term was drawn from, for definition suggestions. */
   seenIn: string[];
-};
-
-export type SuggestionSection = {
-  key: string;
-  /** The group these came from, or null for the whole vocabulary. */
-  group: LexiGroup | null;
-  title: string;
-  reason: string;
-  suggestions: Suggestion[];
-  /** Shown instead of entries when a group has nothing new to offer. */
-  emptyNote?: string;
 };
 
 export type DefinitionLookup = (term: string) => { definition: string; bookTitle: string } | null;
@@ -132,189 +122,105 @@ function knownTerms(words: Word[]): Set<string> {
   return known;
 }
 
-export type BuildOptions = {
+export type FallbackDefinitionOptions = {
+  /** The whole vocabulary, used to know what's already saved regardless of scope. */
   words: Word[];
-  groups: LexiGroup[];
+  /** Restrict candidate-mining to one group's words, or omit for the whole vocabulary. */
+  group?: LexiGroup;
   dismissed: Set<string>;
-  perSection?: number;
-};
-
-export type DefinitionOptions = BuildOptions & { findDefinition: DefinitionLookup };
-export type TranslationOptions = BuildOptions & {
-  translations: Translation[];
-  findTranslation: TranslationLookup;
+  findDefinition: DefinitionLookup;
+  /** Terms to skip in addition to `dismissed`, e.g. ones another section already used. */
+  exclude?: Set<string>;
+  limit?: number;
 };
 
 /**
- * Suggests words the user keeps running into but has never saved: every term
- * is drawn from the definitions of their own vocabulary, so the reason for a
- * suggestion is always something concrete they can see.
- *
- * Every group holding words gets its own section, and the sections draw from
- * independent pools — an earlier group can't use up the terms a later one
- * would have shown.
+ * Offline fallback for when AI suggestions aren't available: mines terms
+ * that keep appearing inside the definitions of the user's own saved words,
+ * scoped to one group (or the whole vocabulary), and looks each one up in
+ * the enabled books. No network, no API key, nothing beyond data already on
+ * disk.
  */
-export function buildDefinitionSuggestions({
+export function buildFallbackDefinitionSuggestions({
   words,
-  groups,
+  group,
   dismissed,
   findDefinition,
-  perSection = 4,
-}: DefinitionOptions): SuggestionSection[] {
-  if (words.length === 0) return [];
+  exclude,
+  limit = 4,
+}: FallbackDefinitionOptions): Suggestion[] {
+  const scopedWords = group ? words.filter((word) => (word.groupIds || []).includes(group.id)) : words;
+  if (scopedWords.length === 0) return [];
 
-  const candidates = collectCandidates(words, knownTerms(words))
-    .filter((candidate) => !dismissed.has(candidate.term));
+  const candidates = collectCandidates(scopedWords, knownTerms(words))
+    .filter((candidate) => !dismissed.has(candidate.term))
+    .filter((candidate) => !exclude?.has(candidate.term));
 
-  const toSuggestion = (candidate: Candidate, seenIn: string[]): Suggestion | null => {
+  const picked: Suggestion[] = [];
+  for (const candidate of candidates) {
+    if (picked.length >= limit) break;
     const found = findDefinition(candidate.term);
     // Without a definition there is nothing to show or save, so those are
     // skipped rather than shown as a bare word.
-    if (!found) return null;
-    return {
+    if (!found) continue;
+    picked.push({
       term: candidate.term,
       detail: found.definition,
       bookTitle: found.bookTitle,
       language: candidate.language,
-      seenIn: seenIn.slice(0, 3),
-    };
-  };
-
-  const sections: SuggestionSection[] = [];
-  const shownInGroups = new Set<string>();
-
-  for (const group of groups) {
-    const groupHasWords = words.some((word) => (word.groupIds || []).includes(group.id));
-    if (!groupHasWords) continue;
-
-    const picked: Suggestion[] = [];
-    for (const candidate of candidates) {
-      if (picked.length >= perSection) break;
-      const hits = candidate.groupHits.get(group.id);
-      if (!hits || hits.size === 0) continue;
-
-      const suggestion = toSuggestion(candidate, Array.from(hits));
-      if (!suggestion) continue;
-      picked.push(suggestion);
-      shownInGroups.add(candidate.term);
-    }
-
-    sections.push({
-      key: `group:${group.id}`,
-      group,
-      title: group.name,
-      reason: `Turning up in the definitions of your ${group.name} words`,
-      suggestions: picked,
-      emptyNote: picked.length === 0
-        ? "Nothing new here yet. Every term in these definitions is already saved or dismissed."
-        : undefined,
+      seenIn: Array.from(candidate.seenIn).slice(0, 3),
     });
   }
 
-  // The catch-all skips anything a group already surfaced, so it adds to the
-  // page instead of repeating it.
-  const rest: Suggestion[] = [];
-  for (const candidate of candidates) {
-    if (rest.length >= perSection) break;
-    if (shownInGroups.has(candidate.term)) continue;
-    const suggestion = toSuggestion(candidate, Array.from(candidate.seenIn));
-    if (suggestion) rest.push(suggestion);
-  }
-
-  if (rest.length > 0) {
-    sections.push({
-      key: "vocabulary",
-      group: null,
-      title: "Across your vocabulary",
-      reason: "Showing up again and again in words you have already saved",
-      suggestions: rest,
-    });
-  }
-
-  return sections;
+  return picked;
 }
 
-/**
- * Suggests translations for words already in the user's vocabulary that have
- * no pair yet, looked up in the enabled translation books.
- */
-export function buildTranslationSuggestions({
+export type FallbackTranslationOptions = {
+  words: Word[];
+  translations: Translation[];
+  group?: LexiGroup;
+  dismissed: Set<string>;
+  findTranslation: TranslationLookup;
+  exclude?: Set<string>;
+  limit?: number;
+};
+
+/** Offline fallback mirror of {@link buildFallbackDefinitionSuggestions} for translations. */
+export function buildFallbackTranslationSuggestions({
   words,
   translations,
-  groups,
+  group,
   dismissed,
   findTranslation,
-  perSection = 4,
-}: TranslationOptions): SuggestionSection[] {
-  if (words.length === 0) return [];
-
+  exclude,
+  limit = 4,
+}: FallbackTranslationOptions): Suggestion[] {
   const alreadyPaired = new Set(
     translations.map((translation) => translation.sourceWord.trim().toLowerCase()),
   );
 
-  const untranslated = words.filter((word) => {
+  const scopedWords = group ? words.filter((word) => (word.groupIds || []).includes(group.id)) : words;
+  const untranslated = scopedWords.filter((word) => {
     const normalized = word.word.trim().toLowerCase();
-    return !alreadyPaired.has(normalized) && !dismissed.has(normalized);
+    return !alreadyPaired.has(normalized) && !dismissed.has(normalized) && !exclude?.has(normalized);
   });
 
-  const toSuggestion = (word: Word): Suggestion | null => {
+  const picked: Suggestion[] = [];
+  for (const word of untranslated) {
+    if (picked.length >= limit) break;
     const found = findTranslation(word.word);
-    if (!found) return null;
-    return {
+    if (!found) continue;
+    picked.push({
       term: word.word,
       detail: found.targetWord,
       bookTitle: found.bookTitle,
       language: word.language,
       targetLanguage: found.targetLanguage,
       seenIn: [],
-    };
-  };
-
-  const sections: SuggestionSection[] = [];
-  const shownInGroups = new Set<string>();
-
-  for (const group of groups) {
-    const groupWords = untranslated.filter((word) => (word.groupIds || []).includes(group.id));
-    if (!words.some((word) => (word.groupIds || []).includes(group.id))) continue;
-
-    const picked: Suggestion[] = [];
-    for (const word of groupWords) {
-      if (picked.length >= perSection) break;
-      const suggestion = toSuggestion(word);
-      if (!suggestion) continue;
-      picked.push(suggestion);
-      shownInGroups.add(word.id);
-    }
-
-    sections.push({
-      key: `group:${group.id}`,
-      group,
-      title: group.name,
-      reason: `Words in ${group.name} that have no translation yet`,
-      suggestions: picked,
-      emptyNote: picked.length === 0
-        ? "No untranslated word here is covered by your enabled translation books."
-        : undefined,
     });
   }
 
-  const rest: Suggestion[] = [];
-  for (const word of untranslated) {
-    if (rest.length >= perSection) break;
-    if (shownInGroups.has(word.id)) continue;
-    const suggestion = toSuggestion(word);
-    if (suggestion) rest.push(suggestion);
-  }
-
-  if (rest.length > 0) {
-    sections.push({
-      key: "vocabulary",
-      group: null,
-      title: "Across your vocabulary",
-      reason: "Saved words still waiting for a translation",
-      suggestions: rest,
-    });
-  }
-
-  return sections;
+  return picked;
 }
+
+export { knownTerms };

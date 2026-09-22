@@ -63,6 +63,11 @@ const RELATED_TRANSLATIONS_SCHEMA = z.object({
   confidence: z.number().min(0).max(1),
 });
 
+const GROUP_WORD_SUGGESTIONS_SCHEMA = z.object({
+  terms: z.array(z.string().min(1).max(60)).min(1).max(8),
+  confidence: z.number().min(0).max(1),
+});
+
 function resolveEnvApiKey(): string {
   return (
     import.meta.env.GROQ_API_KEY?.trim() ||
@@ -833,6 +838,82 @@ export async function suggestRelatedTranslations(
       success: false,
       data: [],
       error: toErrorMessage("Related translation suggestion failed", error),
+    };
+  }
+}
+
+export type GroupWordSuggestionRequest = {
+  groupName: string;
+  groupDescription?: string;
+  language: string;
+  /** Existing words in the group, used as few-shot examples of its theme. */
+  exampleWords: string[];
+  /** Words to avoid re-suggesting: already saved, already dismissed, already shown this session. */
+  excludeWords: string[];
+  count?: number;
+};
+
+/**
+ * Suggests new candidate words for a themed group, using the group's own
+ * existing words as few-shot examples so the result matches its actual
+ * topic and difficulty rather than a generic guess from the group's name
+ * alone. Returns bare terms, not definitions — the caller looks those up in
+ * its own offline books so the definition stays grounded rather than
+ * AI-invented wherever possible.
+ */
+export async function suggestGroupWords(
+  request: GroupWordSuggestionRequest,
+): Promise<AIResponse<string[]>> {
+  const { groupName, groupDescription, language, exampleWords, excludeWords, count = 6 } = request;
+
+  try {
+    const exampleList = exampleWords.length > 0
+      ? exampleWords.join(", ")
+      : "(this group has no words yet — use the name and description to judge the theme)";
+    const exclusionList = excludeWords.length > 0 ? excludeWords.slice(0, 60).join(", ") : "none";
+
+    const object = await runStructuredPrompt({
+      schema: GROUP_WORD_SUGGESTIONS_SCHEMA,
+      system:
+        "You suggest new vocabulary words that belong to a themed collection in a vocabulary learning app. Return strict JSON only.",
+      prompt: [
+        `Group name: ${groupName}`,
+        groupDescription ? `Group description: ${groupDescription}` : "",
+        `Language: ${language}`,
+        `Existing words already in this group, as a reference for its exact topic and difficulty: ${exampleList}`,
+        `Suggest ${count} new, single ${language} words or short terms that clearly belong in this same group.`,
+        "Match the topic and difficulty level of the existing words as closely as possible.",
+        "Do not repeat the group name itself, and do not repeat any of these already-known words:",
+        exclusionList,
+        "Return only the words themselves, one per array entry, not definitions or explanations.",
+      ].filter(Boolean).join("\n"),
+      temperature: 0.65,
+    });
+
+    const excludeSet = new Set(excludeWords.map((word) => word.trim().toLowerCase()));
+    const seen = new Set<string>();
+
+    const terms = object.terms
+      .map((term) => term.trim())
+      .filter((term) => term.length > 0)
+      .filter((term) => !excludeSet.has(term.toLowerCase()))
+      .filter((term) => {
+        const key = term.toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
+    if (terms.length === 0) {
+      return { success: false, data: [], error: "AI returned no usable terms." };
+    }
+
+    return { success: true, data: terms, confidence: object.confidence };
+  } catch (error) {
+    return {
+      success: false,
+      data: [],
+      error: toErrorMessage("Group word suggestion failed", error),
     };
   }
 }

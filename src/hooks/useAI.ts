@@ -96,6 +96,12 @@ export function useAI() {
     [runCall],
   );
 
+  const suggestGroupWords = useCallback(
+    async (request: aiService.GroupWordSuggestionRequest) =>
+      runCall(() => aiService.suggestGroupWords(request), []),
+    [runCall],
+  );
+
   return {
     loading,
     error,
@@ -109,5 +115,6 @@ export function useAI() {
     suggestGroupIcon,
     suggestDistractorDefinitions,
     suggestRelatedTranslations,
+    suggestGroupWords,
   };
 }
