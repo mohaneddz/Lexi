@@ -9,9 +9,11 @@ import { useWords } from "@/hooks/useWords";
 type CatalogTypeFilter = "all" | "dictionary" | "translation";
 
 function BookCover({ title, coverUrl }: { title: string; coverUrl?: string }) {
-  const [failed, setFailed] = useState(false);
+  // Remember which url failed rather than that one did, so a card that fell
+  // back once still retries when the catalog points somewhere new.
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
 
-  if (!coverUrl || failed) {
+  if (!coverUrl || failedUrl === coverUrl) {
     return (
       <div className="book-cover-fallback">
         <BookOpen className="size-8" />
@@ -26,7 +28,7 @@ function BookCover({ title, coverUrl }: { title: string; coverUrl?: string }) {
       alt={`${title} cover`}
       className="book-cover-image"
       loading="lazy"
-      onError={() => setFailed(true)}
+      onError={() => setFailedUrl(coverUrl)}
     />
   );
 }
@@ -246,7 +248,10 @@ export default function Books() {
               return (
                 <article key={book.id} className="book-card frost-panel-soft">
                   <div className="book-cover-frame">
-                    <BookCover title={book.title} coverUrl={installed?.coverUrl || book.coverUrl} />
+                    {/* The catalog ships with the app and is the live source of
+                        cover art; an installed record only holds whatever path
+                        was current when it was installed. */}
+                    <BookCover title={book.title} coverUrl={book.coverUrl || installed?.coverUrl} />
                   </div>
 
                   <div className="min-w-0 space-y-2">
