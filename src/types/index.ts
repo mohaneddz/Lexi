@@ -24,6 +24,8 @@ export interface Translation {
   favorite?: boolean;
   context?: string;
   groupIds?: string[];
+  sourceExamples?: string[];
+  targetExamples?: string[];
 }
 
 export type BookType = "dictionary" | "translation";
@@ -164,5 +166,6 @@ export interface AppSettings {
   dailyReviewGoal: number;
   defaultRevisionMode: RevisionMode;
   groupTabsIconOnly: boolean;
+  autoAssignOthersGroup: boolean;
   surfaceViews: Partial<Record<SurfaceKey, SurfaceViewPreference>>;
 }

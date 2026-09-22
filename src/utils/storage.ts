@@ -39,6 +39,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   dailyReviewGoal: 20,
   defaultRevisionMode: 'flashcard',
   groupTabsIconOnly: false,
+  autoAssignOthersGroup: true,
   surfaceViews: {
     definitions: { mode: "list", zoom: 100, detailPanelOpen: true },
     translations: { mode: "list", zoom: 100, detailPanelOpen: true },
@@ -86,6 +87,8 @@ function normalizeTranslation(translation: Translation): Translation {
     targetWord: capitalizeLeadingCharacter(translation.targetWord),
     favorite: Boolean(translation.favorite),
     groupIds: Array.isArray(translation.groupIds) ? translation.groupIds : [],
+    sourceExamples: Array.isArray(translation.sourceExamples) ? translation.sourceExamples : [],
+    targetExamples: Array.isArray(translation.targetExamples) ? translation.targetExamples : [],
   };
 }
 
