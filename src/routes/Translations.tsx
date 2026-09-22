@@ -459,10 +459,18 @@ export default function Translations() {
       }}
     >
       <div className="flex items-start justify-between gap-2">
-        <p className="serif-display truncate text-lg leading-[0.95]">{translation.sourceWord}<span className="mx-1.5 inline-flex items-center align-middle text-muted-foreground/80"><ArrowRight className="size-3.5" /></span>{translation.targetWord}</p>
-        {bulkMode ? <input type="checkbox" checked={selectedTranslationIds.includes(translation.id)} onChange={() => toggleBulkTranslation(translation.id)} onClick={(event) => event.stopPropagation()} className="size-4 accent-white" /> : null}
+        {/* Source and target each get their own line, so a tile too narrow for
+            the pair shows both truncated rather than hiding the target. */}
+        <div className="min-w-0 flex-1">
+          <p className="serif-display truncate text-lg leading-tight">{translation.sourceWord}</p>
+          <p className="serif-display flex items-center gap-1.5 truncate text-lg leading-tight text-muted-foreground">
+            <ArrowRight className="size-3.5 shrink-0" />
+            <span className="truncate">{translation.targetWord}</span>
+          </p>
+        </div>
+        {bulkMode ? <input type="checkbox" checked={selectedTranslationIds.includes(translation.id)} onChange={() => toggleBulkTranslation(translation.id)} onClick={(event) => event.stopPropagation()} className="size-4 shrink-0 accent-white" /> : null}
       </div>
-      <div className="flex flex-wrap gap-1">
+      <div className="mt-auto flex flex-wrap gap-1">
         <span className="lexi-chip compact">{translation.sourceLanguage}</span>
         <span className="lexi-chip compact">{translation.targetLanguage}</span>
       </div>
