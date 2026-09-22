@@ -1096,21 +1096,21 @@ select.frost-select {
    panes every other page uses, so arriving somewhere new actually feels
    like somewhere new while keeping the same type and surface language. */
 .home-stage {
-  max-width: 64rem;
+  max-width: 62rem;
   margin: 0 auto;
-  padding: 0.5rem 0.25rem 3rem;
+  padding: 2.25rem 2rem 4.5rem;
   display: flex;
   flex-direction: column;
-  gap: 2.75rem;
+  gap: 3rem;
 }
 
 .home-masthead {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 2rem;
+  gap: 2.5rem;
   flex-wrap: wrap;
-  padding-bottom: 1.15rem;
+  padding-bottom: 1.5rem;
   border-bottom: 1px solid oklch(1 0 0 / 0.12);
 }
 
@@ -1177,21 +1177,34 @@ select.frost-select {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: start;
-  gap: 1.25rem;
-  padding: 1rem 0;
+  gap: 1.5rem;
+  padding: 1.35rem 0;
   border-top: 1px solid oklch(1 0 0 / 0.09);
 }
 
 .home-entry:first-child {
   border-top: none;
-  padding-top: 0.35rem;
+  padding-top: 0.25rem;
+}
+
+.home-entry:last-child {
+  padding-bottom: 0.25rem;
 }
 
 .home-entry-term {
   font-family: var(--font-serif);
   font-size: 1.9rem;
-  line-height: 1.05;
+  line-height: 1.15;
   overflow-wrap: break-word;
+}
+
+/* Translation suggestions carry the pair in the heading itself. */
+.home-entry-target {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: 0.6rem;
+  color: var(--muted-foreground);
 }
 
 .home-entry-actions {
