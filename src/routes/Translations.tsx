@@ -8,16 +8,19 @@ import {
   Languages,
   LayoutGrid,
   List,
+  Loader2,
   Minus,
   MoreHorizontal,
   PanelRightClose,
   PanelRightOpen,
   Pencil,
   Plus,
+  RefreshCcw,
   Search,
   SlidersHorizontal,
   Sparkles,
   Trash2,
+  WandSparkles,
   ZoomIn,
 } from "lucide-react";
 
@@ -45,6 +48,7 @@ import { cn } from "@/lib/utils";
 import type { Translation, ViewMode } from "@/types";
 import type { RelatedTranslationSuggestion } from "@/utils/ai-service";
 import { formatDate } from "@/utils/formatters";
+import { resolveGroupAssignment } from "@/utils/group-assignment";
 import { getSettings, updateSettings } from "@/utils/storage";
 import { parseJsonArray, translationFingerprint } from "@/utils/suggestions";
 
@@ -104,12 +108,19 @@ export default function Translations() {
   const [bulkMode, setBulkMode] = useState(false);
   const [selectedTranslationIds, setSelectedTranslationIds] = useState<string[]>([]);
   const [bulkDeletePending, setBulkDeletePending] = useState(false);
+  const [sourceExampleVersion, setSourceExampleVersion] = useState(0);
+  const [targetExampleVersion, setTargetExampleVersion] = useState(0);
+  const [generatingExamples, setGeneratingExamples] = useState(false);
+  const [copiedExample, setCopiedExample] = useState(false);
+  const [autoAssignOthersGroup, setAutoAssignOthersGroup] = useState(true);
+  const [autoGroupingId, setAutoGroupingId] = useState<string | null>(null);
+  const [autoGroupError, setAutoGroupError] = useState<string | null>(null);
 
   const { viewMode, setViewMode, zoom, stepZoom, canZoom, detailPanelOpen, toggleDetailPanel } = useSurfaceViewPreference("translations", "list", 100);
   const { translations, addTranslation, updateTranslation, deleteTranslation, loading } = useTranslations();
   const { words } = useWords();
   const { groups, addGroup } = useGroups();
-  const { suggestRelatedTranslations } = useAI();
+  const { suggestRelatedTranslations, getExamples, suggestGroup } = useAI();
 
   const availableLanguages = useMemo(() => {
     const languages = new Set<string>();
@@ -182,11 +193,17 @@ export default function Translations() {
   }, [filteredTranslations, selectedId]);
 
   useEffect(() => {
-    void getSettings().then((settings) => setShowDeleteConfirmation(settings.showDeleteConfirmation));
+    void getSettings().then((settings) => {
+      setShowDeleteConfirmation(settings.showDeleteConfirmation);
+      setAutoAssignOthersGroup(settings.autoAssignOthersGroup);
+    });
     const onSettingsUpdated = (event: Event) => {
-      const custom = event as CustomEvent<{ showDeleteConfirmation?: boolean }>;
+      const custom = event as CustomEvent<{ showDeleteConfirmation?: boolean; autoAssignOthersGroup?: boolean }>;
       if (typeof custom.detail?.showDeleteConfirmation === "boolean") {
         setShowDeleteConfirmation(custom.detail.showDeleteConfirmation);
+      }
+      if (typeof custom.detail?.autoAssignOthersGroup === "boolean") {
+        setAutoAssignOthersGroup(custom.detail.autoAssignOthersGroup);
       }
     };
     window.addEventListener("lexi:settings-updated", onSettingsUpdated);
@@ -262,6 +279,81 @@ export default function Translations() {
       return normalizedWord === selectedTranslation.sourceWord.toLowerCase() || normalizedWord === selectedTranslation.targetWord.toLowerCase();
     }).slice(0, 4);
   }, [selectedTranslation, words]);
+
+  const selectedSourceExample = useMemo(() => {
+    const examples = selectedTranslation?.sourceExamples;
+    if (!examples || examples.length === 0) return "";
+    return examples[sourceExampleVersion % examples.length];
+  }, [selectedTranslation, sourceExampleVersion]);
+
+  const selectedTargetExample = useMemo(() => {
+    const examples = selectedTranslation?.targetExamples;
+    if (!examples || examples.length === 0) return "";
+    return examples[targetExampleVersion % examples.length];
+  }, [selectedTranslation, targetExampleVersion]);
+
+  useEffect(() => {
+    setSourceExampleVersion(0);
+    setTargetExampleVersion(0);
+    setAutoGroupError(null);
+  }, [selectedId]);
+
+  const generateTranslationExamples = async () => {
+    if (!selectedTranslation) return;
+    setGeneratingExamples(true);
+    try {
+      const [sourceResult, targetResult] = await Promise.all([
+        getExamples(selectedTranslation.sourceWord, selectedTranslation.sourceLanguage),
+        getExamples(selectedTranslation.targetWord, selectedTranslation.targetLanguage),
+      ]);
+
+      const updates: Partial<Translation> = {};
+      if (sourceResult.success && sourceResult.data.length > 0) updates.sourceExamples = sourceResult.data;
+      if (targetResult.success && targetResult.data.length > 0) updates.targetExamples = targetResult.data;
+
+      if (Object.keys(updates).length > 0) {
+        await updateTranslation(selectedTranslation.id, updates);
+        setSourceExampleVersion(0);
+        setTargetExampleVersion(0);
+      }
+    } finally {
+      setGeneratingExamples(false);
+    }
+  };
+
+  const copyExamples = async () => {
+    if (!selectedTranslation) return;
+    const lines = [
+      selectedSourceExample ? `${selectedTranslation.sourceLanguage}: ${selectedSourceExample}` : null,
+      selectedTargetExample ? `${selectedTranslation.targetLanguage}: ${selectedTargetExample}` : null,
+    ].filter((line): line is string => Boolean(line));
+
+    if (lines.length === 0) return;
+    await navigator.clipboard.writeText(lines.join("\n"));
+    setCopiedExample(true);
+    setTimeout(() => setCopiedExample(false), 1800);
+  };
+
+  const autoAssignGroup = async (translation: Translation) => {
+    if (groups.length === 0) return;
+    setAutoGroupError(null);
+    setAutoGroupingId(translation.id);
+    try {
+      const label = `${translation.sourceWord} -> ${translation.targetWord}`;
+      const definition = translation.context?.trim() || `Translation from ${translation.sourceLanguage} to ${translation.targetLanguage}.`;
+      const groupId = await resolveGroupAssignment(label, definition, groups, suggestGroup, autoAssignOthersGroup);
+
+      if (!groupId) {
+        setAutoGroupError("No matching group found.");
+        return;
+      }
+
+      const nextGroupIds = Array.from(new Set([...(translation.groupIds || []), groupId]));
+      await updateTranslation(translation.id, { groupIds: nextGroupIds });
+    } finally {
+      setAutoGroupingId(null);
+    }
+  };
 
   const openActionMenu = (translation: Translation, x: number, y: number) => {
     const nextX = Math.max(8, Math.min(x + ACTION_MENU_GAP, window.innerWidth - ACTION_MENU_WIDTH));
@@ -654,7 +746,50 @@ export default function Translations() {
                   <div className="space-y-2"><p className="detail-text">{selectedTranslation.targetWord}</p><p className="subtle-caption">Primary translation target</p></div>
                   {selectedTranslation.context ? <div className="frost-panel-soft space-y-2 p-4"><p className="subtle-caption">Context</p><p className="word-sub">{selectedTranslation.context}</p></div> : null}
                   <div className="ghost-divider" />
-                  <div className="space-y-3"><div className="flex items-center justify-between"><p className="font-medium">Groups</p><FolderPlus className="size-4 text-muted-foreground" /></div>{selectedTranslationGroups.length === 0 ? <div className="frost-panel-soft p-3 text-sm text-muted-foreground">No group assigned yet. Open the action menu to manage groups.</div> : <div className="flex flex-wrap gap-1.5">{selectedTranslationGroups.map((group) => <GroupBadge key={group.id} group={group} />)}</div>}</div>
+                  <div className="frost-panel-soft space-y-3 p-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-medium">Usage Example</p>
+                      <div className="flex gap-2">
+                        <Button type="button" size="sm" variant="outline" className="border-white/15 bg-white/6 hover:bg-white/14" disabled={generatingExamples} onClick={() => void generateTranslationExamples()}>
+                          {generatingExamples ? <Loader2 className="mr-1.5 size-3.5 animate-spin" /> : <WandSparkles className="mr-1.5 size-3.5" />}
+                          Generate
+                        </Button>
+                        <Button type="button" size="sm" variant="outline" className="border-white/15 bg-white/6 hover:bg-white/14" disabled={(selectedTranslation.sourceExamples?.length ?? 0) <= 1 && (selectedTranslation.targetExamples?.length ?? 0) <= 1} onClick={() => { setSourceExampleVersion((current) => current + 1); setTargetExampleVersion((current) => current + 1); }}>
+                          <RefreshCcw className="mr-1.5 size-3.5" />
+                          Rotate
+                        </Button>
+                      </div>
+                    </div>
+                    {selectedSourceExample || selectedTargetExample ? (
+                      <div className="space-y-2">
+                        {selectedSourceExample ? <div><p className="subtle-caption">{selectedTranslation.sourceLanguage}</p><p className="serif-display text-xl italic text-muted-foreground">{selectedSourceExample}</p></div> : null}
+                        {selectedTargetExample ? <div><p className="subtle-caption">{selectedTranslation.targetLanguage}</p><p className="serif-display text-xl italic text-muted-foreground">{selectedTargetExample}</p></div> : null}
+                      </div>
+                    ) : (
+                      <p className="subtle-caption">No examples yet. Click Generate to see this pair used in both languages.</p>
+                    )}
+                    <div className="flex justify-end">
+                      <Button type="button" size="sm" variant="outline" className="border-white/15 bg-white/6 hover:bg-white/14" disabled={!selectedSourceExample && !selectedTargetExample} onClick={() => void copyExamples()}>
+                        <Copy className="mr-1.5 size-3.5" />
+                        {copiedExample ? "Copied" : "Copy Examples"}
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="ghost-divider" />
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-medium">Groups</p>
+                      <div className="flex items-center gap-2">
+                        <Button type="button" size="sm" variant="outline" className="border-white/15 bg-white/6 hover:bg-white/14" disabled={groups.length === 0 || autoGroupingId === selectedTranslation.id} onClick={() => void autoAssignGroup(selectedTranslation)}>
+                          {autoGroupingId === selectedTranslation.id ? <Loader2 className="mr-1.5 size-3.5 animate-spin" /> : <WandSparkles className="mr-1.5 size-3.5" />}
+                          Auto-assign
+                        </Button>
+                        <FolderPlus className="size-4 text-muted-foreground" />
+                      </div>
+                    </div>
+                    {selectedTranslationGroups.length === 0 ? <div className="frost-panel-soft p-3 text-sm text-muted-foreground">No group assigned yet. Open the action menu to manage groups.</div> : <div className="flex flex-wrap gap-1.5">{selectedTranslationGroups.map((group) => <GroupBadge key={group.id} group={group} />)}</div>}
+                    {autoGroupError ? <p className="subtle-caption text-red-300">{autoGroupError}</p> : null}
+                  </div>
                   <div className="ghost-divider" />
                   <div className="space-y-2"><div className="flex items-center justify-between"><p className="font-medium">Linked Vocabulary</p><Sparkles className="size-4 text-muted-foreground" /></div>{linkedWords.length === 0 ? <div className="frost-panel-soft p-3 text-sm text-muted-foreground">No linked word entries yet.</div> : <div className="flex flex-wrap gap-1.5">{linkedWords.map((word) => <span key={word.id} className="lexi-chip">{word.word}</span>)}</div>}</div>
                 </>
