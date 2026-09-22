@@ -25,7 +25,22 @@ import {
 import { getBookIndex, matchBook, type MatchKind } from "@/utils/bookSearch";
 
 type LookupScope = "selected" | "all";
-const LEGACY_PLACEHOLDER_BOOK_IDS = new Set(["dict-essential-en", "trans-en-fr-es", "trans-en-ar-de"]);
+
+/**
+ * Books that were pulled from the catalog. Any copy still sitting in AppData
+ * is deleted on the next load so it stops showing up in search results.
+ * The heritage packs were a corrupted, smaller cut of the same public-domain
+ * dictionary that Webster's Unabridged already covers.
+ */
+const RETIRED_BOOK_IDS = new Set([
+  "dict-essential-en",
+  "trans-en-fr-es",
+  "trans-en-ar-de",
+  "dict-english-heritage-ae",
+  "dict-english-heritage-fk",
+  "dict-english-heritage-lq",
+  "dict-english-heritage-rz",
+]);
 
 export type BookSearchFilters = {
   bookType?: "all" | "dictionary" | "translation";
@@ -79,10 +94,16 @@ export function useBooks() {
         getInstalledBooks(),
         getActiveBookIds(),
       ]);
-      const installedFiltered = installed.filter((book) => !LEGACY_PLACEHOLDER_BOOK_IDS.has(book.id));
-      const activeFiltered = active.filter((bookId) => !LEGACY_PLACEHOLDER_BOOK_IDS.has(bookId));
+      const installedFiltered = installed.filter((book) => !RETIRED_BOOK_IDS.has(book.id));
+      const activeFiltered = active.filter((bookId) => !RETIRED_BOOK_IDS.has(bookId));
       if (activeFiltered.length !== active.length) {
         await saveActiveBookIds(activeFiltered);
+      }
+
+      for (const book of installed) {
+        if (!RETIRED_BOOK_IDS.has(book.id)) continue;
+        await deleteInstalledBookPayload(book.localPath).catch(() => {});
+        await removeInstalledBook(book.id);
       }
 
       const catalogMap = new Map<string, BookCatalogItem>();
