@@ -173,41 +173,63 @@ export function useBooks() {
     void refresh();
   }, [refresh]);
 
-  const toggleBookEnabled = useCallback(async (bookId: string) => {
+  /**
+   * Enables or disables a whole batch of books atomically, so a group of
+   * language variants can be turned on together from one click without the
+   * usual per-call closure race: calling the single-book toggle N times in
+   * a row would have each call read the same stale enabledBookIds it was
+   * rendered with, so only the last call's change would actually stick.
+   */
+  const setBooksEnabled = useCallback(async (bookIds: string[], enabled: boolean) => {
     setError(null);
+    const idSet = new Set(bookIds);
 
-    if (enabledBookIds.includes(bookId)) {
-      const next = enabledBookIds.filter((id) => id !== bookId);
+    if (!enabled) {
+      const next = enabledBookIds.filter((id) => !idSet.has(id));
       await saveEnabledBookIds(next);
       setEnabledBookIds(next);
-      // Keep the payload cached in memory rather than evicting it, so
-      // toggling a book back on later in the session is instant instead of
-      // re-fetching a pack that can be 25MB+.
+      // Keep payloads cached in memory rather than evicting them, so
+      // re-enabling later in the session is instant instead of re-fetching
+      // packs that can be 25MB+.
       return;
     }
 
-    const next = [...enabledBookIds, bookId];
+    const next = Array.from(new Set([...enabledBookIds, ...bookIds]));
     await saveEnabledBookIds(next);
     setEnabledBookIds(next);
 
-    setLoadingBook(bookId, true);
-    try {
-      await loadPayload(bookId);
-    } catch (loadError) {
-      const rolledBack = next.filter((id) => id !== bookId);
-      await saveEnabledBookIds(rolledBack);
-      setEnabledBookIds(rolledBack);
+    const toLoad = bookIds.filter((id) => !bookPayloadsRef.current[id]);
+    if (toLoad.length === 0) {
+      return;
+    }
 
-      const title = catalogRef.current.find((book) => book.id === bookId)?.title ?? bookId;
-      setError(
-        loadError instanceof Error
-          ? `Could not enable "${title}": ${loadError.message}`
-          : `Could not enable "${title}".`,
-      );
+    toLoad.forEach((id) => setLoadingBook(id, true));
+    try {
+      const settled = await Promise.allSettled(toLoad.map((id) => loadPayload(id)));
+      const failedIds = toLoad.filter((_id, index) => settled[index].status === "rejected");
+
+      if (failedIds.length > 0) {
+        const rolledBack = next.filter((id) => !failedIds.includes(id));
+        await saveEnabledBookIds(rolledBack);
+        setEnabledBookIds(rolledBack);
+
+        const titles = failedIds
+          .map((id) => catalogRef.current.find((book) => book.id === id)?.title ?? id)
+          .join(", ");
+        setError(
+          failedIds.length === toLoad.length
+            ? `Could not enable "${titles}".`
+            : `Could not enable ${failedIds.length} of ${toLoad.length} variants: ${titles}.`,
+        );
+      }
     } finally {
-      setLoadingBook(bookId, false);
+      toLoad.forEach((id) => setLoadingBook(id, false));
     }
   }, [enabledBookIds, loadPayload]);
+
+  const toggleBookEnabled = useCallback(async (bookId: string) => {
+    await setBooksEnabled([bookId], !enabledBookIds.includes(bookId));
+  }, [enabledBookIds, setBooksEnabled]);
 
   const importCustomSourceFromFile = useCallback(async () => {
     const payload = await importBookPayloadFromFile();
@@ -345,6 +367,7 @@ export function useBooks() {
     loadingBookIds,
     refresh,
     toggleBookEnabled,
+    setBooksEnabled,
     importCustomSourceFromFile,
     removeCustomSource,
     lookup,

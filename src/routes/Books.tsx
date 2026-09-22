@@ -1,15 +1,38 @@
 import { useDeferredValue, useMemo, useState } from "react";
-import { BookOpen, Check, Circle, CircleDot, Copy, Languages, Loader2, Search, Sparkles, Trash2 } from "lucide-react";
+import { BookOpen, Check, Circle, CircleDot, Copy, Languages, Loader2, Minus, Search, Sparkles, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenudiv,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useBooks } from "@/hooks/useBooks";
 import { useTranslations } from "@/hooks/useTranslations";
 import { useWords } from "@/hooks/useWords";
 import type { MatchKind } from "@/utils/bookSearch";
+import type { BookCatalogItem, BookType } from "@/types";
 import { cn } from "@/lib/utils";
 
 type CatalogTypeFilter = "all" | "dictionary" | "translation";
 type CatalogStatusFilter = "all" | "enabled" | "disabled";
+
+type CatalogRow =
+  | { kind: "single"; book: BookCatalogItem }
+  | { kind: "group"; baseTitle: string; type: BookType; variants: BookCatalogItem[] };
+
+// "Country Names (English to French)" and "... (English to Spanish)" are the
+// same book in different target languages — the From/To chips already say
+// that, so the parenthetical is just repeating itself in the title.
+function stripVariantSuffix(title: string): string {
+  return title.replace(/\s*\([^()]*\bto\b[^()]*\)\s*$/i, "").trim();
+}
+
+function displayTitle(book: BookCatalogItem): string {
+  return book.type === "translation" ? stripVariantSuffix(book.title) : book.title;
+}
 
 // How closely a result matched, in plain terms rather than the raw 0-1
 // score, grouped into the same "new/learning/mastered" pill styles used
@@ -74,6 +97,7 @@ export default function Books() {
     error,
     loadingBookIds,
     toggleBookEnabled,
+    setBooksEnabled,
     removeCustomSource,
     lookup,
   } = useBooks();
@@ -119,6 +143,40 @@ export default function Books() {
       );
     });
   }, [catalog, catalogLanguage, catalogQuery, catalogStatus, catalogTypeFilter, enabledBookIds]);
+
+  // Books that only differ by target language collapse into one card with a
+  // language picker, instead of one card per language that all say the same
+  // thing except for a single word in the title.
+  const groupedCatalog = useMemo<CatalogRow[]>(() => {
+    const groups = new Map<string, BookCatalogItem[]>();
+    for (const book of filteredCatalog) {
+      const key = `${book.type}::${displayTitle(book)}`;
+      const list = groups.get(key);
+      if (list) list.push(book);
+      else groups.set(key, [book]);
+    }
+
+    const rows: CatalogRow[] = [];
+    for (const variants of groups.values()) {
+      if (variants.length === 1) {
+        rows.push({ kind: "single", book: variants[0] });
+      } else {
+        rows.push({
+          kind: "group",
+          baseTitle: displayTitle(variants[0]),
+          type: variants[0].type,
+          variants: [...variants].sort((a, b) => a.title.localeCompare(b.title)),
+        });
+      }
+    }
+
+    rows.sort((a, b) => {
+      const titleA = a.kind === "single" ? displayTitle(a.book) : a.baseTitle;
+      const titleB = b.kind === "single" ? displayTitle(b.book) : b.baseTitle;
+      return titleA.localeCompare(titleB);
+    });
+    return rows;
+  }, [filteredCatalog]);
 
   const languages = useMemo(() => {
     const inputs = new Set<string>();
@@ -257,7 +315,7 @@ export default function Books() {
         <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-2">
           {loading ? (
             <div className="space-y-2">{[1, 2, 3, 4].map((index) => <div key={index} className="h-36 rounded-lg bg-white/6" />)}</div>
-          ) : filteredCatalog.length === 0 ? (
+          ) : groupedCatalog.length === 0 ? (
             <div className="flex min-h-[260px] items-center justify-center text-center">
               <p className="subtle-caption">
                 {catalog.length === 0
@@ -266,90 +324,9 @@ export default function Books() {
               </p>
             </div>
           ) : (
-            filteredCatalog.map((book) => {
-              const isEnabled = enabledBookIds.includes(book.id);
-              const isToggling = loadingBookIds.includes(book.id);
-              const isImported = importedById.has(book.id);
-
-              return (
-                <article key={book.id} className="book-card frost-panel-soft">
-                  <div className="book-cover-frame">
-                    <BookCover title={book.title} coverUrl={book.coverUrl} />
-                  </div>
-
-                  <div className="flex min-w-0 flex-col space-y-2">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="serif-display text-2xl leading-[0.95]">{book.title}</p>
-                        <div className="mt-1.5 flex flex-wrap gap-1.5">
-                          {book.inputLanguages.map((language) => (
-                            <button
-                              key={`${book.id}-in-${language}`}
-                              type="button"
-                              className="lexi-toggle"
-                              aria-pressed={inputLanguage === language}
-                              onClick={() => applyInputLanguageFilter(language)}
-                              title={`Filter input: ${language}`}
-                            >
-                              {book.type === "dictionary" ? `Language: ${language}` : `From: ${language}`}
-                            </button>
-                          ))}
-                          {book.type === "translation"
-                            ? book.outputLanguages.map((language) => (
-                              <button
-                                key={`${book.id}-out-${language}`}
-                                type="button"
-                                className="lexi-toggle"
-                                aria-pressed={outputLanguage === language}
-                                onClick={() => applyOutputLanguageFilter(language)}
-                                title={`Filter output: ${language}`}
-                              >
-                                {`To: ${language}`}
-                              </button>
-                            ))
-                            : null}
-                        </div>
-                        {/* Clamped so every card's description takes the same
-                            height — otherwise the buttons below land at a
-                            different height on every card. */}
-                        <p className="subtle-caption mt-1 line-clamp-2" title={book.description}>{book.description}</p>
-                      </div>
-                      <span className="status-pill shrink-0">{book.type === "dictionary" ? "Dictionary" : "Translation"}</span>
-                    </div>
-
-                    <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
-                      <button
-                        type="button"
-                        className="lexi-toggle"
-                        aria-pressed={isEnabled}
-                        disabled={isToggling}
-                        onClick={() => void toggleBookEnabled(book.id)}
-                        title={isEnabled
-                          ? "This book is included in search. Click to disable it."
-                          : "This book is excluded from search. Click to enable it."}
-                      >
-                        {isToggling
-                          ? <Loader2 className="size-3.5 animate-spin" />
-                          : isEnabled ? <Check className="size-3.5" /> : <Circle className="size-3.5" />}
-                        {isToggling ? "Loading..." : isEnabled ? "Enabled" : "Disabled"}
-                      </button>
-
-                      {isImported ? (
-                        <button
-                          type="button"
-                          className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-red-900/25 hover:text-red-200"
-                          onClick={() => void removeCustomSource(book.id)}
-                          title={`Remove this imported book (${formatSizeBytes(book.sizeBytes)})`}
-                          aria-label={`Remove ${book.title}`}
-                        >
-                          <Trash2 className="size-4" />
-                        </button>
-                      ) : null}
-                    </div>
-                  </div>
-                </article>
-              );
-            })
+            groupedCatalog.map((row) => row.kind === "single"
+              ? renderBookCard(row.book)
+              : renderVariantGroupCard(row))
           )}
         </div>
 
@@ -359,6 +336,196 @@ export default function Books() {
         </div>
       </section>
 
+      {renderSearchPanel()}
+    </div>
+  );
+
+  function renderBookCard(book: BookCatalogItem) {
+    const isEnabled = enabledBookIds.includes(book.id);
+    const isToggling = loadingBookIds.includes(book.id);
+    const isImported = importedById.has(book.id);
+    const title = displayTitle(book);
+
+    return (
+      <article key={book.id} className="book-card frost-panel-soft">
+        <div className="book-cover-frame">
+          <BookCover title={title} coverUrl={book.coverUrl} />
+        </div>
+
+        <div className="flex min-w-0 flex-col space-y-2">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="serif-display text-2xl leading-[0.95]">{title}</p>
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {book.inputLanguages.map((language) => (
+                  <button
+                    key={`${book.id}-in-${language}`}
+                    type="button"
+                    className="lexi-toggle"
+                    aria-pressed={inputLanguage === language}
+                    onClick={() => applyInputLanguageFilter(language)}
+                    title={`Filter input: ${language}`}
+                  >
+                    {book.type === "dictionary" ? `Language: ${language}` : `From: ${language}`}
+                  </button>
+                ))}
+                {book.type === "translation"
+                  ? book.outputLanguages.map((language) => (
+                    <button
+                      key={`${book.id}-out-${language}`}
+                      type="button"
+                      className="lexi-toggle"
+                      aria-pressed={outputLanguage === language}
+                      onClick={() => applyOutputLanguageFilter(language)}
+                      title={`Filter output: ${language}`}
+                    >
+                      {`To: ${language}`}
+                    </button>
+                  ))
+                  : null}
+              </div>
+              {/* Clamped so every card's description takes the same height —
+                  otherwise the buttons below land at a different height on
+                  every card. */}
+              <p className="subtle-caption mt-1 line-clamp-2" title={book.description}>{book.description}</p>
+            </div>
+            <span className="status-pill shrink-0">{book.type === "dictionary" ? "Dictionary" : "Translation"}</span>
+          </div>
+
+          <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
+            <button
+              type="button"
+              className="lexi-toggle"
+              aria-pressed={isEnabled}
+              disabled={isToggling}
+              onClick={() => void toggleBookEnabled(book.id)}
+              title={isEnabled
+                ? "This book is included in search. Click to disable it."
+                : "This book is excluded from search. Click to enable it."}
+            >
+              {isToggling
+                ? <Loader2 className="size-3.5 animate-spin" />
+                : isEnabled ? <Check className="size-3.5" /> : <Circle className="size-3.5" />}
+              {isToggling ? "Loading..." : isEnabled ? "Enabled" : "Disabled"}
+            </button>
+
+            {isImported ? (
+              <button
+                type="button"
+                className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-red-900/25 hover:text-red-200"
+                onClick={() => void removeCustomSource(book.id)}
+                title={`Remove this imported book (${formatSizeBytes(book.sizeBytes)})`}
+                aria-label={`Remove ${book.title}`}
+              >
+                <Trash2 className="size-4" />
+              </button>
+            ) : null}
+          </div>
+        </div>
+      </article>
+    );
+  }
+
+  function renderVariantGroupCard(row: Extract<CatalogRow, { kind: "group" }>) {
+    const { baseTitle, type, variants } = row;
+    const enabledCount = variants.filter((variant) => enabledBookIds.includes(variant.id)).length;
+    const isAllEnabled = enabledCount === variants.length;
+    const isAnyEnabled = enabledCount > 0;
+    const isToggling = variants.some((variant) => loadingBookIds.includes(variant.id));
+    const primary = variants[0];
+    const sharedInputLanguages = Array.from(new Set(variants.flatMap((variant) => variant.inputLanguages)));
+    const variantSummary = variants.map((variant) => variant.outputLanguages.join("/")).join(", ");
+
+    return (
+      <article key={`group:${type}:${baseTitle}`} className="book-card frost-panel-soft">
+        <div className="book-cover-frame">
+          <BookCover title={baseTitle} coverUrl={primary.coverUrl} />
+        </div>
+
+        <div className="flex min-w-0 flex-col space-y-2">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="serif-display text-2xl leading-[0.95]">{baseTitle}</p>
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {sharedInputLanguages.map((language) => (
+                  <button
+                    key={`group-${baseTitle}-in-${language}`}
+                    type="button"
+                    className="lexi-toggle"
+                    aria-pressed={inputLanguage === language}
+                    onClick={() => applyInputLanguageFilter(language)}
+                    title={`Filter input: ${language}`}
+                  >
+                    {type === "dictionary" ? `Language: ${language}` : `From: ${language}`}
+                  </button>
+                ))}
+              </div>
+              <p className="subtle-caption mt-1 line-clamp-2" title={`${variants.length} language variants: ${variantSummary}.`}>
+                {variants.length} language variants: {variantSummary}.
+              </p>
+            </div>
+            <span className="status-pill shrink-0">{type === "dictionary" ? "Dictionary" : "Translation"}</span>
+          </div>
+
+          <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
+            <button
+              type="button"
+              className="lexi-toggle"
+              aria-pressed={isAllEnabled}
+              disabled={isToggling}
+              onClick={() => void setBooksEnabled(variants.map((variant) => variant.id), !isAllEnabled)}
+              title={isAllEnabled
+                ? "All language variants are included in search. Click to disable them all."
+                : isAnyEnabled
+                  ? "Some language variants are enabled. Click to enable the rest."
+                  : "No language variants are enabled. Click to enable them all."}
+            >
+              {isToggling
+                ? <Loader2 className="size-3.5 animate-spin" />
+                : isAllEnabled ? <Check className="size-3.5" /> : isAnyEnabled ? <Minus className="size-3.5" /> : <Circle className="size-3.5" />}
+              {isToggling ? "Loading..." : isAllEnabled ? "Enabled" : isAnyEnabled ? `${enabledCount}/${variants.length} enabled` : "Disabled"}
+            </button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="lexi-toggle"
+                  title="Choose which language variants to enable individually"
+                >
+                  <Languages className="size-3.5" />
+                  {variants.length} languages
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenudiv>Language variants</DropdownMenudiv>
+                {variants.map((variant) => {
+                  const variantEnabled = enabledBookIds.includes(variant.id);
+                  const variantLoading = loadingBookIds.includes(variant.id);
+                  const label = type === "translation" ? variant.outputLanguages.join("/") : variant.title;
+                  return (
+                    <DropdownMenuCheckboxItem
+                      key={variant.id}
+                      checked={variantEnabled}
+                      disabled={variantLoading}
+                      onSelect={(event) => event.preventDefault()}
+                      onCheckedChange={() => void toggleBookEnabled(variant.id)}
+                    >
+                      {label}
+                      {variantLoading ? <Loader2 className="ml-auto size-3.5 animate-spin" /> : null}
+                    </DropdownMenuCheckboxItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      </article>
+    );
+  }
+
+  function renderSearchPanel() {
+    return (
       <section className="frost-panel flex min-h-[22rem] xl:min-h-0 flex-col overflow-hidden animate-slide-in-up">
         <div className="border-b border-white/10 p-3 space-y-2">
           <div className="flex items-center gap-2">
@@ -499,6 +666,6 @@ export default function Books() {
           <span className="sync-pill"><CircleDot className="size-3" />Offline lookup</span>
         </div>
       </section>
-    </div>
-  );
+    );
+  }
 }
