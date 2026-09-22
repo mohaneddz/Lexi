@@ -403,7 +403,7 @@ export default function QuickAction({ mode }: QuickActionProps) {
           <Button
             type="button"
             disabled={saving || !sourceText.trim() || !outputText.trim()}
-            className="border border-white/20 bg-white/16 hover:bg-white/22"
+            className="lexi-btn-primary"
             onClick={() => void handleSave()}
           >
             {saving ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Check className="mr-2 size-4" />}

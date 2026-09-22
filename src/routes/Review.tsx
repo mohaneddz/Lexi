@@ -539,7 +539,7 @@ export default function Review() {
                         <Button
                           type="button"
                           disabled={isSaving}
-                          className="border border-white/20 bg-white/16 hover:bg-white/22"
+                          className="lexi-btn-primary"
                           onClick={() => void handleFlashcardKnown(true)}
                         >
                           <Check className="mr-2 size-4" />
@@ -599,7 +599,7 @@ export default function Review() {
                     </Button>
                     <Button
                       type="button"
-                      className="border border-white/20 bg-white/16 hover:bg-white/22"
+                      className="lexi-btn-primary"
                       onClick={() => void handleTypingSubmit()}
                     >
                       Submit
