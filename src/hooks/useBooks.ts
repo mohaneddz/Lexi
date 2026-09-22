@@ -22,7 +22,7 @@ import {
   saveInstalledBookPayload,
   verifyChecksum,
 } from "@/utils/books";
-import { bestFuzzyScore } from "@/utils/fuzzy";
+import { getBookIndex, matchBook, type MatchKind } from "@/utils/bookSearch";
 
 type LookupScope = "selected" | "all";
 const LEGACY_PLACEHOLDER_BOOK_IDS = new Set(["dict-essential-en", "trans-en-fr-es", "trans-en-ar-de"]);
@@ -46,6 +46,8 @@ export type BookSearchResult = {
   inputLanguage: string;
   outputLanguage: string;
   score: number;
+  matchKind: MatchKind;
+  termLength: number;
 };
 
 export function useBooks() {
@@ -279,67 +281,48 @@ export function useBooks() {
         continue;
       }
 
-      if (payload.type === "dictionary") {
-        for (const entry of payload.entries) {
-          if (filters.inputLanguage && entry.language !== filters.inputLanguage) {
-            continue;
-          }
-          if (filters.outputLanguage && entry.language !== filters.outputLanguage) {
-            continue;
-          }
-
-          const candidates = [entry.term, ...(entry.aliases || [])];
-          const exactHit = candidates.some((candidate) => candidate.toLowerCase().includes(normalized));
-          const score = exactHit ? 1 : fuzzy ? bestFuzzyScore(normalized, candidates) : 0;
-          if (score <= 0) {
-            continue;
-          }
-
-          results.push({
-            id: `${book.id}:${entry.term}:${entry.language}`,
-            bookId: book.id,
-            bookTitle: book.title,
-            bookType: "dictionary",
-            input: entry.term,
-            output: entry.definition,
-            inputLanguage: entry.language,
-            outputLanguage: entry.language,
-            score,
-          });
-        }
-        continue;
-      }
-
-      for (const entry of payload.entries) {
-        if (filters.inputLanguage && entry.sourceLanguage !== filters.inputLanguage) {
+      const index = getBookIndex(payload);
+      for (const match of matchBook(index, normalized, { fuzzy })) {
+        const record = index.records[match.recordIndex];
+        if (filters.inputLanguage && record.inputLanguage !== filters.inputLanguage) {
           continue;
         }
-        if (filters.outputLanguage && entry.targetLanguage !== filters.outputLanguage) {
-          continue;
-        }
-
-        const candidates = [entry.source, entry.target, ...(entry.aliases || [])];
-        const exactHit = candidates.some((candidate) => candidate.toLowerCase().includes(normalized));
-        const score = exactHit ? 1 : fuzzy ? bestFuzzyScore(normalized, candidates) : 0;
-        if (score <= 0) {
+        if (filters.outputLanguage && record.outputLanguage !== filters.outputLanguage) {
           continue;
         }
 
         results.push({
-          id: `${book.id}:${entry.source}:${entry.target}`,
+          id: `${book.id}:${match.recordIndex}`,
           bookId: book.id,
           bookTitle: book.title,
-          bookType: "translation",
-          input: entry.source,
-          output: entry.target,
-          inputLanguage: entry.sourceLanguage,
-          outputLanguage: entry.targetLanguage,
-          score,
+          bookType: book.type,
+          input: record.input,
+          output: record.output,
+          inputLanguage: record.inputLanguage,
+          outputLanguage: record.outputLanguage,
+          score: match.score,
+          matchKind: match.kind,
+          termLength: match.keyLength,
         });
       }
     }
 
-    return results.sort((a, b) => b.score - a.score || a.input.localeCompare(b.input));
+    // Several books are cuts of the same public-domain dictionary, so collapse
+    // identical term/definition pairs to whichever copy scored highest.
+    const deduped = new Map<string, BookSearchResult>();
+    for (const result of results) {
+      const key = `${result.input.toLowerCase()}::${result.output}`;
+      const existing = deduped.get(key);
+      if (!existing || result.score > existing.score) {
+        deduped.set(key, result);
+      }
+    }
+
+    return Array.from(deduped.values()).sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      if (a.termLength !== b.termLength) return a.termLength - b.termLength;
+      return a.input.localeCompare(b.input);
+    });
   }, [activeBookIds, bookPayloads, installedBooks]);
 
   return {

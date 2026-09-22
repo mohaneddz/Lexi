@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import { BookOpen, Check, CircleDot, Copy, Download, Languages, Search, Sparkles, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -110,11 +110,15 @@ export default function Books() {
     };
   }, [catalog]);
 
+  // Searching scans every installed book, so let the input paint first and run
+  // the scan against the settled value.
+  const deferredQuery = useDeferredValue(searchQuery);
+
   const searchResults = useMemo(() => {
-    if (!searchQuery.trim()) {
+    if (!deferredQuery.trim()) {
       return [];
     }
-    return lookup(searchQuery, {
+    return lookup(deferredQuery, {
       scope,
       fuzzy: fuzzyEnabled,
       bookType: searchType,
@@ -122,7 +126,7 @@ export default function Books() {
       outputLanguage: outputLanguage === "all" ? undefined : outputLanguage,
       bookIds: bookScopeId === "all" ? undefined : [bookScopeId],
     }).slice(0, 120);
-  }, [bookScopeId, fuzzyEnabled, inputLanguage, lookup, outputLanguage, scope, searchQuery, searchType]);
+  }, [bookScopeId, deferredQuery, fuzzyEnabled, inputLanguage, lookup, outputLanguage, scope, searchType]);
 
   const handleApplyResult = async (result: (typeof searchResults)[number]) => {
     if (result.bookType === "dictionary") {
