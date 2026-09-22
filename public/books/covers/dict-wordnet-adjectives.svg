@@ -1,23 +1,49 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="720" height="1024" viewBox="0 0 720 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="720" height="1024" viewBox="0 0 720 1024" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#1d2630"/>
-      <stop offset="100%" stop-color="#3b82f6"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.6" y2="1">
+      <stop offset="0%" stop-color="#2e1065"/>
+      <stop offset="100%" stop-color="#05070d"/>
     </linearGradient>
   </defs>
-  <rect width="720" height="1024" fill="url(#g)"/>
-  <rect x="38" y="38" width="644" height="948" rx="28" stroke="rgba(255,255,255,0.24)" stroke-width="2"/>
-  <circle cx="612" cy="120" r="72" fill="rgba(255,255,255,0.08)"/>
-  <circle cx="104" cy="940" r="120" fill="rgba(255,255,255,0.06)"/>
-  <text x="72" y="140" fill="#bfdbfe" font-size="30" font-family="Arial, sans-serif" opacity="0.95">Lexi Library</text>
-  <text x="72" y="256" fill="white" font-size="72" font-family="Georgia, serif" font-weight="700">WAD</text>
-  <text x="72" y="334" fill="rgba(255,255,255,0.95)" font-size="24" font-family="Arial, sans-serif">Dictionary</text>
-  <foreignObject x="72" y="390" width="576" height="360">
-    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: Georgia, serif; color: white; font-size: 52px; line-height: 1.1; font-weight: 700;">
-      WordNet Adjective Definitions
-    </div>
-  </foreignObject>
-  <rect x="72" y="900" width="252" height="46" rx="23" fill="rgba(255,255,255,0.12)"/>
-  <text x="92" y="931" fill="white" font-size="22" font-family="Arial, sans-serif">Offline Book Pack</text>
+
+  <rect width="720" height="1024" fill="url(#bg)"/>
+
+  <g>
+    <line x1="140" y1="250" x2="300" y2="180" stroke="#c4b5fd" stroke-width="1.4" opacity="0.28"/>
+    <line x1="300" y1="180" x2="430" y2="300" stroke="#c4b5fd" stroke-width="1.4" opacity="0.28"/>
+    <line x1="430" y1="300" x2="250" y2="400" stroke="#c4b5fd" stroke-width="1.4" opacity="0.28"/>
+    <line x1="250" y1="400" x2="140" y2="250" stroke="#c4b5fd" stroke-width="1.4" opacity="0.28"/>
+    <line x1="300" y1="180" x2="520" y2="210" stroke="#c4b5fd" stroke-width="1.4" opacity="0.28"/>
+    <line x1="520" y1="210" x2="600" y2="380" stroke="#c4b5fd" stroke-width="1.4" opacity="0.28"/>
+    <line x1="430" y1="300" x2="600" y2="380" stroke="#c4b5fd" stroke-width="1.4" opacity="0.28"/>
+    <line x1="250" y1="400" x2="380" y2="520" stroke="#c4b5fd" stroke-width="1.4" opacity="0.28"/>
+    <line x1="380" y1="520" x2="560" y2="600" stroke="#c4b5fd" stroke-width="1.4" opacity="0.28"/>
+    <line x1="180" y1="560" x2="380" y2="520" stroke="#c4b5fd" stroke-width="1.4" opacity="0.28"/>
+    <line x1="380" y1="520" x2="300" y2="680" stroke="#c4b5fd" stroke-width="1.4" opacity="0.28"/>
+    <line x1="600" y1="380" x2="560" y2="600" stroke="#c4b5fd" stroke-width="1.4" opacity="0.28"/>
+    <circle cx="140" cy="250" r="7" fill="#c4b5fd" opacity="0.55"/>
+    <circle cx="300" cy="180" r="4.5" fill="#c4b5fd" opacity="0.35"/>
+    <circle cx="430" cy="300" r="4.5" fill="#c4b5fd" opacity="0.35"/>
+    <circle cx="250" cy="400" r="7" fill="#c4b5fd" opacity="0.55"/>
+    <circle cx="520" cy="210" r="4.5" fill="#c4b5fd" opacity="0.35"/>
+    <circle cx="600" cy="380" r="4.5" fill="#c4b5fd" opacity="0.35"/>
+    <circle cx="180" cy="560" r="7" fill="#c4b5fd" opacity="0.55"/>
+    <circle cx="380" cy="520" r="4.5" fill="#c4b5fd" opacity="0.35"/>
+    <circle cx="560" cy="600" r="4.5" fill="#c4b5fd" opacity="0.35"/>
+    <circle cx="300" cy="680" r="7" fill="#c4b5fd" opacity="0.55"/>
+  </g>
+
+  <rect x="44" y="44" width="632" height="936" rx="10" fill="none" stroke="#c4b5fd" stroke-width="1.5" opacity="0.35"/>
+
+  <!-- The catalog card crops to a short strip through the middle, so the type
+       block sits at the vertical centre rather than top and bottom. -->
+  <text x="86" y="436" fill="#c4b5fd" font-family="Georgia, 'Times New Roman', serif" font-size="24" letter-spacing="5" opacity="0.9">PRINCETON WORDNET</text>
+
+  <text x="86" y="548" fill="#ffffff" font-family="Georgia, 'Times New Roman', serif" font-size="86" font-weight="700">Adjectives</text>
+
+  <line x1="86" y1="596" x2="634" y2="596" stroke="#c4b5fd" stroke-width="1.5" opacity="0.5"/>
+
+  <text x="86" y="642" fill="#ffffff" font-family="Georgia, 'Times New Roman', serif" font-size="26" opacity="0.72">30,001 senses</text>
+  <text x="86" y="682" fill="#ffffff" font-family="Georgia, 'Times New Roman', serif" font-size="22" opacity="0.45">Modern English definitions</text>
 </svg>

@@ -14,7 +14,7 @@
       "Spanish"
     ],
     "sizeBytes": 33967,
-    "coverUrl": "/books/covers/trans-countries-en-es.svg"
+    "coverUrl": "/books/covers/trans-countries-en-es.jpg"
   },
   {
     "id": "trans-countries-en-fr",
@@ -31,7 +31,7 @@
       "French"
     ],
     "sizeBytes": 33978,
-    "coverUrl": "/books/covers/trans-countries-en-fr.svg"
+    "coverUrl": "/books/covers/trans-countries-en-fr.jpg"
   },
   {
     "id": "dict-webster-essentials",
@@ -48,7 +48,7 @@
       "English"
     ],
     "sizeBytes": 26854591,
-    "coverUrl": "/books/covers/dict-webster-essentials.svg"
+    "coverUrl": "/books/covers/dict-webster-essentials.jpg"
   },
   {
     "id": "dict-wordnet-adjectives",
