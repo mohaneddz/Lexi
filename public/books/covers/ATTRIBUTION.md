@@ -8,7 +8,7 @@ File names are the Commons file names.
 | Cover | Work | Commons file |
 | --- | --- | --- |
 | `dict-webster-essentials.jpg` | Binding of *Webster's International Dictionary* | `Webster's Unabridged Dictionary Volume I.pdf` (page 1) |
-| `trans-countries-en-es.jpg`, `trans-countries-en-fr.jpg` | *A New and Accurate Map of the Known World*, Emanuel Bowen, 1744 | `1744 Bowen Map of the World in Hemispheres - Geographicus - World-bowen-1744.jpg` |
+| `trans-countries-en-*.jpg`, `general-*.jpg` | *A New and Accurate Map of the Known World*, Emanuel Bowen, 1744 | `1744 Bowen Map of the World in Hemispheres - Geographicus - World-bowen-1744.jpg` |
 
 ## Topical books
 

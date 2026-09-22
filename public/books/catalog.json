@@ -187,6 +187,108 @@
     "coverUrl": "/books/covers/trans-countries-en-ar.jpg"
   },
   {
+    "id": "general-en-fr",
+    "title": "General Vocabulary (English to French)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "Everyday vocabulary — numbers, days, months, colors, greetings, family, question words, adjectives, verbs and common nouns — translated from English to French.",
+    "source": "Lexi",
+    "sourceUrl": "/books/packs/general-en-fr.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "French"
+    ],
+    "sizeBytes": 13297,
+    "coverUrl": "/books/covers/general-en-fr.jpg"
+  },
+  {
+    "id": "general-en-de",
+    "title": "General Vocabulary (English to German)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "Everyday vocabulary — numbers, days, months, colors, greetings, family, question words, adjectives, verbs and common nouns — translated from English to German.",
+    "source": "Lexi",
+    "sourceUrl": "/books/packs/general-en-de.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "German"
+    ],
+    "sizeBytes": 13314,
+    "coverUrl": "/books/covers/general-en-de.jpg"
+  },
+  {
+    "id": "general-en-zh",
+    "title": "General Vocabulary (English to Chinese)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "Everyday vocabulary — numbers, days, months, colors, greetings, family, question words, adjectives, verbs and common nouns — translated from English to Chinese.",
+    "source": "Lexi",
+    "sourceUrl": "/books/packs/general-en-zh.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Chinese"
+    ],
+    "sizeBytes": 13363,
+    "coverUrl": "/books/covers/general-en-zh.jpg"
+  },
+  {
+    "id": "general-ar-fr",
+    "title": "General Vocabulary (Arabic to French)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "Everyday vocabulary — numbers, days, months, colors, greetings, family, question words, adjectives, verbs and common nouns — translated from Arabic to French.",
+    "source": "Lexi",
+    "sourceUrl": "/books/packs/general-ar-fr.v1.json",
+    "inputLanguages": [
+      "Arabic"
+    ],
+    "outputLanguages": [
+      "French"
+    ],
+    "sizeBytes": 13657,
+    "coverUrl": "/books/covers/general-ar-fr.jpg"
+  },
+  {
+    "id": "general-ar-de",
+    "title": "General Vocabulary (Arabic to German)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "Everyday vocabulary — numbers, days, months, colors, greetings, family, question words, adjectives, verbs and common nouns — translated from Arabic to German.",
+    "source": "Lexi",
+    "sourceUrl": "/books/packs/general-ar-de.v1.json",
+    "inputLanguages": [
+      "Arabic"
+    ],
+    "outputLanguages": [
+      "German"
+    ],
+    "sizeBytes": 13674,
+    "coverUrl": "/books/covers/general-ar-de.jpg"
+  },
+  {
+    "id": "general-ar-zh",
+    "title": "General Vocabulary (Arabic to Chinese)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "Everyday vocabulary — numbers, days, months, colors, greetings, family, question words, adjectives, verbs and common nouns — translated from Arabic to Chinese.",
+    "source": "Lexi",
+    "sourceUrl": "/books/packs/general-ar-zh.v1.json",
+    "inputLanguages": [
+      "Arabic"
+    ],
+    "outputLanguages": [
+      "Chinese"
+    ],
+    "sizeBytes": 13723,
+    "coverUrl": "/books/covers/general-ar-zh.jpg"
+  },
+  {
     "id": "dict-topic-feelings",
     "title": "Feelings and Emotions",
     "type": "dictionary",
