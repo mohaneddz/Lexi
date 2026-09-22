@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, FolderTree, Loader2, Pencil, Plus, Search, Trash2, WandSparkles } from "lucide-react";
 
 import { GroupBadge } from "@/components/lexi/GroupBadge";
@@ -11,12 +11,18 @@ import { getGroupIcon, GROUP_ICON_LOAD_ERROR, GROUP_ICON_NAMES, GROUP_ICON_SOURC
 import { cn } from "@/lib/utils";
 import type { LexiGroup } from "@/types";
 import { formatDate } from "@/utils/formatters";
+import { resolveGroupAssignment } from "@/utils/group-assignment";
+import { getSettings } from "@/utils/storage";
 
 export default function Groups() {
   const { groups, loading, addGroup, updateGroup, deleteGroup, moveGroup } = useGroups();
-  const { suggestGroupIcon, loading: aiLoading } = useAI();
-  const { words } = useWords();
-  const { translations } = useTranslations();
+  const { suggestGroupIcon, suggestGroup, loading: aiLoading } = useAI();
+  const { words, updateWord } = useWords();
+  const { translations, updateTranslation } = useTranslations();
+
+  const [organizing, setOrganizing] = useState(false);
+  const [organizeProgress, setOrganizeProgress] = useState<{ done: number; total: number } | null>(null);
+  const [organizeSummary, setOrganizeSummary] = useState<string | null>(null);
 
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [draftName, setDraftName] = useState("");
@@ -151,6 +157,66 @@ export default function Groups() {
       setSelectedGroupId(null);
     }
   };
+
+  const runOrganize = useCallback(async () => {
+    if (organizing) {
+      return;
+    }
+
+    if (groups.length === 0) {
+      setOrganizeSummary("Create at least one group before organizing.");
+      return;
+    }
+
+    const pendingWords = words.filter((word) => (word.groupIds || []).length === 0);
+    const pendingTranslations = translations.filter((translation) => (translation.groupIds || []).length === 0);
+    const total = pendingWords.length + pendingTranslations.length;
+
+    if (total === 0) {
+      setOrganizeSummary("Every word and translation already belongs to a group.");
+      return;
+    }
+
+    setOrganizing(true);
+    setOrganizeSummary(null);
+    setOrganizeProgress({ done: 0, total });
+
+    const settings = await getSettings();
+    let assigned = 0;
+    let done = 0;
+
+    for (const word of pendingWords) {
+      const groupId = await resolveGroupAssignment(word.word, word.definition, groups, suggestGroup, settings.autoAssignOthersGroup);
+      if (groupId) {
+        await updateWord(word.id, { groupIds: [groupId] });
+        assigned += 1;
+      }
+      done += 1;
+      setOrganizeProgress({ done, total });
+    }
+
+    for (const translation of pendingTranslations) {
+      const label = `${translation.sourceWord} -> ${translation.targetWord}`;
+      const definition = translation.context?.trim() || `Translation from ${translation.sourceLanguage} to ${translation.targetLanguage}.`;
+      const groupId = await resolveGroupAssignment(label, definition, groups, suggestGroup, settings.autoAssignOthersGroup);
+      if (groupId) {
+        await updateTranslation(translation.id, { groupIds: [groupId] });
+        assigned += 1;
+      }
+      done += 1;
+      setOrganizeProgress({ done, total });
+    }
+
+    setOrganizing(false);
+    setOrganizeProgress(null);
+    setOrganizeSummary(`Assigned ${assigned} of ${total} unsorted items.`);
+  }, [organizing, groups, words, translations, suggestGroup, updateWord, updateTranslation]);
+
+  useEffect(() => {
+    const onOrganize = () => void runOrganize();
+    window.addEventListener("lexi:organize", onOrganize);
+    return () => window.removeEventListener("lexi:organize", onOrganize);
+  }, [runOrganize]);
 
   return (
     <div className="grid min-h-full grid-cols-1 gap-3 xl:h-full xl:grid-cols-[1fr_0.96fr]">
@@ -387,7 +453,11 @@ export default function Groups() {
             <FolderTree className="size-3" />
             {groups.length} groups
           </span>
-          <span className="subtle-caption">Group deletions unassign linked items automatically.</span>
+          <span className="subtle-caption">
+            {organizing && organizeProgress
+              ? `Organizing ${organizeProgress.done}/${organizeProgress.total}...`
+              : organizeSummary ?? "Group deletions unassign linked items automatically."}
+          </span>
         </div>
       </section>
     </div>

@@ -15,6 +15,7 @@ import {
   Search,
   Settings,
   Type,
+  WandSparkles,
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
@@ -61,6 +62,10 @@ function openCapture(mode: CaptureMode): void {
   window.dispatchEvent(new CustomEvent("lexi:capture", { detail: { mode } }));
 }
 
+function triggerOrganize(): void {
+  window.dispatchEvent(new CustomEvent("lexi:organize"));
+}
+
 function isTypingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) {
     return false;
@@ -86,8 +91,9 @@ export function AppShell({ children }: AppShellProps) {
   const [canScrollTabsLeft, setCanScrollTabsLeft] = useState(false);
   const [canScrollTabsRight, setCanScrollTabsRight] = useState(false);
   const { groups } = useGroups();
+  const isGroupsRoute = location.pathname === "/groups";
   const groupTabsDisabled =
-    location.pathname === "/groups" ||
+    isGroupsRoute ||
     location.pathname === "/stats" ||
     location.pathname === "/settings" ||
     location.pathname === "/books";
@@ -418,15 +424,27 @@ export function AppShell({ children }: AppShellProps) {
                 <Search className="size-4" />
               </button>
 
-              <button
-                type="button"
-                className="topbar-capture-btn inline-flex h-10 items-center gap-2 rounded-lg border border-white/14 bg-white/10 px-3.5 text-sm font-semibold text-foreground transition hover:bg-white/16"
-                onClick={triggerCapture}
-                title={`${PRIMARY_MODIFIER_LABEL}+N`}
-              >
-                <Plus className="size-4" />
-                <span className="hidden sm:inline">Capture</span>
-              </button>
+              {isGroupsRoute ? (
+                <button
+                  type="button"
+                  className="topbar-capture-btn inline-flex h-10 items-center gap-2 rounded-lg border border-white/14 bg-white/10 px-3.5 text-sm font-semibold text-foreground transition hover:bg-white/16"
+                  onClick={triggerOrganize}
+                  title="Auto-assign unsorted words and translations to groups"
+                >
+                  <WandSparkles className="size-4" />
+                  <span className="hidden sm:inline">Organize</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="topbar-capture-btn inline-flex h-10 items-center gap-2 rounded-lg border border-white/14 bg-white/10 px-3.5 text-sm font-semibold text-foreground transition hover:bg-white/16"
+                  onClick={triggerCapture}
+                  title={`${PRIMARY_MODIFIER_LABEL}+N`}
+                >
+                  <Plus className="size-4" />
+                  <span className="hidden sm:inline">Capture</span>
+                </button>
+              )}
             </div>
           </header>
 
