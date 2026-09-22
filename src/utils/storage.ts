@@ -40,8 +40,6 @@ const DEFAULT_SETTINGS: AppSettings = {
   defaultRevisionMode: 'flashcard',
   groupTabsIconOnly: false,
   surfaceViews: {
-    inbox: { mode: "list", zoom: 100, detailPanelOpen: true },
-    words: { mode: "list", zoom: 100, detailPanelOpen: true },
     definitions: { mode: "list", zoom: 100, detailPanelOpen: true },
     translations: { mode: "list", zoom: 100, detailPanelOpen: true },
   },
@@ -61,8 +59,6 @@ function normalizeSurfaceViewPreference(
 
 function normalizeSurfaceViews(value: Partial<Record<SurfaceKey, Partial<SurfaceViewPreference>>> | undefined) {
   return {
-    inbox: normalizeSurfaceViewPreference(value?.inbox, DEFAULT_SETTINGS.surfaceViews.inbox!),
-    words: normalizeSurfaceViewPreference(value?.words, DEFAULT_SETTINGS.surfaceViews.words!),
     definitions: normalizeSurfaceViewPreference(value?.definitions, DEFAULT_SETTINGS.surfaceViews.definitions!),
     translations: normalizeSurfaceViewPreference(value?.translations, DEFAULT_SETTINGS.surfaceViews.translations!),
   };

@@ -57,7 +57,7 @@ const SHORTCUTS = [
   { keys: `${PRIMARY_MODIFIER_div}+N`, action: "Capture item on active page" },
   { keys: `${PRIMARY_MODIFIER_div}+Shift+T`, action: "Open translations and add pair" },
   { keys: `${PRIMARY_MODIFIER_div}+Shift+R`, action: "Jump to review workspace" },
-  { keys: "Ctrl+Shift+<", action: "Toggle tray hide/show and open Inbox" },
+  { keys: "Ctrl+Shift+<", action: "Toggle tray hide/show" },
   { keys: `${PRIMARY_MODIFIER_div}+Shift+;`, action: "Global quick define popup toggle" },
   { keys: `${PRIMARY_MODIFIER_div}+Shift+'`, action: "Global quick translate popup toggle" },
   { keys: "Alt+1..9", action: "Navigate top tabs" },

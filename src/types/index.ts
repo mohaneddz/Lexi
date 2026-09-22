@@ -99,7 +99,7 @@ export interface LexiGroup {
 }
 
 export type ViewMode = "list" | "grid" | "tiles";
-export type SurfaceKey = "inbox" | "words" | "definitions" | "translations";
+export type SurfaceKey = "definitions" | "translations";
 
 export interface SurfaceViewPreference {
   mode: ViewMode;

@@ -2,14 +2,12 @@ import { type ComponentType, type ReactNode, useCallback, useEffect, useMemo, us
 import {
   BookCheck,
   BookMarked,
-  BookOpenText,
   BookText,
   ChartColumn,
   ChevronLeft,
   ChevronRight,
   FolderTree,
   ImageOff,
-  Inbox,
   Languages,
   Menu,
   Plus,
@@ -31,8 +29,6 @@ type NavItem = {
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Inbox", path: "/inbox", icon: Inbox },
-  { label: "Words", path: "/words", icon: BookOpenText },
   { label: "Definitions", path: "/definitions", icon: BookText },
   { label: "Translations", path: "/translations", icon: Languages },
   { label: "Books", path: "/books", icon: BookMarked },
@@ -42,7 +38,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Settings", path: "/settings", icon: Settings },
 ];
 
-const CAPTURE_PATHS = new Set(["/inbox", "/words", "/translations", "/definitions"]);
+const CAPTURE_PATHS = new Set(["/translations", "/definitions"]);
 const PRIMARY_MODIFIER_LABEL = navigator.platform.toLowerCase().includes("mac") ? "Cmd" : "Ctrl";
 
 function isPathActive(pathname: string, targetPath: string): boolean {
@@ -224,12 +220,12 @@ export function AppShell({ children }: AppShellProps) {
   }, [selectedGroupFilter, location.pathname]);
 
   useEffect(() => {
-    const onOpenInbox = () => {
-      navigate("/inbox");
+    const onShowWindow = () => {
+      navigate("/definitions");
     };
 
-    window.addEventListener("lexi:open-inbox", onOpenInbox);
-    return () => window.removeEventListener("lexi:open-inbox", onOpenInbox);
+    window.addEventListener("lexi:show-window", onShowWindow);
+    return () => window.removeEventListener("lexi:show-window", onShowWindow);
   }, [navigate]);
 
   useEffect(() => {

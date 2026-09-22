@@ -169,7 +169,7 @@ fn show_main_window<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
     window.show()?;
     window.unminimize()?;
     window.set_focus()?;
-    let _ = window.emit("lexi:open-inbox", ());
+    let _ = window.emit("lexi:show-window", ());
     Ok(())
 }
 
