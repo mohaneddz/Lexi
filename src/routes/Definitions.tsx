@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Copy, Grid2x2, LayoutGrid, List, Minus, PanelRightClose, PanelRightOpen, Plus, RefreshCcw, Search, Sparkles, ZoomIn } from "lucide-react";
+import { Copy, Grid2x2, LayoutGrid, List, Loader2, Minus, PanelRightClose, PanelRightOpen, Plus, RefreshCcw, Search, Sparkles, WandSparkles, ZoomIn } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { useAI } from "@/hooks/useAI";
 import { useSurfaceViewPreference } from "@/hooks/useSurfaceViewPreference";
 import { cardMinWidthFor } from "@/lib/surface-view";
 import { useTranslations } from "@/hooks/useTranslations";
@@ -38,8 +39,9 @@ function isTypingTarget(target: EventTarget | null): boolean {
 export default function Definitions() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const gridScrollRef = useRef<HTMLDivElement>(null);
-  const { words, loading, addWord } = useWords();
+  const { words, loading, addWord, updateWord } = useWords();
   const { translations } = useTranslations();
+  const { getExamples } = useAI();
   const { viewMode, setViewMode, zoom, stepZoom, canZoom, detailPanelOpen, toggleDetailPanel } = useSurfaceViewPreference("definitions", "list", 100);
 
   const [query, setQuery] = useState("");
@@ -47,6 +49,7 @@ export default function Definitions() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [exampleVersion, setExampleVersion] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [generatingExamples, setGeneratingExamples] = useState(false);
   const [definitionSuggestions, setDefinitionSuggestions] = useState<DefinitionSuggestion[]>([]);
   const [addingSuggestionId, setAddingSuggestionId] = useState<string | null>(null);
   const todayKey = useMemo(() => dayKey(Date.now()), []);
@@ -126,6 +129,20 @@ export default function Definitions() {
     await navigator.clipboard.writeText(`${selectedWord.word}: ${selectedWord.definition}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
+  };
+
+  const generateExamples = async () => {
+    if (!selectedWord) return;
+    setGeneratingExamples(true);
+    try {
+      const result = await getExamples(selectedWord.word, selectedWord.language);
+      if (result.success && result.data.length > 0) {
+        await updateWord(selectedWord.id, { examples: result.data });
+        setExampleVersion(0);
+      }
+    } finally {
+      setGeneratingExamples(false);
+    }
   };
 
   useEffect(() => {
@@ -297,8 +314,17 @@ export default function Definitions() {
                   <div className="ghost-divider" />
                   <p className="detail-text">{selectedWord.definition}</p>
                   <div className="frost-panel-soft space-y-3 p-4">
-                    <div className="flex items-center justify-between"><p className="font-medium">Usage Example</p><Button type="button" size="sm" variant="outline" disabled={!selectedWord.examples || selectedWord.examples.length <= 1} className="border-white/15 bg-white/6 hover:bg-white/14" onClick={() => setExampleVersion((current) => current + 1)}><RefreshCcw className="mr-1.5 size-3.5" />Rotate</Button></div>
-                    {selectedExample ? <p className="serif-display text-2xl italic text-muted-foreground">{selectedExample}</p> : <p className="subtle-caption">No examples yet. Generate examples from the Words page.</p>}
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-medium">Usage Example</p>
+                      <div className="flex gap-2">
+                        <Button type="button" size="sm" variant="outline" disabled={generatingExamples} className="border-white/15 bg-white/6 hover:bg-white/14" onClick={() => void generateExamples()}>
+                          {generatingExamples ? <Loader2 className="mr-1.5 size-3.5 animate-spin" /> : <WandSparkles className="mr-1.5 size-3.5" />}
+                          Generate
+                        </Button>
+                        <Button type="button" size="sm" variant="outline" disabled={!selectedWord.examples || selectedWord.examples.length <= 1} className="border-white/15 bg-white/6 hover:bg-white/14" onClick={() => setExampleVersion((current) => current + 1)}><RefreshCcw className="mr-1.5 size-3.5" />Rotate</Button>
+                      </div>
+                    </div>
+                    {selectedExample ? <p className="serif-display text-2xl italic text-muted-foreground">{selectedExample}</p> : <p className="subtle-caption">No examples yet. Click Generate to create some.</p>}
                   </div>
                   <div className="flex flex-wrap gap-2"><Button type="button" variant="outline" className="border-white/15 bg-white/6 hover:bg-white/14" onClick={() => void copyDefinition()}><Copy className="mr-2 size-3.5" />{copied ? "Copied" : "Copy Definition"}</Button><span className="sync-pill"><Sparkles className="size-3" />{selectedWord.aiGenerated ? "AI generated" : "Manually curated"}</span></div>
                 </>
