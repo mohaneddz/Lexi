@@ -8,6 +8,28 @@ function tokenize(value: string): string[] {
     .filter(Boolean);
 }
 
+function levenshtein(a: string, b: string): number {
+  const m = a.length;
+  const n = b.length;
+  if (m === 0) return n;
+  if (n === 0) return m;
+
+  let prev = new Array<number>(n + 1);
+  let curr = new Array<number>(n + 1);
+  for (let j = 0; j <= n; j++) prev[j] = j;
+
+  for (let i = 1; i <= m; i++) {
+    curr[0] = i;
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      curr[j] = Math.min(curr[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
+    }
+    [prev, curr] = [curr, prev];
+  }
+
+  return prev[n];
+}
+
 function tokenScore(queryToken: string, targetToken: string): number {
   if (!queryToken || !targetToken) {
     return 0;
@@ -18,31 +40,32 @@ function tokenScore(queryToken: string, targetToken: string): number {
   }
 
   if (targetToken.startsWith(queryToken)) {
-    return 0.78;
+    return 0.85;
   }
 
   if (targetToken.includes(queryToken)) {
-    return 0.62;
+    return 0.65;
   }
 
-  let q = 0;
-  let t = 0;
-  let matches = 0;
-  while (q < queryToken.length && t < targetToken.length) {
-    if (queryToken[q] === targetToken[t]) {
-      matches += 1;
-      q += 1;
-    }
-    t += 1;
-  }
-
-  if (matches === 0) {
+  // Very short query tokens produce too many accidental typo matches, so
+  // only allow prefix/substring hits (above) for them.
+  if (queryToken.length < 3) {
     return 0;
   }
 
-  const recall = matches / queryToken.length;
-  const precision = matches / targetToken.length;
-  return (recall * 0.7) + (precision * 0.3);
+  const lenDiff = Math.abs(queryToken.length - targetToken.length);
+  if (lenDiff > 2) {
+    return 0;
+  }
+
+  const distance = levenshtein(queryToken, targetToken);
+  const allowedDistance = queryToken.length <= 4 ? 1 : queryToken.length <= 7 ? 2 : 3;
+  if (distance > allowedDistance) {
+    return 0;
+  }
+
+  const maxLen = Math.max(queryToken.length, targetToken.length);
+  return Math.max(0, 0.6 - distance * 0.15) * (1 - distance / maxLen);
 }
 
 export function fuzzyScore(query: string, haystack: string): number {
