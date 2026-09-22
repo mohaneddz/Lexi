@@ -3,12 +3,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { BookCatalogItem, BookPayload, InstalledBook } from "@/types";
 import {
   addCustomBookSource,
-  getActiveBookIds,
+  getEnabledBookIds,
   getCustomBookSources,
   getInstalledBooks,
   removeCustomBookSource,
   removeInstalledBook,
-  saveActiveBookIds,
+  saveEnabledBookIds,
   upsertInstalledBook,
 } from "@/utils/storage";
 import {
@@ -19,34 +19,19 @@ import {
   loadStarterCatalog,
   readInstalledBookPayload,
   saveInstalledBookPayload,
-  verifyChecksum,
 } from "@/utils/books";
 import { getBookIndex, matchBook, type MatchKind } from "@/utils/bookSearch";
 
-type LookupScope = "selected" | "all";
-
-/**
- * Books that were pulled from the catalog. Any copy still sitting in AppData
- * is deleted on the next load so it stops showing up in search results.
- * The heritage packs were a corrupted, smaller cut of the same public-domain
- * dictionary that Webster's Unabridged already covers.
- */
-const RETIRED_BOOK_IDS = new Set([
-  "dict-essential-en",
-  "trans-en-fr-es",
-  "trans-en-ar-de",
-  "dict-english-heritage-ae",
-  "dict-english-heritage-fk",
-  "dict-english-heritage-lq",
-  "dict-english-heritage-rz",
-]);
+// A book imported from a file is the only kind with a real local copy to
+// clean up; everything else ships inside the app and is read from there.
+const IMPORTED_SOURCE = "Imported File";
 
 export type BookSearchFilters = {
   bookType?: "all" | "dictionary" | "translation";
   inputLanguage?: string;
   outputLanguage?: string;
+  /** Narrows to specific enabled books instead of all of them. */
   bookIds?: string[];
-  scope?: LookupScope;
   fuzzy?: boolean;
 };
 
@@ -66,225 +51,163 @@ export type BookSearchResult = {
 
 export function useBooks() {
   const [catalog, setCatalog] = useState<BookCatalogItem[]>([]);
-  const [installedBooks, setInstalledBooks] = useState<InstalledBook[]>([]);
-  const [activeBookIds, setActiveBookIds] = useState<string[]>([]);
+  const [importedBooks, setImportedBooks] = useState<InstalledBook[]>([]);
+  const [enabledBookIds, setEnabledBookIds] = useState<string[]>([]);
   const [bookPayloads, setBookPayloads] = useState<Record<string, BookPayload>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [installingIds, setInstallingIds] = useState<string[]>([]);
+  const [loadingBookIds, setLoadingBookIds] = useState<string[]>([]);
 
-  // Installed payloads can be tens of megabytes each; keep a ref so refresh()
-  // can skip re-reading ones already in memory instead of blocking the UI
-  // every time it runs.
+  // Payloads and imported-book records are read inside callbacks that must
+  // stay referentially stable, so a ref tracks the latest value without
+  // pulling either into those callbacks' dependency arrays.
   const bookPayloadsRef = useRef<Record<string, BookPayload>>({});
   useEffect(() => {
     bookPayloadsRef.current = bookPayloads;
   }, [bookPayloads]);
 
-  const refresh = useCallback(async (options: { showLoading?: boolean } = {}) => {
-    const { showLoading = true } = options;
-    if (showLoading) {
-      setLoading(true);
-    }
-    try {
-      const [starterCatalog, customSources, installed, active] = await Promise.all([
-        loadStarterCatalog(),
-        getCustomBookSources(),
-        getInstalledBooks(),
-        getActiveBookIds(),
-      ]);
-      const installedFiltered = installed.filter((book) => !RETIRED_BOOK_IDS.has(book.id));
-      const activeFiltered = active.filter((bookId) => !RETIRED_BOOK_IDS.has(bookId));
-      if (activeFiltered.length !== active.length) {
-        await saveActiveBookIds(activeFiltered);
-      }
-
-      for (const book of installed) {
-        if (!RETIRED_BOOK_IDS.has(book.id)) continue;
-        await deleteInstalledBookPayload(book.localPath).catch(() => {});
-        await removeInstalledBook(book.id);
-      }
-
-      const catalogMap = new Map<string, BookCatalogItem>();
-      for (const item of starterCatalog) {
-        catalogMap.set(item.id, item);
-      }
-      for (const item of customSources) {
-        catalogMap.set(item.id, item);
-      }
-
-      const payloadEntries = await Promise.all(
-        installedFiltered.map(async (book) => {
-          const cached = bookPayloadsRef.current[book.id];
-          if (cached && cached.version === book.version) {
-            return [book.id, cached] as const;
-          }
-          try {
-            const payload = await readInstalledBookPayload(book.localPath);
-            return [book.id, payload] as const;
-          } catch {
-            return null;
-          }
-        }),
-      );
-
-      const payloadMap: Record<string, BookPayload> = {};
-      for (const entry of payloadEntries) {
-        if (entry) {
-          payloadMap[entry[0]] = entry[1];
-        }
-      }
-
-      setCatalog(Array.from(catalogMap.values()).sort((a, b) => a.title.localeCompare(b.title)));
-      setInstalledBooks(installedFiltered);
-      setActiveBookIds(activeFiltered);
-      setBookPayloads(payloadMap);
-      setError(null);
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Failed to load books.");
-    } finally {
-      if (showLoading) {
-        setLoading(false);
-      }
-    }
-  }, []);
-
+  const importedBooksRef = useRef<InstalledBook[]>([]);
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    importedBooksRef.current = importedBooks;
+  }, [importedBooks]);
 
-  const setInstalling = (id: string, installing: boolean) => {
-    setInstallingIds((current) => {
-      if (installing) {
+  const catalogRef = useRef<BookCatalogItem[]>([]);
+  useEffect(() => {
+    catalogRef.current = catalog;
+  }, [catalog]);
+
+  const setLoadingBook = (id: string, isLoading: boolean) => {
+    setLoadingBookIds((current) => {
+      if (isLoading) {
         return current.includes(id) ? current : [...current, id];
       }
       return current.filter((entry) => entry !== id);
     });
   };
 
-  const installFromPayload = useCallback(async (payload: BookPayload, sourceItem: BookCatalogItem) => {
-    await verifyChecksum(payload, sourceItem.checksum);
-    const localPath = await saveInstalledBookPayload(payload.id, payload.version, payload);
-
-    const installedBook: InstalledBook = {
-      id: payload.id,
-      title: payload.title,
-      type: payload.type,
-      version: payload.version,
-      description: payload.description,
-      source: sourceItem.source,
-      sourceUrl: sourceItem.sourceUrl,
-      coverUrl: payload.coverUrl || sourceItem.coverUrl,
-      inputLanguages: payload.inputLanguages,
-      outputLanguages: payload.outputLanguages,
-      sizeBytes: sourceItem.sizeBytes || JSON.stringify(payload).length,
-      checksum: sourceItem.checksum,
-      localPath,
-      installedAt: Date.now(),
-      enabled: true,
-    };
-
-    await upsertInstalledBook(installedBook);
-
-    setInstalledBooks((current) => [...current.filter((book) => book.id !== installedBook.id), installedBook]);
-    setBookPayloads((current) => ({ ...current, [installedBook.id]: payload }));
-
-    const currentActive = await getActiveBookIds();
-    if (!currentActive.includes(installedBook.id)) {
-      const nextActive = [...currentActive, installedBook.id];
-      await saveActiveBookIds(nextActive);
-      setActiveBookIds(nextActive);
+  /** Fetches a book's payload (bundled asset or an imported file) and caches it. */
+  const loadPayload = useCallback(async (bookId: string): Promise<BookPayload> => {
+    const cached = bookPayloadsRef.current[bookId];
+    if (cached) {
+      return cached;
     }
+
+    const imported = importedBooksRef.current.find((book) => book.id === bookId);
+    if (imported) {
+      const payload = await readInstalledBookPayload(imported.localPath);
+      setBookPayloads((current) => ({ ...current, [bookId]: payload }));
+      return payload;
+    }
+
+    const catalogItem = catalogRef.current.find((book) => book.id === bookId);
+    if (!catalogItem) {
+      throw new Error("Unknown book.");
+    }
+
+    const payload = await loadPayloadFromSourceUrl(catalogItem.sourceUrl);
+    setBookPayloads((current) => ({ ...current, [bookId]: payload }));
+    return payload;
   }, []);
 
-  const installBook = useCallback(async (book: BookCatalogItem) => {
-    setInstalling(book.id, true);
-    setError(null);
+  const refresh = useCallback(async () => {
+    setLoading(true);
     try {
-      const payload = await loadPayloadFromSourceUrl(book.sourceUrl);
-      await installFromPayload(payload, book);
-    } catch (installError) {
+      const [starterCatalog, customSources, installed, enabled] = await Promise.all([
+        loadStarterCatalog(),
+        getCustomBookSources(),
+        getInstalledBooks(),
+        getEnabledBookIds(),
+      ]);
+
+      // Only a genuine file import has a real local copy worth keeping. A
+      // record left over from the old install-to-disk model just wastes
+      // space the app already spends once on the bundled asset.
+      const imported = installed.filter((book) => book.source === IMPORTED_SOURCE);
+      const stale = installed.filter((book) => book.source !== IMPORTED_SOURCE);
+      await Promise.all(stale.map(async (book) => {
+        await deleteInstalledBookPayload(book.localPath).catch(() => {});
+        await removeInstalledBook(book.id);
+      }));
+
+      const catalogMap = new Map<string, BookCatalogItem>();
+      for (const item of starterCatalog) catalogMap.set(item.id, item);
+      for (const item of customSources) catalogMap.set(item.id, item);
+      const nextCatalog = Array.from(catalogMap.values()).sort((a, b) => a.title.localeCompare(b.title));
+
+      const knownIds = new Set(nextCatalog.map((item) => item.id));
+      const nextEnabled = enabled.filter((id) => knownIds.has(id));
+      if (nextEnabled.length !== enabled.length) {
+        await saveEnabledBookIds(nextEnabled);
+      }
+
+      setCatalog(nextCatalog);
+      setImportedBooks(imported);
+      setEnabledBookIds(nextEnabled);
+      setError(null);
+
+      // Populate payloads for whatever was already enabled from a previous
+      // session; a failure here disables that one book rather than blocking
+      // the rest of the catalog from loading.
+      catalogRef.current = nextCatalog;
+      importedBooksRef.current = imported;
+      const stillMissing = nextEnabled.filter((id) => !bookPayloadsRef.current[id]);
+      await Promise.all(stillMissing.map(async (id) => {
+        try {
+          await loadPayload(id);
+        } catch {
+          setEnabledBookIds((current) => {
+            const without = current.filter((entry) => entry !== id);
+            void saveEnabledBookIds(without);
+            return without;
+          });
+        }
+      }));
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : "Failed to load books.");
+    } finally {
+      setLoading(false);
+    }
+  }, [loadPayload]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  const toggleBookEnabled = useCallback(async (bookId: string) => {
+    setError(null);
+
+    if (enabledBookIds.includes(bookId)) {
+      const next = enabledBookIds.filter((id) => id !== bookId);
+      await saveEnabledBookIds(next);
+      setEnabledBookIds(next);
+      // Keep the payload cached in memory rather than evicting it, so
+      // toggling a book back on later in the session is instant instead of
+      // re-fetching a pack that can be 25MB+.
+      return;
+    }
+
+    const next = [...enabledBookIds, bookId];
+    await saveEnabledBookIds(next);
+    setEnabledBookIds(next);
+
+    setLoadingBook(bookId, true);
+    try {
+      await loadPayload(bookId);
+    } catch (loadError) {
+      const rolledBack = next.filter((id) => id !== bookId);
+      await saveEnabledBookIds(rolledBack);
+      setEnabledBookIds(rolledBack);
+
+      const title = catalogRef.current.find((book) => book.id === bookId)?.title ?? bookId;
       setError(
-        installError instanceof Error
-          ? `Could not install "${book.title}": ${installError.message}`
-          : `Could not install "${book.title}".`,
+        loadError instanceof Error
+          ? `Could not enable "${title}": ${loadError.message}`
+          : `Could not enable "${title}".`,
       );
     } finally {
-      setInstalling(book.id, false);
+      setLoadingBook(bookId, false);
     }
-  }, [installFromPayload]);
-
-  const uninstallBook = useCallback(async (bookId: string) => {
-    const installed = installedBooks.find((entry) => entry.id === bookId);
-    if (!installed) {
-      return;
-    }
-
-    setError(null);
-    try {
-      await deleteInstalledBookPayload(installed.localPath);
-      await removeInstalledBook(bookId);
-
-      setInstalledBooks((current) => current.filter((book) => book.id !== bookId));
-      setBookPayloads((current) => {
-        const next = { ...current };
-        delete next[bookId];
-        return next;
-      });
-
-      const currentActive = await getActiveBookIds();
-      if (currentActive.includes(bookId)) {
-        const nextActive = currentActive.filter((id) => id !== bookId);
-        await saveActiveBookIds(nextActive);
-        setActiveBookIds(nextActive);
-      }
-    } catch (uninstallError) {
-      setError(
-        uninstallError instanceof Error
-          ? `Could not remove "${installed.title}": ${uninstallError.message}`
-          : `Could not remove "${installed.title}".`,
-      );
-    }
-  }, [installedBooks]);
-
-  const toggleBookActive = useCallback(async (bookId: string) => {
-    const next = activeBookIds.includes(bookId)
-      ? activeBookIds.filter((id) => id !== bookId)
-      : [...activeBookIds, bookId];
-    await saveActiveBookIds(next);
-    setActiveBookIds(next);
-  }, [activeBookIds]);
-
-  // Disabling keeps the downloaded file on AppData and just excludes the book
-  // from search, so switching a book back on is instant instead of a full
-  // re-download of what can be a 25MB+ pack.
-  const toggleBookEnabled = useCallback(async (bookId: string) => {
-    const installed = installedBooks.find((entry) => entry.id === bookId);
-    if (!installed) {
-      return;
-    }
-
-    const nextEnabled = !installed.enabled;
-    const updated: InstalledBook = { ...installed, enabled: nextEnabled };
-
-    setError(null);
-    try {
-      await upsertInstalledBook(updated);
-      setInstalledBooks((current) => current.map((book) => (book.id === bookId ? updated : book)));
-
-      if (!nextEnabled && activeBookIds.includes(bookId)) {
-        const nextActive = activeBookIds.filter((id) => id !== bookId);
-        await saveActiveBookIds(nextActive);
-        setActiveBookIds(nextActive);
-      }
-    } catch (toggleError) {
-      setError(
-        toggleError instanceof Error
-          ? `Could not ${nextEnabled ? "enable" : "disable"} "${installed.title}": ${toggleError.message}`
-          : `Could not ${nextEnabled ? "enable" : "disable"} "${installed.title}".`,
-      );
-    }
-  }, [activeBookIds, installedBooks]);
+  }, [enabledBookIds, loadPayload]);
 
   const importCustomSourceFromFile = useCallback(async () => {
     const payload = await importBookPayloadFromFile();
@@ -293,23 +216,67 @@ export function useBooks() {
     }
 
     const sourceUrl = `local-file:${payload.id}:${payload.version}:${Date.now()}`;
-    const item = catalogItemFromPayload(payload, sourceUrl, "Imported File");
+    const item = catalogItemFromPayload(payload, sourceUrl, IMPORTED_SOURCE);
+    const localPath = await saveInstalledBookPayload(payload.id, payload.version, payload);
+    const installedBook: InstalledBook = {
+      ...item,
+      localPath,
+      installedAt: Date.now(),
+    };
+
     await addCustomBookSource(item);
-    await installFromPayload(payload, item);
-  }, [installFromPayload]);
+    await upsertInstalledBook(installedBook);
+
+    setCatalog((current) => [...current.filter((book) => book.id !== item.id), item].sort((a, b) => a.title.localeCompare(b.title)));
+    setImportedBooks((current) => [...current.filter((book) => book.id !== item.id), installedBook]);
+    setBookPayloads((current) => ({ ...current, [item.id]: payload }));
+
+    if (!enabledBookIds.includes(item.id)) {
+      const next = [...enabledBookIds, item.id];
+      await saveEnabledBookIds(next);
+      setEnabledBookIds(next);
+    }
+  }, [enabledBookIds]);
 
   const removeCustomSource = useCallback(async (bookId: string) => {
-    await removeCustomBookSource(bookId);
-    await refresh({ showLoading: false });
-  }, [refresh]);
-
-  const installedById = useMemo(() => {
-    const map = new Map<string, InstalledBook>();
-    for (const book of installedBooks) {
-      map.set(book.id, book);
+    const imported = importedBooks.find((book) => book.id === bookId);
+    if (!imported) {
+      return;
     }
+
+    setError(null);
+    try {
+      await deleteInstalledBookPayload(imported.localPath);
+      await removeInstalledBook(bookId);
+      await removeCustomBookSource(bookId);
+
+      setCatalog((current) => current.filter((book) => book.id !== bookId));
+      setImportedBooks((current) => current.filter((book) => book.id !== bookId));
+      setBookPayloads((current) => {
+        const rest = { ...current };
+        delete rest[bookId];
+        return rest;
+      });
+
+      if (enabledBookIds.includes(bookId)) {
+        const next = enabledBookIds.filter((id) => id !== bookId);
+        await saveEnabledBookIds(next);
+        setEnabledBookIds(next);
+      }
+    } catch (removeError) {
+      setError(
+        removeError instanceof Error
+          ? `Could not remove "${imported.title}": ${removeError.message}`
+          : `Could not remove "${imported.title}".`,
+      );
+    }
+  }, [enabledBookIds, importedBooks]);
+
+  const importedById = useMemo(() => {
+    const map = new Map<string, InstalledBook>();
+    for (const book of importedBooks) map.set(book.id, book);
     return map;
-  }, [installedBooks]);
+  }, [importedBooks]);
 
   const lookup = useCallback((query: string, filters: BookSearchFilters = {}): BookSearchResult[] => {
     const normalized = query.trim().toLowerCase();
@@ -318,38 +285,22 @@ export function useBooks() {
     }
 
     const fuzzy = filters.fuzzy !== false;
-    const scope = filters.scope ?? "selected";
-    const allowedBookIds = new Set(filters.bookIds ?? []);
+    const allowedBookIds = filters.bookIds && filters.bookIds.length > 0 ? new Set(filters.bookIds) : null;
 
     const results: BookSearchResult[] = [];
-    for (const book of installedBooks) {
-      if (!book.enabled) {
-        continue;
-      }
-      if (scope === "selected" && !activeBookIds.includes(book.id)) {
-        continue;
-      }
-      if (allowedBookIds.size > 0 && !allowedBookIds.has(book.id)) {
-        continue;
-      }
-      if (filters.bookType && filters.bookType !== "all" && book.type !== filters.bookType) {
-        continue;
-      }
+    for (const book of catalog) {
+      if (!enabledBookIds.includes(book.id)) continue;
+      if (allowedBookIds && !allowedBookIds.has(book.id)) continue;
+      if (filters.bookType && filters.bookType !== "all" && book.type !== filters.bookType) continue;
 
       const payload = bookPayloads[book.id];
-      if (!payload) {
-        continue;
-      }
+      if (!payload) continue;
 
       const index = getBookIndex(payload);
       for (const match of matchBook(index, normalized, { fuzzy })) {
         const record = index.records[match.recordIndex];
-        if (filters.inputLanguage && record.inputLanguage !== filters.inputLanguage) {
-          continue;
-        }
-        if (filters.outputLanguage && record.outputLanguage !== filters.outputLanguage) {
-          continue;
-        }
+        if (filters.inputLanguage && record.inputLanguage !== filters.inputLanguage) continue;
+        if (filters.outputLanguage && record.outputLanguage !== filters.outputLanguage) continue;
 
         results.push({
           id: `${book.id}:${match.recordIndex}`,
@@ -383,20 +334,16 @@ export function useBooks() {
       if (a.termLength !== b.termLength) return a.termLength - b.termLength;
       return a.input.localeCompare(b.input);
     });
-  }, [activeBookIds, bookPayloads, installedBooks]);
+  }, [bookPayloads, catalog, enabledBookIds]);
 
   return {
     catalog,
-    installedBooks,
-    installedById,
-    activeBookIds,
+    importedById,
+    enabledBookIds,
     loading,
     error,
-    installingIds,
+    loadingBookIds,
     refresh,
-    installBook,
-    uninstallBook,
-    toggleBookActive,
     toggleBookEnabled,
     importCustomSourceFromFile,
     removeCustomSource,

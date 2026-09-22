@@ -95,7 +95,6 @@ function normalizeInstalledBook(book: InstalledBook): InstalledBook {
     inputLanguages: Array.isArray(book.inputLanguages) ? book.inputLanguages : [],
     outputLanguages: Array.isArray(book.outputLanguages) ? book.outputLanguages : [],
     coverUrl: typeof book.coverUrl === "string" ? book.coverUrl : undefined,
-    enabled: book.enabled !== false,
     installedAt: typeof book.installedAt === "number" ? book.installedAt : Date.now(),
   };
 }
@@ -290,25 +289,20 @@ export async function upsertInstalledBook(book: InstalledBook): Promise<void> {
 export async function removeInstalledBook(id: string): Promise<void> {
   const books = await getInstalledBooks();
   await saveInstalledBooks(books.filter((book) => book.id !== id));
-  const activeIds = await getActiveBookIds();
-  await saveActiveBookIds(activeIds.filter((activeId) => activeId !== id));
+  const enabledIds = await getEnabledBookIds();
+  await saveEnabledBookIds(enabledIds.filter((enabledId) => enabledId !== id));
 }
 
-export async function getActiveBookIds(): Promise<string[]> {
+// Which books count toward search. A catalog book with no entry here is
+// simply never fetched, so there is nothing else to "install" or "remove".
+export async function getEnabledBookIds(): Promise<string[]> {
   const ids = await store.get<string[]>(KEYS.BOOKS_ACTIVE_IDS);
   return Array.isArray(ids) ? ids.filter((id) => typeof id === "string") : [];
 }
 
-export async function saveActiveBookIds(ids: string[]): Promise<void> {
+export async function saveEnabledBookIds(ids: string[]): Promise<void> {
   await store.set(KEYS.BOOKS_ACTIVE_IDS, Array.from(new Set(ids)));
   await store.save();
-}
-
-export async function toggleActiveBookId(id: string): Promise<string[]> {
-  const ids = await getActiveBookIds();
-  const next = ids.includes(id) ? ids.filter((entry) => entry !== id) : [...ids, id];
-  await saveActiveBookIds(next);
-  return next;
 }
 
 export async function getCustomBookSources(): Promise<BookCatalogItem[]> {

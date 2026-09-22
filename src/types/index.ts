@@ -43,10 +43,12 @@ export interface BookCatalogItem {
   checksum?: string;
 }
 
+// A book whose payload is stored as a local file rather than fetched from a
+// bundled asset — currently only books imported from a JSON file, since
+// catalog books ship inside the app and are read directly, never copied.
 export interface InstalledBook extends BookCatalogItem {
   localPath: string;
   installedAt: number;
-  enabled: boolean;
 }
 
 export interface DictionaryBookEntry {

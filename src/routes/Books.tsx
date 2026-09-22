@@ -1,5 +1,5 @@
 import { useDeferredValue, useMemo, useState } from "react";
-import { BookOpen, Check, Circle, CircleDot, Copy, Download, Languages, Search, Sparkles, Trash2 } from "lucide-react";
+import { BookOpen, Check, Circle, CircleDot, Copy, Languages, Loader2, Search, Sparkles, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useBooks } from "@/hooks/useBooks";
@@ -9,7 +9,7 @@ import type { MatchKind } from "@/utils/bookSearch";
 import { cn } from "@/lib/utils";
 
 type CatalogTypeFilter = "all" | "dictionary" | "translation";
-type CatalogStatusFilter = "all" | "installed" | "available" | "selected";
+type CatalogStatusFilter = "all" | "enabled" | "disabled";
 
 // How closely a result matched, in plain terms rather than the raw 0-1
 // score, grouped into the same "new/learning/mastered" pill styles used
@@ -68,14 +68,11 @@ function BookCover({ title, coverUrl }: { title: string; coverUrl?: string }) {
 export default function Books() {
   const {
     catalog,
-    installedById,
-    activeBookIds,
+    importedById,
+    enabledBookIds,
     loading,
     error,
-    installingIds,
-    installBook,
-    uninstallBook,
-    toggleBookActive,
+    loadingBookIds,
     toggleBookEnabled,
     removeCustomSource,
     lookup,
@@ -92,8 +89,8 @@ export default function Books() {
   const [fuzzyEnabled, setFuzzyEnabled] = useState(true);
   const [inputLanguage, setInputLanguage] = useState("all");
   const [outputLanguage, setOutputLanguage] = useState("all");
-  // "selected" and "all" are scopes; anything else is a single book id.
-  const [searchScope, setSearchScope] = useState("selected");
+  // "all" searches every enabled book; anything else is a single book id.
+  const [searchScope, setSearchScope] = useState("all");
 
   const filteredCatalog = useMemo(() => {
     const normalized = catalogQuery.trim().toLowerCase();
@@ -107,10 +104,9 @@ export default function Books() {
         return false;
       }
       if (catalogStatus !== "all") {
-        const isInstalled = installedById.has(book.id);
-        if (catalogStatus === "installed" && !isInstalled) return false;
-        if (catalogStatus === "available" && isInstalled) return false;
-        if (catalogStatus === "selected" && !activeBookIds.includes(book.id)) return false;
+        const isEnabled = enabledBookIds.includes(book.id);
+        if (catalogStatus === "enabled" && !isEnabled) return false;
+        if (catalogStatus === "disabled" && isEnabled) return false;
       }
       if (!normalized) {
         return true;
@@ -122,7 +118,7 @@ export default function Books() {
         book.outputLanguages.some((language) => language.toLowerCase().includes(normalized))
       );
     });
-  }, [activeBookIds, catalog, catalogLanguage, catalogQuery, catalogStatus, catalogTypeFilter, installedById]);
+  }, [catalog, catalogLanguage, catalogQuery, catalogStatus, catalogTypeFilter, enabledBookIds]);
 
   const languages = useMemo(() => {
     const inputs = new Set<string>();
@@ -152,7 +148,7 @@ export default function Books() {
     return ["all", ...Array.from(all).sort((a, b) => a.localeCompare(b))];
   }, [catalog]);
 
-  // Searching scans every installed book, so let the input paint first and run
+  // Searching scans every enabled book, so let the input paint first and run
   // the scan against the settled value.
   const deferredQuery = useDeferredValue(searchQuery);
 
@@ -160,10 +156,8 @@ export default function Books() {
     if (!deferredQuery.trim()) {
       return [];
     }
-    const singleBookId = searchScope === "selected" || searchScope === "all" ? null : searchScope;
+    const singleBookId = searchScope === "all" ? null : searchScope;
     return lookup(deferredQuery, {
-      // Picking one book means searching it whether or not it is selected.
-      scope: searchScope === "selected" ? "selected" : "all",
       fuzzy: fuzzyEnabled,
       bookType: searchType,
       inputLanguage: inputLanguage === "all" ? undefined : inputLanguage,
@@ -172,29 +166,22 @@ export default function Books() {
     }).slice(0, 120);
   }, [deferredQuery, fuzzyEnabled, inputLanguage, lookup, outputLanguage, searchScope, searchType]);
 
-  // Installed records keep the title they had at install time, so the catalog
-  // is what the book picker should list. A disabled book can't produce
-  // results, so leaving it in the picker would just be a dead end.
-  const installedCatalogBooks = useMemo(
-    () => catalog.filter((book) => installedById.get(book.id)?.enabled !== false),
-    [catalog, installedById],
+  // A disabled book has no payload loaded, so it can't produce results —
+  // leaving it in the picker would just be a dead end.
+  const enabledCatalogBooks = useMemo(
+    () => catalog.filter((book) => enabledBookIds.includes(book.id)),
+    [catalog, enabledBookIds],
   );
 
   const searchableBookCount = useMemo(() => {
-    const inScope = searchScope === "selected"
-      ? installedCatalogBooks.filter((book) => activeBookIds.includes(book.id))
-      : installedCatalogBooks;
-    return inScope.filter((book) => {
-      if (searchType !== "all" && book.type !== searchType) return false;
-      if (searchScope !== "selected" && searchScope !== "all" && book.id !== searchScope) return false;
-      return true;
-    }).length;
-  }, [activeBookIds, installedCatalogBooks, searchScope, searchType]);
+    const inScope = searchScope === "all" ? enabledCatalogBooks : enabledCatalogBooks.filter((book) => book.id === searchScope);
+    return inScope.filter((book) => searchType === "all" || book.type === searchType).length;
+  }, [enabledCatalogBooks, searchScope, searchType]);
 
   const emptyResultsMessage = !deferredQuery.trim()
-    ? "Run a query to search your installed books."
+    ? "Run a query to search your enabled books."
     : searchableBookCount === 0
-      ? "No installed book matches the current filters. Widen the type or book filter above."
+      ? "No enabled book matches the current filters. Enable a book in the catalog, or widen the type or book filter above."
       : `No matches for "${deferredQuery.trim()}"${fuzzyEnabled ? "" : ". Turn Fuzzy on to allow near misses"}.`;
 
   const handleApplyResult = async (result: (typeof searchResults)[number]) => {
@@ -259,9 +246,8 @@ export default function Books() {
             </select>
             <select className="frost-input h-10 py-0" value={catalogStatus} onChange={(event) => setCatalogStatus(event.target.value as CatalogStatusFilter)}>
               <option value="all">All books</option>
-              <option value="installed">Installed</option>
-              <option value="available">Not installed</option>
-              <option value="selected">Selected for search</option>
+              <option value="enabled">Enabled</option>
+              <option value="disabled">Disabled</option>
             </select>
           </div>
 
@@ -275,28 +261,23 @@ export default function Books() {
             <div className="flex min-h-[260px] items-center justify-center text-center">
               <p className="subtle-caption">
                 {catalog.length === 0
-                  ? "No books available yet. Add a real JSON source URL or import a book file."
+                  ? "No books available yet. Import a book file from Settings."
                   : "No books match the current filters."}
               </p>
             </div>
           ) : (
             filteredCatalog.map((book) => {
-              const installed = installedById.get(book.id);
-              const isInstalling = installingIds.includes(book.id);
-              const isActive = activeBookIds.includes(book.id);
-              const hasUpdate = installed ? installed.version !== book.version : false;
-              const isEnabled = installed?.enabled !== false;
+              const isEnabled = enabledBookIds.includes(book.id);
+              const isToggling = loadingBookIds.includes(book.id);
+              const isImported = importedById.has(book.id);
 
               return (
                 <article key={book.id} className="book-card frost-panel-soft">
                   <div className="book-cover-frame">
-                    {/* The catalog ships with the app and is the live source of
-                        cover art; an installed record only holds whatever path
-                        was current when it was installed. */}
-                    <BookCover title={book.title} coverUrl={book.coverUrl || installed?.coverUrl} />
+                    <BookCover title={book.title} coverUrl={book.coverUrl} />
                   </div>
 
-                  <div className="min-w-0 space-y-2">
+                  <div className="flex min-w-0 flex-col space-y-2">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="serif-display text-2xl leading-[0.95]">{book.title}</p>
@@ -328,75 +309,41 @@ export default function Books() {
                             ))
                             : null}
                         </div>
-                        <p className="subtle-caption mt-1">{book.description}</p>
+                        {/* Clamped so every card's description takes the same
+                            height — otherwise the buttons below land at a
+                            different height on every card. */}
+                        <p className="subtle-caption mt-1 line-clamp-2" title={book.description}>{book.description}</p>
                       </div>
-                      <span className="status-pill">{book.type === "dictionary" ? "Dictionary" : "Translation"}</span>
+                      <span className="status-pill shrink-0">{book.type === "dictionary" ? "Dictionary" : "Translation"}</span>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2">
-                      {!installed || hasUpdate ? (
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          disabled={isInstalling}
-                          className="border-white/15 bg-white/6 hover:bg-white/14"
-                          onClick={() => void installBook(book)}
-                        >
-                          <Download className="mr-1.5 size-3.5" />
-                          {isInstalling ? "Installing..." : hasUpdate ? "Update" : "Install"}
-                        </Button>
-                      ) : (
-                        <>
-                          <button
-                            type="button"
-                            className="lexi-toggle"
-                            aria-pressed={isEnabled}
-                            onClick={() => void toggleBookEnabled(book.id)}
-                            title={isEnabled
-                              ? "This book is downloaded and searchable. Click to disable it without deleting it."
-                              : "This book is downloaded but excluded from all search. Click to enable it again."}
-                          >
-                            {isEnabled ? <Check className="size-3.5" /> : <Circle className="size-3.5" />}
-                            {isEnabled ? "Enabled" : "Disabled"}
-                          </button>
-                          <button
-                            type="button"
-                            className="lexi-toggle"
-                            aria-pressed={isActive}
-                            disabled={!isEnabled}
-                            onClick={() => void toggleBookActive(book.id)}
-                            title={!isEnabled
-                              ? "Enable this book first to search it."
-                              : isActive
-                                ? "This book is included in search. Click to exclude it."
-                                : "This book is excluded from search. Click to include it."}
-                          >
-                            {isActive ? <Check className="size-3.5" /> : <Circle className="size-3.5" />}
-                            {isActive ? "Searching this" : "Search this"}
-                          </button>
-                          <button
-                            type="button"
-                            className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-red-900/25 hover:text-red-200"
-                            onClick={() => void uninstallBook(book.id)}
-                            title={`Delete the downloaded file for "${book.title}" (${formatSizeBytes(book.sizeBytes)})`}
-                            aria-label={`Remove ${book.title}`}
-                          >
-                            <Trash2 className="size-4" />
-                          </button>
-                        </>
-                      )}
+                    <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        className="lexi-toggle"
+                        aria-pressed={isEnabled}
+                        disabled={isToggling}
+                        onClick={() => void toggleBookEnabled(book.id)}
+                        title={isEnabled
+                          ? "This book is included in search. Click to disable it."
+                          : "This book is excluded from search. Click to enable it."}
+                      >
+                        {isToggling
+                          ? <Loader2 className="size-3.5 animate-spin" />
+                          : isEnabled ? <Check className="size-3.5" /> : <Circle className="size-3.5" />}
+                        {isToggling ? "Loading..." : isEnabled ? "Enabled" : "Disabled"}
+                      </button>
 
-                      {book.source === "Custom URL" || book.source === "Imported File" ? (
-                        <Button
+                      {isImported ? (
+                        <button
                           type="button"
-                          size="sm"
-                          variant="ghost"
-                          className="text-muted-foreground hover:text-foreground"
+                          className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-red-900/25 hover:text-red-200"
                           onClick={() => void removeCustomSource(book.id)}
+                          title={`Remove this imported book (${formatSizeBytes(book.sizeBytes)})`}
+                          aria-label={`Remove ${book.title}`}
                         >
-                          Remove source
-                        </Button>
+                          <Trash2 className="size-4" />
+                        </button>
                       ) : null}
                     </div>
                   </div>
@@ -408,7 +355,7 @@ export default function Books() {
 
         <div className="flex items-center justify-between border-t border-white/10 p-2">
           <span className="sync-pill"><BookOpen className="size-3" />{catalog.length} books listed</span>
-          <span className="sync-pill"><CircleDot className="size-3" />{activeBookIds.length} selected</span>
+          <span className="sync-pill"><CircleDot className="size-3" />{enabledBookIds.length} enabled</span>
         </div>
       </section>
 
@@ -421,7 +368,7 @@ export default function Books() {
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 className="frost-input search-field-input"
-                placeholder="Search across installed books"
+                placeholder="Search across enabled books"
               />
             </div>
             <button
@@ -453,9 +400,8 @@ export default function Books() {
               ))}
             </select>
             <select className="frost-input h-10 py-0" value={searchScope} onChange={(event) => setSearchScope(event.target.value)}>
-              <option value="selected">Selected books</option>
-              <option value="all">All installed books</option>
-              {installedCatalogBooks.map((book) => (
+              <option value="all">All enabled books</option>
+              {enabledCatalogBooks.map((book) => (
                 <option key={book.id} value={book.id}>{book.title}</option>
               ))}
             </select>
@@ -477,7 +423,7 @@ export default function Books() {
                       type="button"
                       className="lexi-toggle mt-2"
                       aria-pressed={searchScope === result.bookId}
-                      onClick={() => setSearchScope((current) => current === result.bookId ? "selected" : result.bookId)}
+                      onClick={() => setSearchScope((current) => current === result.bookId ? "all" : result.bookId)}
                       title={`${result.bookTitle} — click to search only this book`}
                     >
                       <BookOpen className="size-3.5" />
