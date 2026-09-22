@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Copy, Grid2x2, LayoutGrid, List, Minus, PanelRightClose, PanelRightOpen, Plus, RefreshCcw, Search, Sparkles, ZoomIn } from "lucide-react";
 
-import { AddWordDialog } from "@/components/AddWordDialog";
 import { Button } from "@/components/ui/button";
 import { useSurfaceViewPreference } from "@/hooks/useSurfaceViewPreference";
 import { cardMinWidthFor } from "@/lib/surface-view";
@@ -48,7 +47,6 @@ export default function Definitions() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [exampleVersion, setExampleVersion] = useState(0);
   const [copied, setCopied] = useState(false);
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [definitionSuggestions, setDefinitionSuggestions] = useState<DefinitionSuggestion[]>([]);
   const [addingSuggestionId, setAddingSuggestionId] = useState<string | null>(null);
   const todayKey = useMemo(() => dayKey(Date.now()), []);
@@ -77,18 +75,12 @@ export default function Definitions() {
   }, [filteredWords, selectedId]);
 
   useEffect(() => {
-    const onCapture = (event: Event) => {
-      const customEvent = event as CustomEvent<{ path?: string }>;
-      if (customEvent.detail?.path === "/definitions") setAddDialogOpen(true);
-    };
     const onSearchFocus = (event: Event) => {
       const customEvent = event as CustomEvent<{ path?: string }>;
       if (customEvent.detail?.path === "/definitions") searchInputRef.current?.focus();
     };
-    window.addEventListener("lexi:capture", onCapture);
     window.addEventListener("lexi:focus-search", onSearchFocus);
     return () => {
-      window.removeEventListener("lexi:capture", onCapture);
       window.removeEventListener("lexi:focus-search", onSearchFocus);
     };
   }, []);
@@ -255,7 +247,7 @@ export default function Definitions() {
                 {filteredWords.map((word) => (
                   <article key={word.id} className={cn("lexi-browser-card tile", selectedId === word.id && "active")} role="button" tabIndex={0} onClick={() => { setSelectedId(word.id); setExampleVersion(0); }}>
                     <p className="serif-display truncate text-xl leading-[0.95]">{word.word}</p>
-                    <span className="lexi-chip w-fit">{word.language}</span>
+                    <span className="lexi-chip compact w-fit">{word.language}</span>
                     <span className={cn("status-pill mt-auto w-fit", getReviewStatus(word) === "Mastered" ? "status-mastered" : getReviewStatus(word) === "Learning" ? "status-learning" : "status-new")}>{getReviewStatus(word)}</span>
                   </article>
                 ))}
@@ -327,7 +319,6 @@ export default function Definitions() {
         </section>
         ) : null}
       </div>
-      <AddWordDialog open={addDialogOpen} onOpenChange={setAddDialogOpen} onAdd={addWord} />
     </>
   );
 }

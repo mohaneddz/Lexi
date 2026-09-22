@@ -21,7 +21,6 @@ import {
   ZoomIn,
 } from "lucide-react";
 
-import { AddTranslationDialog } from "@/components/AddTranslationDialog";
 import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 import { EditTranslationDialog } from "@/components/EditTranslationDialog";
 import { GroupBadge } from "@/components/lexi/GroupBadge";
@@ -84,7 +83,6 @@ function isTypingTarget(target: EventTarget | null): boolean {
 export default function Translations() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const gridScrollRef = useRef<HTMLDivElement>(null);
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingTranslation, setEditingTranslation] = useState<Translation | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -206,18 +204,12 @@ export default function Translations() {
   }, []);
 
   useEffect(() => {
-    const onCapture = (event: Event) => {
-      const customEvent = event as CustomEvent<{ path?: string }>;
-      if (customEvent.detail?.path === "/translations") setAddDialogOpen(true);
-    };
     const onSearchFocus = (event: Event) => {
       const customEvent = event as CustomEvent<{ path?: string }>;
       if (customEvent.detail?.path === "/translations") searchInputRef.current?.focus();
     };
-    window.addEventListener("lexi:capture", onCapture);
     window.addEventListener("lexi:focus-search", onSearchFocus);
     return () => {
-      window.removeEventListener("lexi:capture", onCapture);
       window.removeEventListener("lexi:focus-search", onSearchFocus);
     };
   }, []);
@@ -470,9 +462,9 @@ export default function Translations() {
         <p className="serif-display truncate text-lg leading-[0.95]">{translation.sourceWord}<span className="mx-1.5 inline-flex items-center align-middle text-muted-foreground/80"><ArrowRight className="size-3.5" /></span>{translation.targetWord}</p>
         {bulkMode ? <input type="checkbox" checked={selectedTranslationIds.includes(translation.id)} onChange={() => toggleBulkTranslation(translation.id)} onClick={(event) => event.stopPropagation()} className="size-4 accent-white" /> : null}
       </div>
-      <div className="flex flex-wrap gap-1.5">
-        <span className="lexi-chip">{translation.sourceLanguage}</span>
-        <span className="lexi-chip">{translation.targetLanguage}</span>
+      <div className="flex flex-wrap gap-1">
+        <span className="lexi-chip compact">{translation.sourceLanguage}</span>
+        <span className="lexi-chip compact">{translation.targetLanguage}</span>
       </div>
     </article>
   );
@@ -658,7 +650,6 @@ export default function Translations() {
         </div>
       ) : null}
 
-      <AddTranslationDialog open={addDialogOpen} onOpenChange={setAddDialogOpen} onAdd={addTranslation} />
       <EditTranslationDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} translation={editingTranslation} onSave={updateTranslation} />
       <DeleteConfirmationDialog
         open={deleteDialogOpen}

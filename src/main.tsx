@@ -5,11 +5,7 @@ import Titlebar from "./layout/Titlebar";
 
 import "@/styles/globals.css";
 
-const isQuickWindow =
-  window.location.pathname === "/quick-define" ||
-  window.location.pathname === "/quick-translate" ||
-  new URLSearchParams(window.location.search).get("quick") === "define" ||
-  new URLSearchParams(window.location.search).get("quick") === "translate";
+const isQuickWindow = new URLSearchParams(window.location.search).has("quick");
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>

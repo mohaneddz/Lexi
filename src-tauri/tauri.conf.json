@@ -19,6 +19,22 @@
         "minHeight": 700,
         "center": true,
         "decorations": false
+      },
+      {
+        "label": "quick-capture",
+        "url": "index.html?quick=1",
+        "title": "Lexi Quick Capture",
+        "width": 560,
+        "height": 540,
+        "center": true,
+        "decorations": false,
+        "resizable": false,
+        "maximizable": false,
+        "minimizable": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "focus": false,
+        "visible": false
       }
     ],
     "security": {

@@ -20,8 +20,7 @@ const TRAY_QUICK_TRANSLATE_ID: &str = "tray_quick_translate";
 const TRAY_QUIT_ID: &str = "tray_quit";
 
 const MAIN_WINDOW_LABEL: &str = "main";
-const QUICK_DEFINE_WINDOW_LABEL: &str = "quick-define";
-const QUICK_TRANSLATE_WINDOW_LABEL: &str = "quick-translate";
+const QUICK_WINDOW_LABEL: &str = "quick-capture";
 const QUICK_WINDOW_WIDTH: f64 = 560.0;
 const QUICK_WINDOW_HEIGHT: f64 = 540.0;
 
@@ -33,6 +32,8 @@ const WINDOW_STATE_FILE_NAME: &str = "window-state.json";
 #[derive(Default)]
 struct AppState {
     hide_to_tray: Arc<Mutex<bool>>,
+    /// Which tab the quick window is currently showing.
+    quick_mode: Arc<Mutex<String>>,
     keep_alive_on_window_close: Arc<Mutex<bool>>,
     explicit_quit: Arc<Mutex<bool>>,
 }
@@ -218,22 +219,20 @@ fn should_start_minimized<R: Runtime>(app: &AppHandle<R>) -> bool {
         .unwrap_or(false)
 }
 
-fn show_quick_window<R: Runtime>(
-    app: &AppHandle<R>,
-    label: &str,
-    mode: &str,
-    title: &str,
-) -> tauri::Result<()> {
-    if let Some(window) = app.get_webview_window(label) {
-        window.show()?;
-        window.unminimize()?;
-        window.set_focus()?;
-        return Ok(());
-    }
-
-    let url = format!("index.html?quick={mode}");
-    let window = WebviewWindowBuilder::new(app, label, WebviewUrl::App(url.into()))
-        .title(title)
+/// Shows the always-loaded quick capture window and tells the page which tab
+/// to open on. The window is created hidden at startup (see tauri.conf.json)
+/// and only ever hidden again, never destroyed: building a webview and booting
+/// the bundle into it costs seconds, while show + focus is effectively instant.
+fn show_quick_window<R: Runtime>(app: &AppHandle<R>, mode: &str) -> tauri::Result<()> {
+    let window = match app.get_webview_window(QUICK_WINDOW_LABEL) {
+        Some(window) => window,
+        // Only reachable if the configured window failed to build at startup.
+        None => WebviewWindowBuilder::new(
+            app,
+            QUICK_WINDOW_LABEL,
+            WebviewUrl::App("index.html?quick=1".into()),
+        )
+        .title("Lexi Quick Capture")
         .center()
         .inner_size(QUICK_WINDOW_WIDTH, QUICK_WINDOW_HEIGHT)
         .resizable(false)
@@ -242,56 +241,61 @@ fn show_quick_window<R: Runtime>(
         .decorations(false)
         .always_on_top(true)
         .skip_taskbar(true)
-        .build()?;
+        .visible(false)
+        .build()?,
+    };
 
+    // Recorded here rather than in the toggle so the tray items and commands
+    // leave the same trace the shortcuts do.
+    if let Ok(mut current) = app.state::<AppState>().quick_mode.lock() {
+        *current = mode.to_string();
+    }
+
+    // Emitted before showing so the page has already switched tabs and reset
+    // by the time it becomes visible.
+    let _ = window.emit("lexi:quick-open", mode);
+    window.show()?;
+    window.unminimize()?;
     window.set_focus()?;
     Ok(())
 }
 
 fn open_quick_define_window<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
-    show_quick_window(app, QUICK_DEFINE_WINDOW_LABEL, "define", "Define New Term")
+    show_quick_window(app, "define")
 }
 
 fn open_quick_translate_window<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
-    show_quick_window(
-        app,
-        QUICK_TRANSLATE_WINDOW_LABEL,
-        "translate",
-        "Translate New Term",
-    )
+    show_quick_window(app, "translate")
 }
 
-fn toggle_quick_window<R: Runtime>(
-    app: &AppHandle<R>,
-    label: &str,
-    mode: &str,
-    title: &str,
-) -> tauri::Result<()> {
-    if let Some(window) = app.get_webview_window(label) {
+/// Pressing the same shortcut again closes the window; pressing the other
+/// one switches tabs instead of closing.
+fn toggle_quick_window<R: Runtime>(app: &AppHandle<R>, mode: &str) -> tauri::Result<()> {
+    if let Some(window) = app.get_webview_window(QUICK_WINDOW_LABEL) {
         if window.is_visible()? {
-            window.hide()?;
-        } else {
-            window.show()?;
-            window.unminimize()?;
-            window.set_focus()?;
+            let state = app.state::<AppState>();
+            let same_mode = state
+                .quick_mode
+                .lock()
+                .map(|current| current.as_str() == mode)
+                .unwrap_or(false);
+
+            if same_mode {
+                window.hide()?;
+                return Ok(());
+            }
         }
-        return Ok(());
     }
 
-    show_quick_window(app, label, mode, title)
+    show_quick_window(app, mode)
 }
 
 fn toggle_quick_define_window<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
-    toggle_quick_window(app, QUICK_DEFINE_WINDOW_LABEL, "define", "Define New Term")
+    toggle_quick_window(app, "define")
 }
 
 fn toggle_quick_translate_window<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
-    toggle_quick_window(
-        app,
-        QUICK_TRANSLATE_WINDOW_LABEL,
-        "translate",
-        "Translate New Term",
-    )
+    toggle_quick_window(app, "translate")
 }
 
 fn build_tray<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
@@ -512,9 +516,7 @@ pub fn run() {
                     return;
                 }
 
-                if window_label == QUICK_DEFINE_WINDOW_LABEL
-                    || window_label == QUICK_TRANSLATE_WINDOW_LABEL
-                {
+                if window_label == QUICK_WINDOW_LABEL {
                     api.prevent_close();
                     let _ = window.hide();
                 }

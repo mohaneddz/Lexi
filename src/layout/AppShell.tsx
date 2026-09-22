@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
+import { CaptureDialog } from "@/components/CaptureDialog";
 import { cn } from "@/lib/utils";
 import { getGroupIcon } from "@/lib/group-icons";
 import { useGroups } from "@/hooks/useGroups";
@@ -38,15 +39,24 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Settings", path: "/settings", icon: Settings },
 ];
 
-const CAPTURE_PATHS = new Set(["/translations", "/definitions"]);
+type CaptureMode = "define" | "translate";
+
+/** The tab the capture modal starts on, based on where you triggered it. */
+function captureModeForPath(pathname: string): CaptureMode {
+  return pathname.startsWith("/translations") ? "translate" : "define";
+}
 const PRIMARY_MODIFIER_LABEL = navigator.platform.toLowerCase().includes("mac") ? "Cmd" : "Ctrl";
 
 function isPathActive(pathname: string, targetPath: string): boolean {
   return pathname === targetPath || pathname.startsWith(`${targetPath}/`);
 }
 
-function emitAppEvent(name: "lexi:capture" | "lexi:focus-search", path: string): void {
+function emitAppEvent(name: "lexi:focus-search", path: string): void {
   window.dispatchEvent(new CustomEvent(name, { detail: { path } }));
+}
+
+function openCapture(mode: CaptureMode): void {
+  window.dispatchEvent(new CustomEvent("lexi:capture", { detail: { mode } }));
 }
 
 function isTypingTarget(target: EventTarget | null): boolean {
@@ -95,14 +105,8 @@ export function AppShell({ children }: AppShellProps) {
   }, []);
 
   const triggerCapture = useCallback(() => {
-    if (CAPTURE_PATHS.has(location.pathname)) {
-      emitAppEvent("lexi:capture", location.pathname);
-      return;
-    }
-
-    navigate("/definitions");
-    window.setTimeout(() => emitAppEvent("lexi:capture", "/definitions"), 0);
-  }, [location.pathname, navigate]);
+    openCapture(captureModeForPath(location.pathname));
+  }, [location.pathname]);
 
   const toggleGroupTabsIconOnly = useCallback(async () => {
     const nextValue = !groupTabsIconOnly;
@@ -187,8 +191,7 @@ export function AppShell({ children }: AppShellProps) {
 
       if (isMeta && event.shiftKey && event.key.toLowerCase() === "t") {
         event.preventDefault();
-        navigate("/translations");
-        window.setTimeout(() => emitAppEvent("lexi:capture", "/translations"), 0);
+        openCapture("translate");
         return;
       }
 
@@ -428,6 +431,8 @@ export function AppShell({ children }: AppShellProps) {
           <div className="lexi-main-body">{children}</div>
         </section>
       </div>
+
+      <CaptureDialog />
     </div>
   );
 }

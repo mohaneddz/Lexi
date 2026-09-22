@@ -16,18 +16,10 @@ import { getSettings } from "@/utils/storage";
 
 function AppRoutes() {
   const location = useLocation();
-  const quickFromQuery = new URLSearchParams(location.search).get("quick");
-  const quickMode =
-    location.pathname === "/quick-define" || quickFromQuery === "define"
-      ? "define"
-      : location.pathname === "/quick-translate" || quickFromQuery === "translate"
-        ? "translate"
-        : null;
+  const quickParam = new URLSearchParams(location.search).get("quick");
 
-  if (quickMode) {
-    return (
-      <QuickAction mode={quickMode} />
-    );
+  if (quickParam !== null) {
+    return <QuickAction initialMode={quickParam === "translate" ? "translate" : "define"} />;
   }
 
   return (
@@ -41,8 +33,6 @@ function AppRoutes() {
         <Route path="/review" element={<Review />} />
         <Route path="/stats" element={<Stats />} />
         <Route path="/settings" element={<Settings />} />
-        <Route path="/quick-define" element={<Navigate to="/definitions" replace />} />
-        <Route path="/quick-translate" element={<Navigate to="/definitions" replace />} />
         <Route path="*" element={<Navigate to="/definitions" replace />} />
       </Routes>
     </AppShell>
