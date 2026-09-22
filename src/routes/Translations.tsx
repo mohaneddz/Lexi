@@ -490,12 +490,8 @@ export default function Translations() {
       }}
     >
       <div className="flex items-start justify-between gap-2">
-        <div>
+        <div className="min-w-0">
           <p className="serif-display break-words text-[2rem] leading-[0.92]">{translation.sourceWord}</p>
-          <div className="mt-1.5 flex flex-wrap gap-1.5">
-            <span className="lexi-chip">{translation.sourceLanguage}</span>
-            <span className="lexi-chip">{translation.targetLanguage}</span>
-          </div>
         </div>
         <div className="flex items-center gap-2">
           {bulkMode ? <input type="checkbox" checked={selectedTranslationIds.includes(translation.id)} onChange={() => toggleBulkTranslation(translation.id)} onClick={(event) => event.stopPropagation()} className="size-4 accent-white" /> : null}
@@ -504,13 +500,19 @@ export default function Translations() {
           </button>
         </div>
       </div>
-      <p className="serif-display break-words mt-3 text-[1.7rem] leading-[0.95]">{translation.targetWord}</p>
+      <p className="serif-display break-words mt-3 border-t border-white/10 pt-3 text-[1.7rem] leading-[0.95]">{translation.targetWord}</p>
       {translation.context ? <p className="word-sub mt-3 line-clamp-4">{translation.context}</p> : null}
-      <div className="mt-auto flex flex-wrap gap-2 pt-4">
-        {(translation.groupIds || []).slice(0, 2).map((groupId) => {
-          const group = groups.find((entry) => entry.id === groupId);
-          return group ? <GroupBadge key={group.id} group={group} /> : null;
-        })}
+      <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-4">
+        <div className="flex flex-wrap gap-1.5">
+          <span className="lexi-chip">{translation.sourceLanguage}</span>
+          <span className="lexi-chip">{translation.targetLanguage}</span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {(translation.groupIds || []).slice(0, 2).map((groupId) => {
+            const group = groups.find((entry) => entry.id === groupId);
+            return group ? <GroupBadge key={group.id} group={group} /> : null;
+          })}
+        </div>
       </div>
     </article>
   );
