@@ -255,6 +255,37 @@ export function useBooks() {
     setActiveBookIds(next);
   }, [activeBookIds]);
 
+  // Disabling keeps the downloaded file on AppData and just excludes the book
+  // from search, so switching a book back on is instant instead of a full
+  // re-download of what can be a 25MB+ pack.
+  const toggleBookEnabled = useCallback(async (bookId: string) => {
+    const installed = installedBooks.find((entry) => entry.id === bookId);
+    if (!installed) {
+      return;
+    }
+
+    const nextEnabled = !installed.enabled;
+    const updated: InstalledBook = { ...installed, enabled: nextEnabled };
+
+    setError(null);
+    try {
+      await upsertInstalledBook(updated);
+      setInstalledBooks((current) => current.map((book) => (book.id === bookId ? updated : book)));
+
+      if (!nextEnabled && activeBookIds.includes(bookId)) {
+        const nextActive = activeBookIds.filter((id) => id !== bookId);
+        await saveActiveBookIds(nextActive);
+        setActiveBookIds(nextActive);
+      }
+    } catch (toggleError) {
+      setError(
+        toggleError instanceof Error
+          ? `Could not ${nextEnabled ? "enable" : "disable"} "${installed.title}": ${toggleError.message}`
+          : `Could not ${nextEnabled ? "enable" : "disable"} "${installed.title}".`,
+      );
+    }
+  }, [activeBookIds, installedBooks]);
+
   const importCustomSourceFromFile = useCallback(async () => {
     const payload = await importBookPayloadFromFile();
     if (!payload) {
@@ -292,10 +323,10 @@ export function useBooks() {
 
     const results: BookSearchResult[] = [];
     for (const book of installedBooks) {
-      if (scope === "selected" && !activeBookIds.includes(book.id)) {
+      if (!book.enabled) {
         continue;
       }
-      if (scope === "all" && !book.enabled) {
+      if (scope === "selected" && !activeBookIds.includes(book.id)) {
         continue;
       }
       if (allowedBookIds.size > 0 && !allowedBookIds.has(book.id)) {
@@ -366,6 +397,7 @@ export function useBooks() {
     installBook,
     uninstallBook,
     toggleBookActive,
+    toggleBookEnabled,
     importCustomSourceFromFile,
     removeCustomSource,
     lookup,

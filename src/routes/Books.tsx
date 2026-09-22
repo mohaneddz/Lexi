@@ -34,6 +34,12 @@ function matchKindStatusClass(kind: MatchKind): string {
   }
 }
 
+function formatSizeBytes(bytes: number): string {
+  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+  if (bytes >= 1024) return `${(bytes / 1024).toFixed(0)}KB`;
+  return `${bytes}B`;
+}
+
 function BookCover({ title, coverUrl }: { title: string; coverUrl?: string }) {
   // Remember which url failed rather than that one did, so a card that fell
   // back once still retries when the catalog points somewhere new.
@@ -70,6 +76,7 @@ export default function Books() {
     installBook,
     uninstallBook,
     toggleBookActive,
+    toggleBookEnabled,
     removeCustomSource,
     lookup,
   } = useBooks();
@@ -166,9 +173,10 @@ export default function Books() {
   }, [deferredQuery, fuzzyEnabled, inputLanguage, lookup, outputLanguage, searchScope, searchType]);
 
   // Installed records keep the title they had at install time, so the catalog
-  // is what the book picker should list.
+  // is what the book picker should list. A disabled book can't produce
+  // results, so leaving it in the picker would just be a dead end.
   const installedCatalogBooks = useMemo(
-    () => catalog.filter((book) => installedById.has(book.id)),
+    () => catalog.filter((book) => installedById.get(book.id)?.enabled !== false),
     [catalog, installedById],
   );
 
@@ -277,6 +285,7 @@ export default function Books() {
               const isInstalling = installingIds.includes(book.id);
               const isActive = activeBookIds.includes(book.id);
               const hasUpdate = installed ? installed.version !== book.version : false;
+              const isEnabled = installed?.enabled !== false;
 
               return (
                 <article key={book.id} className="book-card frost-panel-soft">
@@ -342,25 +351,39 @@ export default function Books() {
                           <button
                             type="button"
                             className="lexi-toggle"
+                            aria-pressed={isEnabled}
+                            onClick={() => void toggleBookEnabled(book.id)}
+                            title={isEnabled
+                              ? "This book is downloaded and searchable. Click to disable it without deleting it."
+                              : "This book is downloaded but excluded from all search. Click to enable it again."}
+                          >
+                            {isEnabled ? <Check className="size-3.5" /> : <Circle className="size-3.5" />}
+                            {isEnabled ? "Enabled" : "Disabled"}
+                          </button>
+                          <button
+                            type="button"
+                            className="lexi-toggle"
                             aria-pressed={isActive}
+                            disabled={!isEnabled}
                             onClick={() => void toggleBookActive(book.id)}
-                            title={isActive
-                              ? "This book is included in search. Click to exclude it."
-                              : "This book is excluded from search. Click to include it."}
+                            title={!isEnabled
+                              ? "Enable this book first to search it."
+                              : isActive
+                                ? "This book is included in search. Click to exclude it."
+                                : "This book is excluded from search. Click to include it."}
                           >
                             {isActive ? <Check className="size-3.5" /> : <Circle className="size-3.5" />}
                             {isActive ? "Searching this" : "Search this"}
                           </button>
-                          <Button
+                          <button
                             type="button"
-                            size="sm"
-                            variant="outline"
-                            className="border-white/15 bg-white/6 hover:bg-white/14"
+                            className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-red-900/25 hover:text-red-200"
                             onClick={() => void uninstallBook(book.id)}
+                            title={`Delete the downloaded file for "${book.title}" (${formatSizeBytes(book.sizeBytes)})`}
+                            aria-label={`Remove ${book.title}`}
                           >
-                            <Trash2 className="mr-1.5 size-3.5" />
-                            Remove
-                          </Button>
+                            <Trash2 className="size-4" />
+                          </button>
                         </>
                       )}
 
