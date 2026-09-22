@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { useBooks } from "@/hooks/useBooks";
 import { useTranslations } from "@/hooks/useTranslations";
 import { useWords } from "@/hooks/useWords";
-import { cn } from "@/lib/utils";
 
 type CatalogTypeFilter = "all" | "dictionary" | "translation";
 
@@ -128,6 +127,22 @@ export default function Books() {
     }).slice(0, 120);
   }, [bookScopeId, deferredQuery, fuzzyEnabled, inputLanguage, lookup, outputLanguage, scope, searchType]);
 
+  const searchableBookCount = useMemo(() => {
+    const installed = Array.from(installedById.values());
+    const inScope = scope === "selected" ? installed.filter((book) => activeBookIds.includes(book.id)) : installed;
+    return inScope.filter((book) => {
+      if (searchType !== "all" && book.type !== searchType) return false;
+      if (bookScopeId !== "all" && book.id !== bookScopeId) return false;
+      return true;
+    }).length;
+  }, [activeBookIds, bookScopeId, installedById, scope, searchType]);
+
+  const emptyResultsMessage = !deferredQuery.trim()
+    ? "Run a query to search your installed books."
+    : searchableBookCount === 0
+      ? "No installed book matches the current filters. Widen the type, book, or scope filter above."
+      : `No matches for "${deferredQuery.trim()}"${fuzzyEnabled ? "" : ". Turn Fuzzy on to allow near misses"}.`;
+
   const handleApplyResult = async (result: (typeof searchResults)[number]) => {
     if (result.bookType === "dictionary") {
       await addWord({
@@ -199,12 +214,7 @@ export default function Books() {
                 key={entry}
                 type="button"
                 aria-pressed={catalogTypeFilter === entry}
-                className={cn(
-                  "lexi-chip transition-all",
-                  catalogTypeFilter === entry
-                    ? "border-transparent bg-white text-black font-medium shadow-[0_1px_3px_rgba(0,0,0,0.5)]"
-                    : "border-white/15 bg-white/8 text-muted-foreground hover:border-white/35 hover:text-foreground",
-                )}
+                className="lexi-toggle"
                 onClick={() => setCatalogTypeFilter(entry)}
               >
                 {entry === "all" ? "All" : entry === "dictionary" ? "Dictionary" : "Translation"}
@@ -248,12 +258,8 @@ export default function Books() {
                             <button
                               key={`${book.id}-in-${language}`}
                               type="button"
-                              className={cn(
-                                "lexi-chip cursor-pointer transition-all",
-                                inputLanguage === language
-                                  ? "border-transparent bg-white text-black font-medium shadow-[0_1px_3px_rgba(0,0,0,0.5)]"
-                                  : "border-white/20 hover:border-white/35",
-                              )}
+                              className="lexi-toggle"
+                              aria-pressed={inputLanguage === language}
                               onClick={() => applyInputLanguageFilter(language)}
                               title={`Filter input: ${language}`}
                             >
@@ -265,12 +271,8 @@ export default function Books() {
                               <button
                                 key={`${book.id}-out-${language}`}
                                 type="button"
-                                className={cn(
-                                  "lexi-chip cursor-pointer transition-all",
-                                  outputLanguage === language
-                                    ? "border-transparent bg-white text-black font-medium shadow-[0_1px_3px_rgba(0,0,0,0.5)]"
-                                    : "border-white/20 hover:border-white/35",
-                                )}
+                                className="lexi-toggle"
+                                aria-pressed={outputLanguage === language}
                                 onClick={() => applyOutputLanguageFilter(language)}
                                 title={`Filter output: ${language}`}
                               >
@@ -363,12 +365,7 @@ export default function Books() {
             <button
               type="button"
               aria-pressed={scope === "selected"}
-              className={cn(
-                "lexi-chip transition-all",
-                scope === "selected"
-                  ? "border-transparent bg-white text-black font-medium shadow-[0_1px_3px_rgba(0,0,0,0.5)]"
-                  : "border-white/15 bg-white/8 text-muted-foreground hover:border-white/35 hover:text-foreground",
-              )}
+              className="lexi-toggle"
               onClick={() => setScope("selected")}
             >
               Selected books
@@ -376,12 +373,7 @@ export default function Books() {
             <button
               type="button"
               aria-pressed={scope === "all"}
-              className={cn(
-                "lexi-chip transition-all",
-                scope === "all"
-                  ? "border-transparent bg-white text-black font-medium shadow-[0_1px_3px_rgba(0,0,0,0.5)]"
-                  : "border-white/15 bg-white/8 text-muted-foreground hover:border-white/35 hover:text-foreground",
-              )}
+              className="lexi-toggle"
               onClick={() => setScope("all")}
             >
               All installed
@@ -389,12 +381,7 @@ export default function Books() {
             <button
               type="button"
               aria-pressed={fuzzyEnabled}
-              className={cn(
-                "lexi-chip transition-all",
-                fuzzyEnabled
-                  ? "border-transparent bg-white text-black font-medium shadow-[0_1px_3px_rgba(0,0,0,0.5)]"
-                  : "border-white/15 bg-white/8 text-muted-foreground hover:border-white/35 hover:text-foreground",
-              )}
+              className="lexi-toggle"
               onClick={() => setFuzzyEnabled((value) => !value)}
             >
               Fuzzy {fuzzyEnabled ? "On" : "Off"}
@@ -428,8 +415,8 @@ export default function Books() {
 
         <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-3 space-y-2">
           {searchResults.length === 0 ? (
-            <div className="flex min-h-[240px] items-center justify-center text-center">
-              <p className="subtle-caption">Run a query to search your installed books.</p>
+            <div className="flex min-h-[240px] items-center justify-center px-6 text-center">
+              <p className="subtle-caption">{emptyResultsMessage}</p>
             </div>
           ) : (
             searchResults.map((result) => (
@@ -440,12 +427,8 @@ export default function Books() {
                     <div className="mt-1.5 flex flex-wrap gap-1.5">
                       <button
                         type="button"
-                        className={cn(
-                          "lexi-chip cursor-pointer transition-all",
-                          inputLanguage === result.inputLanguage
-                            ? "border-transparent bg-white text-black font-medium shadow-[0_1px_3px_rgba(0,0,0,0.5)]"
-                            : "border-white/20 hover:border-white/35",
-                        )}
+                        className="lexi-toggle"
+                        aria-pressed={inputLanguage === result.inputLanguage}
                         onClick={() => applyInputLanguageFilter(result.inputLanguage)}
                         title={`Filter input: ${result.inputLanguage}`}
                       >
@@ -453,12 +436,8 @@ export default function Books() {
                       </button>
                       <button
                         type="button"
-                        className={cn(
-                          "lexi-chip cursor-pointer transition-all",
-                          outputLanguage === result.outputLanguage
-                            ? "border-transparent bg-white text-black font-medium shadow-[0_1px_3px_rgba(0,0,0,0.5)]"
-                            : "border-white/20 hover:border-white/35",
-                        )}
+                        className="lexi-toggle"
+                        aria-pressed={outputLanguage === result.outputLanguage}
                         onClick={() => applyOutputLanguageFilter(result.outputLanguage)}
                         title={`Filter output: ${result.outputLanguage}`}
                       >

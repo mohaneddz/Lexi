@@ -745,6 +745,77 @@ select.frost-select {
   box-shadow: var(--elevation-soft);
 }
 
+/*
+ * Interactive filter/toggle pill. Distinct from .lexi-chip, which is a static
+ * label: this one has to read as pressable and has to make its on/off state
+ * obvious at a glance.
+ */
+.lexi-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 0.56rem;
+  padding: 0.34rem 0.7rem;
+  font-size: 0.86rem;
+  font-weight: 500;
+  line-height: 1.35;
+  cursor: pointer;
+  user-select: none;
+  border: 1px solid oklch(1 0 0 / 0.14);
+  background: oklch(1 0 0 / 0.05);
+  color: var(--muted-foreground);
+  box-shadow: var(--elevation-soft);
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease,
+    box-shadow 140ms ease,
+    transform 110ms ease;
+}
+
+.lexi-toggle:hover:not(:disabled) {
+  background: oklch(1 0 0 / 0.12);
+  border-color: oklch(1 0 0 / 0.32);
+  color: var(--foreground);
+  transform: translateY(-1px);
+}
+
+.lexi-toggle:active:not(:disabled) {
+  background: oklch(1 0 0 / 0.08);
+  transform: translateY(0) scale(0.97);
+  transition-duration: 60ms;
+}
+
+.lexi-toggle:focus-visible {
+  outline: none;
+  border-color: oklch(0.78 0.03 250 / 0.9);
+  box-shadow: 0 0 0 3px oklch(0.78 0.03 250 / 0.3);
+}
+
+.lexi-toggle[aria-pressed="true"] {
+  background: oklch(0.95 0.01 255);
+  border-color: transparent;
+  color: oklch(0.18 0.02 253);
+  font-weight: 600;
+  box-shadow: 0 1px 4px oklch(0 0 0 / 0.45), inset 0 1px 0 oklch(1 0 0 / 0.55);
+}
+
+.lexi-toggle[aria-pressed="true"]:hover:not(:disabled) {
+  background: oklch(1 0 0);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 7px oklch(0 0 0 / 0.5), inset 0 1px 0 oklch(1 0 0 / 0.65);
+}
+
+.lexi-toggle[aria-pressed="true"]:active:not(:disabled) {
+  background: oklch(0.88 0.012 255);
+  transform: translateY(0) scale(0.97);
+}
+
+.lexi-toggle:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .status-pill {
   display: inline-flex;
   align-items: center;

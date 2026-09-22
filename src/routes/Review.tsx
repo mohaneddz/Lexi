@@ -451,10 +451,8 @@ export default function Review() {
                       <button
                         key={entry.value}
                         type="button"
-                        className={cn(
-                          "lexi-chip transition-colors",
-                          mode === entry.value && "border-white/28 bg-white/16 text-foreground",
-                        )}
+                        className="lexi-toggle"
+                        aria-pressed={mode === entry.value}
                         onClick={() => {
                           setMode(entry.value);
                           setShowAnswer(false);
@@ -471,10 +469,8 @@ export default function Review() {
 
                 <button
                   type="button"
-                  className={cn(
-                    "lexi-chip transition-colors",
-                    lightningMode && "border-white/28 bg-white/16 text-foreground",
-                  )}
+                  className="lexi-toggle"
+                  aria-pressed={lightningMode}
                   onClick={() => {
                     if (lightningMode) {
                       setLightningMode(false);

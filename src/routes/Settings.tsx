@@ -19,7 +19,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAI } from "@/hooks/useAI";
 import { useTheme } from "@/hooks/useTheme";
-import { cn } from "@/lib/utils";
 import type { AppSettings, RevisionMode, Theme } from "@/types";
 import { GROQ_MODELS } from "@/utils/ai-service";
 import { clearAllData, getSettings, updateSettings } from "@/utils/storage";
@@ -250,10 +249,8 @@ export default function Settings() {
                   <button
                     key={entry.value}
                     type="button"
-                    className={cn(
-                      "lexi-chip transition-colors",
-                      theme === entry.value && "border-white/28 bg-white/16 text-foreground",
-                    )}
+                    className="lexi-toggle"
+                    aria-pressed={theme === entry.value}
                     onClick={() => handleThemeChange(entry.value)}
                     disabled={saving}
                   >
