@@ -14,7 +14,6 @@ import {
 import {
   catalogItemFromPayload,
   deleteInstalledBookPayload,
-  downloadBookPayload,
   importBookPayloadFromFile,
   loadPayloadFromSourceUrl,
   loadStarterCatalog,
@@ -240,13 +239,6 @@ export function useBooks() {
     setActiveBookIds(next);
   }, [activeBookIds]);
 
-  const addCustomSourceFromUrl = useCallback(async (url: string) => {
-    const payload = await downloadBookPayload(url);
-    const item = catalogItemFromPayload(payload, url, "Custom URL");
-    await addCustomBookSource(item);
-    await refresh({ showLoading: false });
-  }, [refresh]);
-
   const importCustomSourceFromFile = useCallback(async () => {
     const payload = await importBookPayloadFromFile();
     if (!payload) {
@@ -358,7 +350,6 @@ export function useBooks() {
     installBook,
     uninstallBook,
     toggleBookActive,
-    addCustomSourceFromUrl,
     importCustomSourceFromFile,
     removeCustomSource,
     lookup,
