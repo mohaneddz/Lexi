@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type { BookCatalogItem, BookPayload, InstalledBook } from "@/types";
 import {
@@ -22,7 +22,7 @@ import {
   saveInstalledBookPayload,
   verifyChecksum,
 } from "@/utils/books";
-import { fuzzyScore } from "@/utils/fuzzy";
+import { bestFuzzyScore } from "@/utils/fuzzy";
 
 type LookupScope = "selected" | "all";
 const LEGACY_PLACEHOLDER_BOOK_IDS = new Set(["dict-essential-en", "trans-en-fr-es", "trans-en-ar-de"]);
@@ -57,8 +57,19 @@ export function useBooks() {
   const [error, setError] = useState<string | null>(null);
   const [installingIds, setInstallingIds] = useState<string[]>([]);
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
+  // Installed payloads can be tens of megabytes each; keep a ref so refresh()
+  // can skip re-reading ones already in memory instead of blocking the UI
+  // every time it runs.
+  const bookPayloadsRef = useRef<Record<string, BookPayload>>({});
+  useEffect(() => {
+    bookPayloadsRef.current = bookPayloads;
+  }, [bookPayloads]);
+
+  const refresh = useCallback(async (options: { showLoading?: boolean } = {}) => {
+    const { showLoading = true } = options;
+    if (showLoading) {
+      setLoading(true);
+    }
     try {
       const [starterCatalog, customSources, installed, active] = await Promise.all([
         loadStarterCatalog(),
@@ -82,6 +93,10 @@ export function useBooks() {
 
       const payloadEntries = await Promise.all(
         installedFiltered.map(async (book) => {
+          const cached = bookPayloadsRef.current[book.id];
+          if (cached && cached.version === book.version) {
+            return [book.id, cached] as const;
+          }
           try {
             const payload = await readInstalledBookPayload(book.localPath);
             return [book.id, payload] as const;
@@ -106,7 +121,9 @@ export function useBooks() {
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "Failed to load books.");
     } finally {
-      setLoading(false);
+      if (showLoading) {
+        setLoading(false);
+      }
     }
   }, []);
 
@@ -147,13 +164,16 @@ export function useBooks() {
 
     await upsertInstalledBook(installedBook);
 
+    setInstalledBooks((current) => [...current.filter((book) => book.id !== installedBook.id), installedBook]);
+    setBookPayloads((current) => ({ ...current, [installedBook.id]: payload }));
+
     const currentActive = await getActiveBookIds();
     if (!currentActive.includes(installedBook.id)) {
-      await saveActiveBookIds([...currentActive, installedBook.id]);
+      const nextActive = [...currentActive, installedBook.id];
+      await saveActiveBookIds(nextActive);
+      setActiveBookIds(nextActive);
     }
-
-    await refresh();
-  }, [refresh]);
+  }, []);
 
   const installBook = useCallback(async (book: BookCatalogItem) => {
     setInstalling(book.id, true);
@@ -173,8 +193,21 @@ export function useBooks() {
 
     await deleteInstalledBookPayload(installed.localPath);
     await removeInstalledBook(bookId);
-    await refresh();
-  }, [installedBooks, refresh]);
+
+    setInstalledBooks((current) => current.filter((book) => book.id !== bookId));
+    setBookPayloads((current) => {
+      const next = { ...current };
+      delete next[bookId];
+      return next;
+    });
+
+    const currentActive = await getActiveBookIds();
+    if (currentActive.includes(bookId)) {
+      const nextActive = currentActive.filter((id) => id !== bookId);
+      await saveActiveBookIds(nextActive);
+      setActiveBookIds(nextActive);
+    }
+  }, [installedBooks]);
 
   const toggleBookActive = useCallback(async (bookId: string) => {
     const next = activeBookIds.includes(bookId)
@@ -188,7 +221,7 @@ export function useBooks() {
     const payload = await downloadBookPayload(url);
     const item = catalogItemFromPayload(payload, url, "Custom URL");
     await addCustomBookSource(item);
-    await refresh();
+    await refresh({ showLoading: false });
   }, [refresh]);
 
   const importCustomSourceFromFile = useCallback(async () => {
@@ -205,7 +238,7 @@ export function useBooks() {
 
   const removeCustomSource = useCallback(async (bookId: string) => {
     await removeCustomBookSource(bookId);
-    await refresh();
+    await refresh({ showLoading: false });
   }, [refresh]);
 
   const installedById = useMemo(() => {
@@ -255,10 +288,10 @@ export function useBooks() {
             continue;
           }
 
-          const searchable = [entry.term, ...(entry.aliases || []), entry.definition].join(" ");
-          const exactHit = searchable.toLowerCase().includes(normalized);
-          const score = exactHit ? 1 : fuzzy ? fuzzyScore(normalized, searchable) : 0;
-          if (score < 0.38) {
+          const candidates = [entry.term, ...(entry.aliases || [])];
+          const exactHit = candidates.some((candidate) => candidate.toLowerCase().includes(normalized));
+          const score = exactHit ? 1 : fuzzy ? bestFuzzyScore(normalized, candidates) : 0;
+          if (score <= 0) {
             continue;
           }
 
@@ -285,16 +318,10 @@ export function useBooks() {
           continue;
         }
 
-        const searchable = [
-          entry.source,
-          entry.target,
-          entry.sourceLanguage,
-          entry.targetLanguage,
-          ...(entry.aliases || []),
-        ].join(" ");
-        const exactHit = searchable.toLowerCase().includes(normalized);
-        const score = exactHit ? 1 : fuzzy ? fuzzyScore(normalized, searchable) : 0;
-        if (score < 0.38) {
+        const candidates = [entry.source, entry.target, ...(entry.aliases || [])];
+        const exactHit = candidates.some((candidate) => candidate.toLowerCase().includes(normalized));
+        const score = exactHit ? 1 : fuzzy ? bestFuzzyScore(normalized, candidates) : 0;
+        if (score <= 0) {
           continue;
         }
 
