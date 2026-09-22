@@ -3,8 +3,8 @@
     "id": "trans-countries-en-es",
     "title": "Country Names (English, Spanish)",
     "type": "translation",
-    "version": "1.0.0",
-    "description": "Country name translations from mledoze/countries (https://raw.githubusercontent.com/mledoze/countries/master/countries.json).",
+    "version": "2.0.0",
+    "description": "Full country name translations from mledoze/countries (https://raw.githubusercontent.com/mledoze/countries/master/countries.json).",
     "source": "mledoze/countries",
     "sourceUrl": "/books/packs/trans-countries-en-es.v1.json",
     "inputLanguages": [
@@ -13,15 +13,15 @@
     "outputLanguages": [
       "Spanish"
     ],
-    "sizeBytes": 20577,
+    "sizeBytes": 34005,
     "coverUrl": "/books/covers/trans-countries-en-es.svg"
   },
   {
     "id": "trans-countries-en-fr",
     "title": "Country Names (English, French)",
     "type": "translation",
-    "version": "1.0.0",
-    "description": "Country name translations from mledoze/countries (https://raw.githubusercontent.com/mledoze/countries/master/countries.json).",
+    "version": "2.0.0",
+    "description": "Full country name translations from mledoze/countries (https://raw.githubusercontent.com/mledoze/countries/master/countries.json).",
     "source": "mledoze/countries",
     "sourceUrl": "/books/packs/trans-countries-en-fr.v1.json",
     "inputLanguages": [
@@ -30,15 +30,15 @@
     "outputLanguages": [
       "French"
     ],
-    "sizeBytes": 23829,
+    "sizeBytes": 34017,
     "coverUrl": "/books/covers/trans-countries-en-fr.svg"
   },
   {
     "id": "dict-english-heritage-ae",
     "title": "English Heritage Dictionary A-E",
     "type": "dictionary",
-    "version": "1.0.0",
-    "description": "Curated English definitions (A-E) from adambom/dictionary (https://raw.githubusercontent.com/adambom/dictionary/master/dictionary.json).",
+    "version": "2.0.0",
+    "description": "Full English definitions (A-E) from adambom/dictionary (https://raw.githubusercontent.com/adambom/dictionary/master/dictionary.json).",
     "source": "adambom/dictionary",
     "sourceUrl": "/books/packs/dict-english-heritage-ae.v1.json",
     "inputLanguages": [
@@ -47,15 +47,15 @@
     "outputLanguages": [
       "English"
     ],
-    "sizeBytes": 119137,
+    "sizeBytes": 3959745,
     "coverUrl": "/books/covers/dict-english-heritage-ae.svg"
   },
   {
     "id": "dict-english-heritage-fk",
     "title": "English Heritage Dictionary F-K",
     "type": "dictionary",
-    "version": "1.0.0",
-    "description": "Curated English definitions (F-K) from adambom/dictionary (https://raw.githubusercontent.com/adambom/dictionary/master/dictionary.json).",
+    "version": "2.0.0",
+    "description": "Full English definitions (F-K) from adambom/dictionary (https://raw.githubusercontent.com/adambom/dictionary/master/dictionary.json).",
     "source": "adambom/dictionary",
     "sourceUrl": "/books/packs/dict-english-heritage-fk.v1.json",
     "inputLanguages": [
@@ -64,15 +64,15 @@
     "outputLanguages": [
       "English"
     ],
-    "sizeBytes": 134431,
+    "sizeBytes": 2146694,
     "coverUrl": "/books/covers/dict-english-heritage-fk.svg"
   },
   {
     "id": "dict-english-heritage-lq",
     "title": "English Heritage Dictionary L-Q",
     "type": "dictionary",
-    "version": "1.0.0",
-    "description": "Curated English definitions (L-Q) from adambom/dictionary (https://raw.githubusercontent.com/adambom/dictionary/master/dictionary.json).",
+    "version": "2.0.0",
+    "description": "Full English definitions (L-Q) from adambom/dictionary (https://raw.githubusercontent.com/adambom/dictionary/master/dictionary.json).",
     "source": "adambom/dictionary",
     "sourceUrl": "/books/packs/dict-english-heritage-lq.v1.json",
     "inputLanguages": [
@@ -81,15 +81,15 @@
     "outputLanguages": [
       "English"
     ],
-    "sizeBytes": 134995,
+    "sizeBytes": 2898506,
     "coverUrl": "/books/covers/dict-english-heritage-lq.svg"
   },
   {
     "id": "dict-english-heritage-rz",
     "title": "English Heritage Dictionary R-Z",
     "type": "dictionary",
-    "version": "1.0.0",
-    "description": "Curated English definitions (R-Z) from adambom/dictionary (https://raw.githubusercontent.com/adambom/dictionary/master/dictionary.json).",
+    "version": "2.0.0",
+    "description": "Full English definitions (R-Z) from adambom/dictionary (https://raw.githubusercontent.com/adambom/dictionary/master/dictionary.json).",
     "source": "adambom/dictionary",
     "sourceUrl": "/books/packs/dict-english-heritage-rz.v1.json",
     "inputLanguages": [
@@ -98,15 +98,15 @@
     "outputLanguages": [
       "English"
     ],
-    "sizeBytes": 126158,
+    "sizeBytes": 3640180,
     "coverUrl": "/books/covers/dict-english-heritage-rz.svg"
   },
   {
     "id": "dict-webster-essentials",
     "title": "Webster Compact Essentials",
     "type": "dictionary",
-    "version": "1.0.0",
-    "description": "Compact Webster-derived definitions from matthewreagan/WebstersEnglishDictionary (https://raw.githubusercontent.com/matthewreagan/WebstersEnglishDictionary/master/dictionary_compact.json).",
+    "version": "2.0.0",
+    "description": "Full Webster-derived definitions from matthewreagan/WebstersEnglishDictionary (https://raw.githubusercontent.com/matthewreagan/WebstersEnglishDictionary/master/dictionary_compact.json).",
     "source": "WebstersEnglishDictionary",
     "sourceUrl": "/books/packs/dict-webster-essentials.v1.json",
     "inputLanguages": [
@@ -115,15 +115,15 @@
     "outputLanguages": [
       "English"
     ],
-    "sizeBytes": 302870,
+    "sizeBytes": 26854585,
     "coverUrl": "/books/covers/dict-webster-essentials.svg"
   },
   {
     "id": "dict-wordnet-adjectives",
     "title": "WordNet Adjective Definitions",
     "type": "dictionary",
-    "version": "1.0.0",
-    "description": "Definitions derived from Princeton WordNet (adj) via nltk_data (https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/packages/corpora/wordnet.zip).",
+    "version": "2.0.0",
+    "description": "Full definitions derived from Princeton WordNet (adj) via nltk_data (https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/packages/corpora/wordnet.zip).",
     "source": "Princeton WordNet (nltk_data)",
     "sourceUrl": "/books/packs/dict-wordnet-adjectives.v1.json",
     "inputLanguages": [
@@ -132,15 +132,15 @@
     "outputLanguages": [
       "English"
     ],
-    "sizeBytes": 287261,
+    "sizeBytes": 4481379,
     "coverUrl": "/books/covers/dict-wordnet-adjectives.svg"
   },
   {
     "id": "dict-wordnet-adverbs",
     "title": "WordNet Adverb Definitions",
     "type": "dictionary",
-    "version": "1.0.0",
-    "description": "Definitions derived from Princeton WordNet (adv) via nltk_data (https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/packages/corpora/wordnet.zip).",
+    "version": "2.0.0",
+    "description": "Full definitions derived from Princeton WordNet (adv) via nltk_data (https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/packages/corpora/wordnet.zip).",
     "source": "Princeton WordNet (nltk_data)",
     "sourceUrl": "/books/packs/dict-wordnet-adverbs.v1.json",
     "inputLanguages": [
@@ -149,15 +149,15 @@
     "outputLanguages": [
       "English"
     ],
-    "sizeBytes": 204032,
+    "sizeBytes": 814236,
     "coverUrl": "/books/covers/dict-wordnet-adverbs.svg"
   },
   {
     "id": "dict-wordnet-nouns",
     "title": "WordNet Noun Definitions",
     "type": "dictionary",
-    "version": "1.0.0",
-    "description": "Definitions derived from Princeton WordNet (noun) via nltk_data (https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/packages/corpora/wordnet.zip).",
+    "version": "2.0.0",
+    "description": "Full definitions derived from Princeton WordNet (noun) via nltk_data (https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/packages/corpora/wordnet.zip).",
     "source": "Princeton WordNet (nltk_data)",
     "sourceUrl": "/books/packs/dict-wordnet-nouns.v1.json",
     "inputLanguages": [
@@ -166,15 +166,15 @@
     "outputLanguages": [
       "English"
     ],
-    "sizeBytes": 332278,
+    "sizeBytes": 20300506,
     "coverUrl": "/books/covers/dict-wordnet-nouns.svg"
   },
   {
     "id": "dict-wordnet-verbs",
     "title": "WordNet Verb Definitions",
     "type": "dictionary",
-    "version": "1.0.0",
-    "description": "Definitions derived from Princeton WordNet (verb) via nltk_data (https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/packages/corpora/wordnet.zip).",
+    "version": "2.0.0",
+    "description": "Full definitions derived from Princeton WordNet (verb) via nltk_data (https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/packages/corpora/wordnet.zip).",
     "source": "Princeton WordNet (nltk_data)",
     "sourceUrl": "/books/packs/dict-wordnet-verbs.v1.json",
     "inputLanguages": [
@@ -183,7 +183,7 @@
     "outputLanguages": [
       "English"
     ],
-    "sizeBytes": 233316,
+    "sizeBytes": 3426695,
     "coverUrl": "/books/covers/dict-wordnet-verbs.svg"
   }
 ]
