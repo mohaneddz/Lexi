@@ -800,14 +800,18 @@ select.frost-select {
   box-shadow: 0 1px 4px oklch(0 0 0 / 0.45), inset 0 1px 0 oklch(1 0 0 / 0.55);
 }
 
+/* The pressed state is a light fill, so it has to re-assert dark text: the
+   generic hover rule above turns the label light for the unpressed state. */
 .lexi-toggle[aria-pressed="true"]:hover:not(:disabled) {
   background: oklch(1 0 0);
+  color: oklch(0.14 0.02 253);
   transform: translateY(-1px);
   box-shadow: 0 2px 7px oklch(0 0 0 / 0.5), inset 0 1px 0 oklch(1 0 0 / 0.65);
 }
 
 .lexi-toggle[aria-pressed="true"]:active:not(:disabled) {
   background: oklch(0.88 0.012 255);
+  color: oklch(0.14 0.02 253);
   transform: translateY(0) scale(0.97);
 }
 
