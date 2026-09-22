@@ -820,6 +820,17 @@ select.frost-select {
   cursor: not-allowed;
 }
 
+/* Tiles are small and show two language chips, so they get a scaled-down
+   chip that sits inline instead of stacking and eating the whole tile. */
+.lexi-chip.compact {
+  gap: 0.2rem;
+  border-radius: 0.4rem;
+  padding: 0.1rem 0.34rem;
+  font-size: 0.68rem;
+  line-height: 1.25;
+  box-shadow: none;
+}
+
 .status-pill {
   display: inline-flex;
   align-items: center;
