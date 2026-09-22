@@ -6,6 +6,7 @@ import {
   isEnabled as isAutostartEnabled,
 } from "@tauri-apps/plugin-autostart";
 import {
+  FileJson,
   Keyboard,
   KeyRound,
   MoonStar,
@@ -17,7 +18,9 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { ImportBookDialog } from "@/components/ImportBookDialog";
 import { useAI } from "@/hooks/useAI";
+import { useBooks } from "@/hooks/useBooks";
 import { useTheme } from "@/hooks/useTheme";
 import type { AppSettings, RevisionMode, Theme } from "@/types";
 import { GROQ_MODELS } from "@/utils/ai-service";
@@ -70,10 +73,12 @@ const SHORTCUTS = [
 export default function Settings() {
   const { theme, setTheme } = useTheme();
   const { testConnection, loading: testingConnection } = useAI();
+  const { importCustomSourceFromFile } = useBooks();
 
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [saving, setSaving] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [importBookOpen, setImportBookOpen] = useState(false);
 
   const [apiDraft, setApiDraft] = useState("");
   const [modelDraft, setModelDraft] = useState<string>(GROQ_MODELS[0]);
@@ -544,6 +549,26 @@ export default function Settings() {
 
           <div className="frost-panel-soft space-y-3 p-4">
             <div>
+              <p className="font-medium">Books</p>
+              <p className="subtle-caption mt-1">
+                Add your own dictionary or translation book from a JSON file. It appears in the books catalog
+                alongside the bundled ones.
+              </p>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="border-white/15 bg-white/6 hover:bg-white/14"
+              onClick={() => setImportBookOpen(true)}
+            >
+              <FileJson className="mr-2 size-4" />
+              Import book file
+            </Button>
+          </div>
+
+          <div className="frost-panel-soft space-y-3 p-4">
+            <div>
               <p className="font-medium text-red-200">Danger Zone</p>
               <p className="subtle-caption mt-1">Completely reset all saved vocabulary and preferences.</p>
             </div>
@@ -614,6 +639,12 @@ export default function Settings() {
           <span className="sync-pill">{saving ? "Saving..." : "All changes saved"}</span>
         </div>
       </section>
+
+      <ImportBookDialog
+        open={importBookOpen}
+        onOpenChange={setImportBookOpen}
+        onImport={importCustomSourceFromFile}
+      />
     </div>
   );
 }
