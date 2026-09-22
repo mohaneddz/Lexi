@@ -5,9 +5,34 @@ import { Button } from "@/components/ui/button";
 import { useBooks } from "@/hooks/useBooks";
 import { useTranslations } from "@/hooks/useTranslations";
 import { useWords } from "@/hooks/useWords";
+import type { MatchKind } from "@/utils/bookSearch";
+import { cn } from "@/lib/utils";
 
 type CatalogTypeFilter = "all" | "dictionary" | "translation";
 type CatalogStatusFilter = "all" | "installed" | "available" | "selected";
+
+// How closely a result matched, in plain terms rather than the raw 0-1
+// score, grouped into the same "new/learning/mastered" pill styles used
+// elsewhere so higher confidence reads as more settled at a glance.
+function matchKindLabel(kind: MatchKind): string {
+  switch (kind) {
+    case "exact": return "Exact match";
+    case "prefix": return "Starts with";
+    case "word": return "Word match";
+    case "substring": return "Contains";
+    case "typo": return "Close match";
+  }
+}
+
+function matchKindStatusClass(kind: MatchKind): string {
+  switch (kind) {
+    case "exact": return "status-mastered";
+    case "prefix": return "status-learning";
+    case "word":
+    case "substring": return "status-learning";
+    case "typo": return "status-new";
+  }
+}
 
 function BookCover({ title, coverUrl }: { title: string; coverUrl?: string }) {
   // Remember which url failed rather than that one did, so a card that fell
@@ -423,8 +448,18 @@ export default function Books() {
             searchResults.map((result) => (
               <article key={result.id} className="frost-panel-soft space-y-2 p-3">
                 <div className="flex items-start justify-between gap-3">
-                  <div>
+                  <div className="min-w-0">
                     <p className="serif-display text-2xl leading-[0.95]">{result.input}</p>
+                    <button
+                      type="button"
+                      className="lexi-toggle mt-2"
+                      aria-pressed={searchScope === result.bookId}
+                      onClick={() => setSearchScope((current) => current === result.bookId ? "selected" : result.bookId)}
+                      title={`${result.bookTitle} — click to search only this book`}
+                    >
+                      <BookOpen className="size-3.5" />
+                      {result.bookTitle}
+                    </button>
                     <div className="mt-1.5 flex flex-wrap gap-1.5">
                       <button
                         type="button"
@@ -445,11 +480,15 @@ export default function Books() {
                         {`To: ${result.outputLanguage}`}
                       </button>
                     </div>
-                    <p className="word-sub mt-1">{result.output}</p>
+                    <p className="word-sub mt-1.5">{result.output}</p>
                   </div>
-                  <span className="subtle-caption">score {result.score.toFixed(2)}</span>
+                  <span
+                    className={cn("status-pill shrink-0", matchKindStatusClass(result.matchKind))}
+                    title={`Match score ${result.score.toFixed(2)}`}
+                  >
+                    {matchKindLabel(result.matchKind)}
+                  </span>
                 </div>
-                <p className="subtle-caption">{result.bookTitle}</p>
 
                 <div className="flex flex-wrap gap-2">
                   <Button
