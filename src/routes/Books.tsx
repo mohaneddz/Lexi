@@ -429,7 +429,45 @@ export default function Books() {
                       <BookOpen className="size-3.5" />
                       {result.bookTitle}
                     </button>
-                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    <p className="word-sub mt-1.5">{result.output}</p>
+                  </div>
+                  <span
+                    className={cn("status-pill shrink-0", matchKindStatusClass(result.matchKind))}
+                    title={`Match score ${result.score.toFixed(2)}`}
+                  >
+                    {matchKindLabel(result.matchKind)}
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="border-white/15 bg-white/6 hover:bg-white/14"
+                      onClick={() => void navigator.clipboard.writeText(`${result.input} -> ${result.output}`)}
+                    >
+                      <Copy className="mr-1.5 size-3.5" />
+                      Copy
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="border-white/15 bg-white/6 hover:bg-white/14"
+                      onClick={() => void handleApplyResult(result)}
+                    >
+                      <Sparkles className="mr-1.5 size-3.5" />
+                      {result.bookType === "dictionary" ? "Add to Words" : "Add to Translations"}
+                    </Button>
+                  </div>
+
+                  {/* A dictionary's input and output language are always the
+                      same, so From/To would just repeat itself; only a
+                      translation has two distinct sides worth filtering. */}
+                  {result.bookType === "translation" ? (
+                    <div className="flex flex-wrap gap-1.5">
                       <button
                         type="button"
                         className="lexi-toggle"
@@ -449,37 +487,7 @@ export default function Books() {
                         {`To: ${result.outputLanguage}`}
                       </button>
                     </div>
-                    <p className="word-sub mt-1.5">{result.output}</p>
-                  </div>
-                  <span
-                    className={cn("status-pill shrink-0", matchKindStatusClass(result.matchKind))}
-                    title={`Match score ${result.score.toFixed(2)}`}
-                  >
-                    {matchKindLabel(result.matchKind)}
-                  </span>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="border-white/15 bg-white/6 hover:bg-white/14"
-                    onClick={() => void navigator.clipboard.writeText(`${result.input} -> ${result.output}`)}
-                  >
-                    <Copy className="mr-1.5 size-3.5" />
-                    Copy
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="border-white/15 bg-white/6 hover:bg-white/14"
-                    onClick={() => void handleApplyResult(result)}
-                  >
-                    <Sparkles className="mr-1.5 size-3.5" />
-                    {result.bookType === "dictionary" ? "Add to Words" : "Add to Translations"}
-                  </Button>
+                  ) : null}
                 </div>
               </article>
             ))
