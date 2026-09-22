@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="720" height="1024" viewBox="0 0 720 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.6" y2="1">
+      <stop offset="0%" stop-color="#422006"/>
+      <stop offset="100%" stop-color="#05070d"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="720" height="1024" fill="url(#bg)"/>
+
+  <g>
+    <path d="M360 180 L470 330 L410 560 L310 560 L250 330 Z" fill="none" stroke="#fcd34d" stroke-width="2.4" opacity="0.5"/>
+    <path d="M180 300 L250 390 L215 520 L145 520 L120 390 Z" fill="none" stroke="#fcd34d" stroke-width="1.6" opacity="0.3"/>
+    <path d="M520 320 L600 400 L570 520 L500 520 L478 400 Z" fill="none" stroke="#fcd34d" stroke-width="1.6" opacity="0.3"/>
+  </g>
+
+  <rect x="44" y="44" width="632" height="936" rx="10" fill="none" stroke="#fcd34d" stroke-width="1.5" opacity="0.32"/>
+
+  <text x="86" y="436" fill="#fcd34d" font-family="Georgia, 'Times New Roman', serif" font-size="24" letter-spacing="5" opacity="0.9">PRINCETON WORDNET</text>
+
+  <text x="86" y="548" fill="#ffffff" font-family="Georgia, 'Times New Roman', serif" font-size="82" font-weight="700">Substances</text>
+
+  <line x1="86" y1="596" x2="634" y2="596" stroke="#fcd34d" stroke-width="1.5" opacity="0.5"/>
+
+  <text x="86" y="642" fill="#ffffff" font-family="Georgia, 'Times New Roman', serif" font-size="26" opacity="0.72">4,764 senses</text>
+  <text x="86" y="682" fill="#ffffff" font-family="Georgia, 'Times New Roman', serif" font-size="22" opacity="0.45">Materials and matter</text>
+</svg>

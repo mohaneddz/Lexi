@@ -1,20 +1,37 @@
 [
   {
-    "id": "trans-countries-en-es",
-    "title": "Country Names (English to Spanish)",
-    "type": "translation",
-    "version": "2.1.0",
-    "description": "Every country name in English paired with its Spanish name, including official long forms.",
-    "source": "mledoze/countries",
-    "sourceUrl": "/books/packs/trans-countries-en-es.v1.json",
+    "id": "dict-topic-animals",
+    "title": "Animals",
+    "type": "dictionary",
+    "version": "1.0.0",
+    "description": "Animal names from Princeton WordNet, from common species to zoological terms.",
+    "source": "Princeton WordNet (nltk_data)",
+    "sourceUrl": "/books/packs/dict-topic-animals.v1.json",
     "inputLanguages": [
       "English"
     ],
     "outputLanguages": [
-      "Spanish"
+      "English"
     ],
-    "sizeBytes": 33967,
-    "coverUrl": "/books/covers/trans-countries-en-es.jpg"
+    "sizeBytes": 1757836,
+    "coverUrl": "/books/covers/dict-topic-animals.jpg"
+  },
+  {
+    "id": "dict-topic-astronomy",
+    "title": "Astronomy",
+    "type": "dictionary",
+    "version": "1.0.0",
+    "description": "Astronomy vocabulary traced through Princeton WordNet: stars, planets, moons, constellations and other celestial bodies.",
+    "source": "Princeton WordNet (nltk_data)",
+    "sourceUrl": "/books/packs/dict-topic-astronomy.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "English"
+    ],
+    "sizeBytes": 33844,
+    "coverUrl": "/books/covers/dict-topic-astronomy.jpg"
   },
   {
     "id": "trans-countries-en-fr",
@@ -32,6 +49,176 @@
     ],
     "sizeBytes": 33978,
     "coverUrl": "/books/covers/trans-countries-en-fr.jpg"
+  },
+  {
+    "id": "trans-countries-en-es",
+    "title": "Country Names (English to Spanish)",
+    "type": "translation",
+    "version": "2.1.0",
+    "description": "Every country name in English paired with its Spanish name, including official long forms.",
+    "source": "mledoze/countries",
+    "sourceUrl": "/books/packs/trans-countries-en-es.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Spanish"
+    ],
+    "sizeBytes": 33967,
+    "coverUrl": "/books/covers/trans-countries-en-es.jpg"
+  },
+  {
+    "id": "dict-topic-feelings",
+    "title": "Feelings and Emotions",
+    "type": "dictionary",
+    "version": "1.0.0",
+    "description": "Words for emotions and states of feeling from Princeton WordNet.",
+    "source": "Princeton WordNet (nltk_data)",
+    "sourceUrl": "/books/packs/dict-topic-feelings.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "English"
+    ],
+    "sizeBytes": 98693,
+    "coverUrl": "/books/covers/dict-topic-feelings.png"
+  },
+  {
+    "id": "dict-topic-food",
+    "title": "Food and Drink",
+    "type": "dictionary",
+    "version": "1.0.0",
+    "description": "Food and drink vocabulary from Princeton WordNet, including dishes, ingredients and cuts.",
+    "source": "Princeton WordNet (nltk_data)",
+    "sourceUrl": "/books/packs/dict-topic-food.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "English"
+    ],
+    "sizeBytes": 445250,
+    "coverUrl": "/books/covers/dict-topic-food.jpg"
+  },
+  {
+    "id": "dict-topic-music",
+    "title": "Music",
+    "type": "dictionary",
+    "version": "1.0.0",
+    "description": "Music vocabulary traced through Princeton WordNet: instruments, forms, genres and musical terms.",
+    "source": "Princeton WordNet (nltk_data)",
+    "sourceUrl": "/books/packs/dict-topic-music.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "English"
+    ],
+    "sizeBytes": 82490,
+    "coverUrl": "/books/covers/dict-topic-music.jpg"
+  },
+  {
+    "id": "dict-topic-nature",
+    "title": "Natural Phenomena",
+    "type": "dictionary",
+    "version": "1.0.0",
+    "description": "Natural processes and phenomena from Princeton WordNet, from weather to physical effects.",
+    "source": "Princeton WordNet (nltk_data)",
+    "sourceUrl": "/books/packs/dict-topic-nature.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "English"
+    ],
+    "sizeBytes": 155572,
+    "coverUrl": "/books/covers/dict-topic-nature.svg"
+  },
+  {
+    "id": "dict-topic-people",
+    "title": "People and Roles",
+    "type": "dictionary",
+    "version": "1.0.0",
+    "description": "Words for people from Princeton WordNet: occupations, roles, characters and named figures.",
+    "source": "Princeton WordNet (nltk_data)",
+    "sourceUrl": "/books/packs/dict-topic-people.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "English"
+    ],
+    "sizeBytes": 2814012,
+    "coverUrl": "/books/covers/dict-topic-people.jpg"
+  },
+  {
+    "id": "dict-topic-places",
+    "title": "Places and Geography",
+    "type": "dictionary",
+    "version": "1.0.0",
+    "description": "Geographic vocabulary from Princeton WordNet, covering regions, landforms and named places.",
+    "source": "Princeton WordNet (nltk_data)",
+    "sourceUrl": "/books/packs/dict-topic-places.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "English"
+    ],
+    "sizeBytes": 746652,
+    "coverUrl": "/books/covers/dict-topic-places.jpg"
+  },
+  {
+    "id": "dict-topic-plants",
+    "title": "Plants",
+    "type": "dictionary",
+    "version": "1.0.0",
+    "description": "Plant and fungus names from Princeton WordNet, from garden flowers to botanical groups.",
+    "source": "Princeton WordNet (nltk_data)",
+    "sourceUrl": "/books/packs/dict-topic-plants.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "English"
+    ],
+    "sizeBytes": 2846865,
+    "coverUrl": "/books/covers/dict-topic-plants.jpg"
+  },
+  {
+    "id": "dict-topic-substances",
+    "title": "Substances and Materials",
+    "type": "dictionary",
+    "version": "1.0.0",
+    "description": "Materials, chemicals and substances from Princeton WordNet.",
+    "source": "Princeton WordNet (nltk_data)",
+    "sourceUrl": "/books/packs/dict-topic-substances.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "English"
+    ],
+    "sizeBytes": 687797,
+    "coverUrl": "/books/covers/dict-topic-substances.svg"
+  },
+  {
+    "id": "dict-topic-body",
+    "title": "The Human Body",
+    "type": "dictionary",
+    "version": "1.0.0",
+    "description": "Anatomy vocabulary from Princeton WordNet, covering organs, bones, tissues and body parts.",
+    "source": "Princeton WordNet (nltk_data)",
+    "sourceUrl": "/books/packs/dict-topic-body.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "English"
+    ],
+    "sizeBytes": 533642,
+    "coverUrl": "/books/covers/dict-topic-body.png"
   },
   {
     "id": "dict-webster-essentials",
