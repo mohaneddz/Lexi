@@ -54,6 +54,15 @@ const DISTRACTOR_DEFINITIONS_SCHEMA = z.object({
   confidence: z.number().min(0).max(1),
 });
 
+const RELATED_TRANSLATIONS_SCHEMA = z.object({
+  suggestions: z.array(z.object({
+    sourceWord: z.string().min(1).max(80),
+    targetWord: z.string().min(1).max(80),
+    context: z.string().min(4).max(200),
+  })).min(1).max(6),
+  confidence: z.number().min(0).max(1),
+});
+
 function resolveEnvApiKey(): string {
   return (
     import.meta.env.GROQ_API_KEY?.trim() ||
@@ -739,6 +748,91 @@ export async function suggestDistractorDefinitions(
       success: false,
       data: [],
       error: toErrorMessage("Distractor generation failed", error),
+    };
+  }
+}
+
+export type RelatedTranslationSuggestion = {
+  sourceWord: string;
+  targetWord: string;
+  context: string;
+};
+
+export async function suggestRelatedTranslations(
+  sourceWord: string,
+  sourceLanguage: string,
+  targetLanguage: string,
+  context: string | undefined,
+  excludeWords: string[],
+): Promise<AIResponse<RelatedTranslationSuggestion[]>> {
+  const trimmedWord = sourceWord.trim();
+
+  if (!trimmedWord) {
+    return {
+      success: false,
+      data: [],
+      error: "No word provided for related translation suggestions.",
+    };
+  }
+
+  try {
+    const exclusionList = excludeWords.length > 0 ? excludeWords.join(", ") : "none";
+
+    const object = await runStructuredPrompt({
+      schema: RELATED_TRANSLATIONS_SCHEMA,
+      system:
+        "You suggest vocabulary translation pairs for language learners, related to a given word. Return strict JSON only.",
+      prompt: [
+        `Source word: ${trimmedWord}`,
+        `Source language: ${sourceLanguage}`,
+        `Target language: ${targetLanguage}`,
+        context ? `Context/usage of the source word: ${context}` : "",
+        "Suggest 4 other word pairs in the same source-to-target language direction that are similar to the source word in topic, context, and difficulty level.",
+        "Do not repeat the source word itself, and do not repeat any of these already-known words:",
+        exclusionList,
+        "Each suggestion needs a short usage note or context sentence (under 15 words).",
+      ].filter(Boolean).join("\n"),
+      temperature: 0.4,
+    });
+
+    const excludeSet = new Set([trimmedWord.toLowerCase(), ...excludeWords.map((word) => word.toLowerCase())]);
+    const seen = new Set<string>();
+
+    const suggestions = object.suggestions
+      .map((item) => ({
+        sourceWord: item.sourceWord.trim(),
+        targetWord: item.targetWord.trim(),
+        context: item.context.trim(),
+      }))
+      .filter((item) => item.sourceWord && item.targetWord)
+      .filter((item) => !excludeSet.has(item.sourceWord.toLowerCase()))
+      .filter((item) => {
+        const key = item.sourceWord.toLowerCase();
+        if (seen.has(key)) {
+          return false;
+        }
+        seen.add(key);
+        return true;
+      });
+
+    if (suggestions.length === 0) {
+      return {
+        success: false,
+        data: [],
+        error: "AI returned no usable suggestions.",
+      };
+    }
+
+    return {
+      success: true,
+      data: suggestions,
+      confidence: object.confidence,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      data: [],
+      error: toErrorMessage("Related translation suggestion failed", error),
     };
   }
 }

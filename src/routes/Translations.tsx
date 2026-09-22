@@ -35,6 +35,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAI } from "@/hooks/useAI";
 import { useGroups } from "@/hooks/useGroups";
 import { useSurfaceViewPreference } from "@/hooks/useSurfaceViewPreference";
 import { useTranslations } from "@/hooks/useTranslations";
@@ -42,16 +43,14 @@ import { useWords } from "@/hooks/useWords";
 import { cardMinWidthFor } from "@/lib/surface-view";
 import { cn } from "@/lib/utils";
 import type { Translation, ViewMode } from "@/types";
+import type { RelatedTranslationSuggestion } from "@/utils/ai-service";
 import { formatDate } from "@/utils/formatters";
 import { getSettings, updateSettings } from "@/utils/storage";
-import {
-  TRANSLATION_SUGGESTION_BANK,
-  dayKey,
-  parseJsonArray,
-  shuffleArray,
-  translationFingerprint,
-  type TranslationSuggestion,
-} from "@/utils/suggestions";
+import { parseJsonArray, translationFingerprint } from "@/utils/suggestions";
+
+function suggestionKey(suggestion: RelatedTranslationSuggestion): string {
+  return `${suggestion.sourceWord.trim().toLowerCase()}::${suggestion.targetWord.trim().toLowerCase()}`;
+}
 
 type SortMode = "recent" | "oldest" | "source" | "target" | "sourceLang" | "targetLang";
 type GroupMode = "none" | "sourceLang" | "targetLang" | "pair";
@@ -98,17 +97,19 @@ export default function Translations() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(true);
   const [actionMenu, setActionMenu] = useState<ActionMenuState | null>(null);
-  const [translationSuggestions, setTranslationSuggestions] = useState<TranslationSuggestion[]>([]);
-  const [addingSuggestionId, setAddingSuggestionId] = useState<string | null>(null);
+  const [translationSuggestions, setTranslationSuggestions] = useState<RelatedTranslationSuggestion[]>([]);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  const [suggestionsError, setSuggestionsError] = useState<string | null>(null);
+  const [addingSuggestionKey, setAddingSuggestionKey] = useState<string | null>(null);
   const [bulkMode, setBulkMode] = useState(false);
   const [selectedTranslationIds, setSelectedTranslationIds] = useState<string[]>([]);
   const [bulkDeletePending, setBulkDeletePending] = useState(false);
-  const todayKey = useMemo(() => dayKey(Date.now()), []);
 
   const { viewMode, setViewMode, zoom, stepZoom, canZoom, detailPanelOpen, toggleDetailPanel } = useSurfaceViewPreference("translations", "list", 100);
   const { translations, addTranslation, updateTranslation, deleteTranslation, loading } = useTranslations();
   const { words } = useWords();
   const { groups, addGroup } = useGroups();
+  const { suggestRelatedTranslations } = useAI();
 
   const availableLanguages = useMemo(() => {
     const languages = new Set<string>();
@@ -370,48 +371,83 @@ export default function Translations() {
   };
 
   useEffect(() => {
-    const existingPairSet = new Set(translations.map((entry) => translationFingerprint(entry)));
-    const dismissedKey = `lexi:translations:daily-dismissed:${todayKey}`;
-    const generatedKey = `lexi:translations:daily-generated:${todayKey}`;
-    const dismissed = new Set(parseJsonArray(window.localStorage.getItem(dismissedKey)));
-    const persisted = parseJsonArray(window.localStorage.getItem(generatedKey));
-
-    if (persisted.length > 0) {
-      const persistedSet = new Set(persisted);
-      setTranslationSuggestions(TRANSLATION_SUGGESTION_BANK.filter((entry) => persistedSet.has(entry.id) && !dismissed.has(entry.id) && !existingPairSet.has(translationFingerprint(entry))));
+    if (!selectedTranslation) {
+      setTranslationSuggestions([]);
+      setSuggestionsError(null);
+      setSuggestionsLoading(false);
       return;
     }
 
-    const nextFresh = shuffleArray(
-      TRANSLATION_SUGGESTION_BANK.filter((entry) => !dismissed.has(entry.id) && !existingPairSet.has(translationFingerprint(entry))),
-    ).slice(0, 4);
-    setTranslationSuggestions(nextFresh);
-    window.localStorage.setItem(generatedKey, JSON.stringify(nextFresh.map((entry) => entry.id)));
-  }, [todayKey, translations]);
+    const { id: translationId, sourceWord, sourceLanguage, targetLanguage, context } = selectedTranslation;
+    let cancelled = false;
+    setSuggestionsLoading(true);
+    setSuggestionsError(null);
 
-  const dismissSuggestion = (id: string) => {
-    const dismissedKey = `lexi:translations:daily-dismissed:${todayKey}`;
+    const dismissedKey = `lexi:translations:dismissed:${translationId}`;
     const dismissed = new Set(parseJsonArray(window.localStorage.getItem(dismissedKey)));
-    dismissed.add(id);
+
+    const knownWords = new Set<string>();
+    for (const entry of translations) {
+      if (entry.sourceLanguage === sourceLanguage) knownWords.add(entry.sourceWord.toLowerCase());
+      if (entry.targetLanguage === targetLanguage) knownWords.add(entry.targetWord.toLowerCase());
+    }
+    for (const word of words) {
+      if (word.language === sourceLanguage) knownWords.add(word.word.toLowerCase());
+    }
+
+    void suggestRelatedTranslations(sourceWord, sourceLanguage, targetLanguage, context, Array.from(knownWords)).then((result) => {
+      if (cancelled) return;
+
+      if (!result.success) {
+        setTranslationSuggestions([]);
+        setSuggestionsError(result.error ?? "Could not load suggestions.");
+        return;
+      }
+
+      const existingPairs = new Set(translations.map((entry) => translationFingerprint(entry)));
+      const filtered = result.data.filter((suggestion) => {
+        if (dismissed.has(suggestionKey(suggestion))) return false;
+        const fingerprint = translationFingerprint({ sourceWord: suggestion.sourceWord, sourceLanguage, targetWord: suggestion.targetWord, targetLanguage });
+        return !existingPairs.has(fingerprint);
+      });
+      setTranslationSuggestions(filtered);
+    }).finally(() => {
+      if (!cancelled) setSuggestionsLoading(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTranslation?.id]);
+
+  const dismissSuggestion = (suggestion: RelatedTranslationSuggestion) => {
+    if (!selectedTranslation) return;
+    const key = suggestionKey(suggestion);
+    const dismissedKey = `lexi:translations:dismissed:${selectedTranslation.id}`;
+    const dismissed = new Set(parseJsonArray(window.localStorage.getItem(dismissedKey)));
+    dismissed.add(key);
     window.localStorage.setItem(dismissedKey, JSON.stringify(Array.from(dismissed)));
-    setTranslationSuggestions((current) => current.filter((entry) => entry.id !== id));
+    setTranslationSuggestions((current) => current.filter((entry) => suggestionKey(entry) !== key));
   };
 
-  const applySuggestion = async (suggestion: TranslationSuggestion) => {
-    setAddingSuggestionId(suggestion.id);
+  const applySuggestion = async (suggestion: RelatedTranslationSuggestion) => {
+    if (!selectedTranslation) return;
+    const key = suggestionKey(suggestion);
+    setAddingSuggestionKey(key);
     try {
       await addTranslation({
         sourceWord: suggestion.sourceWord,
-        sourceLanguage: suggestion.sourceLanguage,
+        sourceLanguage: selectedTranslation.sourceLanguage,
         targetWord: suggestion.targetWord,
-        targetLanguage: suggestion.targetLanguage,
+        targetLanguage: selectedTranslation.targetLanguage,
         context: suggestion.context,
-        aiGenerated: false,
+        aiGenerated: true,
         groupIds: [],
       });
-      setTranslationSuggestions((current) => current.filter((entry) => entry.id !== suggestion.id));
+      setTranslationSuggestions((current) => current.filter((entry) => suggestionKey(entry) !== key));
     } finally {
-      setAddingSuggestionId(null);
+      setAddingSuggestionKey(null);
     }
   };
 
@@ -625,11 +661,42 @@ export default function Translations() {
               ) : (
                 <div className="flex h-full min-h-[220px] flex-col items-center justify-center text-center"><p className="section-title">Choose a translation</p><p className="subtle-caption mt-2 max-w-sm">Explore context, linked words, and language flow for each pair.</p></div>
               )}
-              <div className="ghost-divider" />
-              <div className="space-y-3">
-                <div className="flex items-center justify-between"><p className="font-medium">Translation Suggestions</p><Sparkles className="size-4 text-muted-foreground" /></div>
-                {translationSuggestions.length === 0 ? <div className="frost-panel-soft p-3 text-sm text-muted-foreground">No suggestions left for today.</div> : <div className="space-y-2">{translationSuggestions.map((suggestion) => <div key={suggestion.id} className="frost-panel-soft space-y-2 p-3"><div className="flex items-start justify-between gap-2"><div><p className="serif-display text-2xl leading-[0.95]">{suggestion.sourceWord}<span className="mx-2 inline-flex items-center align-middle text-muted-foreground/80"><ArrowRight className="size-4" /></span>{suggestion.targetWord}</p><p className="subtle-caption">{suggestion.sourceLanguage} {"->"} {suggestion.targetLanguage}</p></div><div className="flex gap-2"><Button type="button" size="sm" variant="outline" className="border-white/15 bg-white/6 hover:bg-white/14" disabled={addingSuggestionId === suggestion.id} onClick={() => void applySuggestion(suggestion)}>{addingSuggestionId === suggestion.id ? "Adding..." : "Add"}</Button><Button type="button" size="sm" variant="outline" className="border-white/15 bg-white/6 hover:bg-white/14" onClick={() => dismissSuggestion(suggestion.id)}>Dismiss</Button></div></div>{suggestion.context ? <p className="word-sub">{suggestion.context}</p> : null}</div>)}</div>}
-              </div>
+              {selectedTranslation ? (
+                <>
+                  <div className="ghost-divider" />
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between"><p className="font-medium">Translation Suggestions</p><Sparkles className="size-4 text-muted-foreground" /></div>
+                    {suggestionsLoading ? (
+                      <div className="frost-panel-soft p-3 text-sm text-muted-foreground">Finding related words...</div>
+                    ) : suggestionsError ? (
+                      <div className="frost-panel-soft p-3 text-sm text-muted-foreground">{suggestionsError}</div>
+                    ) : translationSuggestions.length === 0 ? (
+                      <div className="frost-panel-soft p-3 text-sm text-muted-foreground">No suggestions right now.</div>
+                    ) : (
+                      <div className="space-y-2">
+                        {translationSuggestions.map((suggestion) => {
+                          const key = suggestionKey(suggestion);
+                          return (
+                            <div key={key} className="frost-panel-soft space-y-2 p-3">
+                              <div className="flex items-start justify-between gap-2">
+                                <div>
+                                  <p className="serif-display text-2xl leading-[0.95]">{suggestion.sourceWord}<span className="mx-2 inline-flex items-center align-middle text-muted-foreground/80"><ArrowRight className="size-4" /></span>{suggestion.targetWord}</p>
+                                  <p className="subtle-caption">{selectedTranslation.sourceLanguage} {"->"} {selectedTranslation.targetLanguage}</p>
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button type="button" size="sm" variant="outline" className="border-white/15 bg-white/6 hover:bg-white/14" disabled={addingSuggestionKey === key} onClick={() => void applySuggestion(suggestion)}>{addingSuggestionKey === key ? "Adding..." : "Add"}</Button>
+                                  <Button type="button" size="sm" variant="outline" className="border-white/15 bg-white/6 hover:bg-white/14" onClick={() => dismissSuggestion(suggestion)}>Dismiss</Button>
+                                </div>
+                              </div>
+                              {suggestion.context ? <p className="word-sub">{suggestion.context}</p> : null}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : null}
             </div>
           </div>
           <div className="flex items-center justify-between border-t border-white/10 p-2"><span className="sync-pill"><Languages className="size-3" />{translations.length} translation pairs</span><span className="sync-pill"><Sparkles className="size-3" />AI assisted translation</span></div>

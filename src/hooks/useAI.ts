@@ -90,6 +90,12 @@ export function useAI() {
     [runCall],
   );
 
+  const suggestRelatedTranslations = useCallback(
+    async (sourceWord: string, sourceLanguage: string, targetLanguage: string, context: string | undefined, excludeWords: string[]) =>
+      runCall(() => aiService.suggestRelatedTranslations(sourceWord, sourceLanguage, targetLanguage, context, excludeWords), []),
+    [runCall],
+  );
+
   return {
     loading,
     error,
@@ -102,5 +108,6 @@ export function useAI() {
     suggestGroup,
     suggestGroupIcon,
     suggestDistractorDefinitions,
+    suggestRelatedTranslations,
   };
 }
