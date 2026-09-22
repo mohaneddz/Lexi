@@ -1092,6 +1092,125 @@ select.frost-select {
   background: linear-gradient(90deg, oklch(0.74 0.03 250), oklch(0.88 0.02 255));
 }
 
+/* Home reads as a single editorial column rather than the split working
+   panes every other page uses, so arriving somewhere new actually feels
+   like somewhere new while keeping the same type and surface language. */
+.home-stage {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 0.5rem 0.25rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2.75rem;
+}
+
+.home-masthead {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2rem;
+  flex-wrap: wrap;
+  padding-bottom: 1.15rem;
+  border-bottom: 1px solid oklch(1 0 0 / 0.12);
+}
+
+.home-greeting {
+  font-family: var(--font-serif);
+  font-size: clamp(2.1rem, 3.4vw, 3.1rem);
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+
+.home-pulse {
+  display: flex;
+  align-items: flex-end;
+  gap: 1.75rem;
+}
+
+.home-pulse-figure {
+  font-family: var(--font-serif);
+  font-size: 1.85rem;
+  line-height: 1;
+}
+
+.home-pulse-label {
+  margin-top: 0.3rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+/* A marker rail on the left, entries on the right: the reason for a
+   suggestion stays pinned beside the words it produced. */
+.home-thread {
+  display: grid;
+  grid-template-columns: 14rem minmax(0, 1fr);
+  gap: 2rem;
+}
+
+.home-rail {
+  position: sticky;
+  top: 0.25rem;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding-top: 0.3rem;
+}
+
+.home-rail-title {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  line-height: 1.1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.home-entries {
+  display: flex;
+  flex-direction: column;
+}
+
+.home-entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 1.25rem;
+  padding: 1rem 0;
+  border-top: 1px solid oklch(1 0 0 / 0.09);
+}
+
+.home-entry:first-child {
+  border-top: none;
+  padding-top: 0.35rem;
+}
+
+.home-entry-term {
+  font-family: var(--font-serif);
+  font-size: 1.9rem;
+  line-height: 1.05;
+  overflow-wrap: break-word;
+}
+
+.home-entry-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+@media (max-width: 900px) {
+  .home-thread {
+    grid-template-columns: 1fr;
+    gap: 0.9rem;
+  }
+
+  .home-rail {
+    position: static;
+  }
+}
+
 .mobile-overlay {
   position: fixed;
   inset: 0;

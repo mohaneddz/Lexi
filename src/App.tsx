@@ -6,6 +6,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { AppShell } from "@/layout/AppShell";
 import Definitions from "@/routes/Definitions";
 import Groups from "@/routes/Groups";
+import Home from "@/routes/Home";
 import QuickAction from "@/routes/QuickAction";
 import Review from "@/routes/Review";
 import Books from "@/routes/Books";
@@ -25,7 +26,8 @@ function AppRoutes() {
   return (
     <AppShell>
       <Routes>
-        <Route path="/" element={<Navigate to="/definitions" replace />} />
+        <Route path="/" element={<Navigate to="/home" replace />} />
+        <Route path="/home" element={<Home />} />
         <Route path="/groups" element={<Groups />} />
         <Route path="/translations" element={<Translations />} />
         <Route path="/definitions" element={<Definitions />} />

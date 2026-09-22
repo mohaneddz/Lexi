@@ -7,6 +7,7 @@ import {
   ChevronLeft,
   ChevronRight,
   FolderTree,
+  House,
   ImageOff,
   Languages,
   Menu,
@@ -30,6 +31,7 @@ type NavItem = {
 };
 
 const NAV_ITEMS: NavItem[] = [
+  { label: "Home", path: "/home", icon: House },
   { label: "Definitions", path: "/definitions", icon: BookText },
   { label: "Translations", path: "/translations", icon: Languages },
   { label: "Books", path: "/books", icon: BookMarked },
