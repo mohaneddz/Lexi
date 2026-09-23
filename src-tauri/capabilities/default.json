@@ -16,6 +16,7 @@
     "core:window:allow-toggle-maximize",
     "core:window:allow-internal-toggle-maximize",
     "core:window:allow-set-fullscreen",
+    "core:window:allow-set-size",
     "opener:default",
     "fs:default",
     "fs:allow-exists",

@@ -22,7 +22,7 @@ const TRAY_QUIT_ID: &str = "tray_quit";
 const MAIN_WINDOW_LABEL: &str = "main";
 const QUICK_WINDOW_LABEL: &str = "quick-capture";
 const QUICK_WINDOW_WIDTH: f64 = 560.0;
-const QUICK_WINDOW_HEIGHT: f64 = 540.0;
+const QUICK_WINDOW_HEIGHT: f64 = 700.0;
 
 const GLOBAL_DEFINE_SHORTCUT: &str = "CmdOrCtrl+Shift+;";
 const GLOBAL_TRANSLATE_SHORTCUT: &str = "CmdOrCtrl+Shift+'";

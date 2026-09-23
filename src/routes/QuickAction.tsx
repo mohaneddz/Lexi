@@ -1,8 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { LogicalSize, getCurrentWindow } from "@tauri-apps/api/window";
 import { X } from "lucide-react";
 
 import { CaptureForm, type CaptureMode } from "@/components/CaptureForm";
+
+/** The p-3 around the form, top and bottom. */
+const WINDOW_PADDING_PX = 24;
 
 interface QuickActionProps {
   /** Tab to start on before the first show event arrives. */
@@ -18,6 +21,19 @@ export default function QuickAction({ initialMode = "define" }: QuickActionProps
   const [session, setSession] = useState(0);
 
   const hide = useMemo(() => () => { void windowRef.hide(); }, [windowRef]);
+  const lastHeightRef = useRef(0);
+
+  // The window sizes itself to the form, so nothing is cut off and there's
+  // no empty band under it. It stays inside the screen; past that the form
+  // body scrolls as a last resort.
+  const fitToContent = useCallback((formHeight: number) => {
+    const height = Math.min(formHeight + WINDOW_PADDING_PX, Math.floor(window.screen.availHeight * 0.92));
+    if (Math.abs(height - lastHeightRef.current) < 2) return;
+    lastHeightRef.current = height;
+    void windowRef.setSize(new LogicalSize(window.innerWidth, height)).catch((error) => {
+      console.error("Failed to resize quick capture window", error);
+    });
+  }, [windowRef]);
 
   useEffect(() => {
     // The window is never destroyed, only hidden, so each show has to reset
@@ -53,6 +69,7 @@ export default function QuickAction({ initialMode = "define" }: QuickActionProps
         mode={mode}
         onModeChange={setMode}
         onClose={hide}
+        onNaturalHeightChange={fitToContent}
         dragRegion
         headerAction={(
           <button

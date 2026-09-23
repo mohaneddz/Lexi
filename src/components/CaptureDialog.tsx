@@ -44,6 +44,7 @@ export function CaptureDialog() {
           onModeChange={setMode}
           onClose={close}
           group={group}
+          className="max-h-[85vh]"
           headerAction={(
             <button
               type="button"

@@ -1,4 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+
+import { cn } from "@/lib/utils";
 import { BookOpen, Check, Loader2, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -43,9 +45,15 @@ interface CaptureFormProps {
   dragRegion?: boolean;
   /** Saves the new entry straight into this group, e.g. when capturing from the Groups page. */
   group?: { id: string; name: string };
+  className?: string;
+  /**
+   * Reports the height the whole form needs to show without scrolling, so
+   * the quick-capture window can resize itself to fit.
+   */
+  onNaturalHeightChange?: (height: number) => void;
 }
 
-export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragRegion, group }: CaptureFormProps) {
+export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragRegion, group, className, onNaturalHeightChange }: CaptureFormProps) {
   const { defineWord, translate, captureWithMeta, loading: aiLoading } = useAI();
   const { words, addWord } = useWords();
   const { translations, addTranslation } = useTranslations();
@@ -55,6 +63,10 @@ export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragReg
   // The Input wrapper is a plain function component, so it can't take a ref
   // on React 18 — reach the field through the container instead.
   const containerRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const bodyContentRef = useRef<HTMLDivElement>(null);
+  const footerRef = useRef<HTMLDivElement>(null);
 
   const [sourceText, setSourceText] = useState("");
   const [outputText, setOutputText] = useState("");
@@ -83,6 +95,28 @@ export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragReg
       setTargetLanguage(settings.defaultTranslationTargetLanguage || fallback);
     });
   }, []);
+
+  // The body scrolls, so its own height says nothing about how tall its
+  // contents are; the inner wrapper does, and grows as messages or the
+  // translation-only fields appear.
+  useLayoutEffect(() => {
+    if (!onNaturalHeightChange) return;
+    const measure = () => {
+      const header = headerRef.current?.offsetHeight ?? 0;
+      const footer = footerRef.current?.offsetHeight ?? 0;
+      const content = bodyContentRef.current?.offsetHeight ?? 0;
+      const body = bodyRef.current;
+      const bodyPadding = body ? parseFloat(getComputedStyle(body).paddingTop) + parseFloat(getComputedStyle(body).paddingBottom) : 0;
+      // The panel's 1px border on each side.
+      onNaturalHeightChange(Math.ceil(header + content + bodyPadding + footer + 2));
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    for (const element of [headerRef.current, bodyContentRef.current, footerRef.current]) {
+      if (element) observer.observe(element);
+    }
+    return () => observer.disconnect();
+  }, [onNaturalHeightChange]);
 
   const focusSource = () => {
     containerRef.current?.querySelector<HTMLInputElement>("input[data-capture-source]")?.focus();
@@ -259,8 +293,9 @@ export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragReg
   const assistDisabled = !sourceText.trim();
 
   return (
-    <div ref={containerRef} className="frost-panel flex h-full max-h-[80vh] flex-col overflow-hidden">
+    <div ref={containerRef} className={cn("frost-panel flex h-full flex-col overflow-hidden", className)}>
       <div
+        ref={headerRef}
         {...(dragRegion ? { "data-tauri-drag-region": true } : {})}
         className="flex items-start justify-between gap-3 border-b border-white/10 p-3"
       >
@@ -299,7 +334,8 @@ export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragReg
         {headerAction}
       </div>
 
-      <div className="custom-scrollbar min-h-0 flex-1 space-y-4 overflow-y-auto p-3">
+      <div ref={bodyRef} className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-3">
+        <div ref={bodyContentRef} className="space-y-4">
         <div className="space-y-2">
           <div className="text-sm font-medium">{mode === "define" ? "Word" : "Source Word"}</div>
           {mode === "define" ? (
@@ -503,9 +539,10 @@ export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragReg
         </div>
 
         {message ? <p className="subtle-caption">{message}</p> : null}
+        </div>
       </div>
 
-      <div className="mt-auto flex items-center justify-between border-t border-white/10 p-3">
+      <div ref={footerRef} className="mt-auto flex items-center justify-between border-t border-white/10 p-3">
         <Button
           type="button"
           variant="outline"
