@@ -193,6 +193,8 @@ export interface AppSettings {
   startMinimized: boolean;
   dailyReviewGoal: number;
   defaultRevisionMode: RevisionMode;
+  /** Whether answers are visible in the revision queue. */
+  showReviewQueueAnswers: boolean;
   groupTabsIconOnly: boolean;
   /** Keeps the built-in Others group: shown in tabs and Home, and used when auto-assign finds no match. */
   othersGroupEnabled: boolean;

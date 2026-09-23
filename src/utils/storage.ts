@@ -42,6 +42,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   startMinimized: false,
   dailyReviewGoal: 20,
   defaultRevisionMode: 'flashcard',
+  showReviewQueueAnswers: false,
   groupTabsIconOnly: false,
   othersGroupEnabled: true,
   homeSuggestionCount: 4,

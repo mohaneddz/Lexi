@@ -4,6 +4,8 @@ import {
   Check,
   CircleDot,
   Flame,
+  Eye,
+  EyeOff,
   Gamepad2,
   Loader2,
   MessageSquareText,
@@ -41,7 +43,7 @@ import {
   scheduleReview,
   type ReviewStatus,
 } from "@/utils/review";
-import { getSettings, readAiCacheEntry, writeAiCache } from "@/utils/storage";
+import { getSettings, readAiCacheEntry, updateSettings, writeAiCache } from "@/utils/storage";
 
 type KindFilter = "all" | "word" | "translation";
 type StatusFilter = "All" | ReviewStatus;
@@ -197,6 +199,7 @@ export default function Review() {
   const [isSaving, setIsSaving] = useState(false);
   const [mode, setMode] = useState<RevisionMode>("flashcard");
   const [dailyGoal, setDailyGoal] = useState(20);
+  const [showQueueAnswers, setShowQueueAnswers] = useState(false);
   const [now, setNow] = useState(() => Date.now());
 
   const [showAnswer, setShowAnswer] = useState(false);
@@ -217,6 +220,7 @@ export default function Review() {
     void getSettings().then((settings) => {
       setMode(settings.defaultRevisionMode);
       setDailyGoal(settings.dailyReviewGoal);
+      setShowQueueAnswers(settings.showReviewQueueAnswers);
     });
   }, []);
 
@@ -600,6 +604,9 @@ export default function Review() {
                 <DropdownMenuItem onSelect={clearAllFilters}>Clear filters</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            <Button type="button" variant="outline" size="icon" className="border-white/15 bg-white/6 hover:bg-white/14" aria-label={showQueueAnswers ? "Hide queue answers" : "Show queue answers"} title={showQueueAnswers ? "Hide queue answers" : "Show queue answers"} aria-pressed={showQueueAnswers} onClick={() => { const next = !showQueueAnswers; setShowQueueAnswers(next); void updateSettings({ showReviewQueueAnswers: next }); }}>
+              {showQueueAnswers ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
+            </Button>
           </div>
         </div>
 
@@ -638,10 +645,10 @@ export default function Review() {
                 >
                   <div className="min-w-0">
                     <p className="serif-display truncate text-[1.65rem] leading-[1.2]">{item.prompt}</p>
-                    <p className="word-sub mt-1.5 flex min-w-0 items-center gap-1.5 truncate text-sm">
+                    {showQueueAnswers ? <p className="word-sub mt-1.5 flex min-w-0 items-center gap-1.5 truncate text-sm">
                       {item.kind === "translation" ? <ArrowRight className="size-3 shrink-0" /> : null}
                       <span className="truncate">{item.answer}</span>
-                    </p>
+                    </p> : null}
                   </div>
 
                   <span className={cn("status-pill", statusClass(status))}>{status}</span>
