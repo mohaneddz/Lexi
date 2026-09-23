@@ -508,6 +508,12 @@ export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragReg
         {mode === "translate" ? (
           <div className="space-y-2">
             <div className="text-sm font-medium">Context (Optional)</div>
+            {aiLoading && !context.trim() ? (
+              <div className="frost-input form-textarea flex min-h-[5.75rem] flex-col gap-2.5 py-3" aria-busy>
+                <Skeleton className="h-4 w-full bg-white/8" />
+                <Skeleton className="h-4 w-2/3 bg-white/8" />
+              </div>
+            ) : (
             <textarea
               className="frost-input form-textarea"
               value={context}
@@ -521,6 +527,7 @@ export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragReg
               placeholder="Add context or example usage..."
               rows={3}
             />
+            )}
           </div>
         ) : null}
 
