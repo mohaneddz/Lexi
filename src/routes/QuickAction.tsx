@@ -3,19 +3,24 @@ import { LogicalSize, getCurrentWindow } from "@tauri-apps/api/window";
 import { X } from "lucide-react";
 
 import { CaptureForm, type CaptureMode } from "@/components/CaptureForm";
+import { SearchPanel } from "@/components/SearchPanel";
 
 /** The p-3 around the form, top and bottom. */
 const WINDOW_PADDING_PX = 24;
+/** Search results scroll, so the search view gets a fixed, roomy height instead of fitting its content. */
+const SEARCH_WINDOW_HEIGHT_PX = 640;
+
+type QuickMode = CaptureMode | "search";
 
 interface QuickActionProps {
   /** Tab to start on before the first show event arrives. */
-  initialMode?: CaptureMode;
+  initialMode?: QuickMode;
 }
 
 export default function QuickAction({ initialMode = "define" }: QuickActionProps) {
   const windowRef = useMemo(() => getCurrentWindow(), []);
 
-  const [mode, setMode] = useState<CaptureMode>(initialMode);
+  const [mode, setMode] = useState<QuickMode>(initialMode);
   // Bumped every time the window is shown so the form remounts clean rather
   // than holding whatever was typed the last time it was open.
   const [session, setSession] = useState(0);
@@ -46,7 +51,7 @@ export default function QuickAction({ initialMode = "define" }: QuickActionProps
     // The window is never destroyed, only hidden, so each show has to reset
     // the form and set the tab the shortcut asked for.
     const unlisten = windowRef.listen<string>("lexi:quick-open", (event) => {
-      if (event.payload === "define" || event.payload === "translate") {
+      if (event.payload === "define" || event.payload === "translate" || event.payload === "search") {
         setMode(event.payload);
       }
       setSession((current) => current + 1);
@@ -56,6 +61,10 @@ export default function QuickAction({ initialMode = "define" }: QuickActionProps
       void unlisten.then((dispose) => dispose());
     };
   }, [windowRef]);
+
+  useEffect(() => {
+    if (mode === "search") fitToContent(SEARCH_WINDOW_HEIGHT_PX - WINDOW_PADDING_PX);
+  }, [fitToContent, mode, session]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -69,26 +78,32 @@ export default function QuickAction({ initialMode = "define" }: QuickActionProps
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [hide]);
 
+  const closeButton = (
+    <button
+      type="button"
+      onClick={hide}
+      className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition hover:bg-white/10 hover:text-foreground"
+      aria-label="Close"
+    >
+      <X className="size-4" />
+    </button>
+  );
+
   return (
     <div className="h-full w-full p-3">
-      <CaptureForm
-        key={session}
-        mode={mode}
-        onModeChange={setMode}
-        onClose={hide}
-        onNaturalHeightChange={fitToContent}
-        dragRegion
-        headerAction={(
-          <button
-            type="button"
-            onClick={hide}
-            className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition hover:bg-white/10 hover:text-foreground"
-            aria-label="Close"
-          >
-            <X className="size-4" />
-          </button>
-        )}
-      />
+      {mode === "search" ? (
+        <SearchPanel key={session} onClose={hide} dragRegion headerAction={closeButton} />
+      ) : (
+        <CaptureForm
+          key={session}
+          mode={mode}
+          onModeChange={setMode}
+          onClose={hide}
+          onNaturalHeightChange={fitToContent}
+          dragRegion
+          headerAction={closeButton}
+        />
+      )}
     </div>
   );
 }

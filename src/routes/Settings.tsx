@@ -62,13 +62,14 @@ const SUGGESTION_COUNT_FIELDS: Array<{ key: "homeSuggestionCount" | "definitionS
 const PRIMARY_MODIFIER_div = navigator.platform.toLowerCase().includes("mac") ? "Cmd" : "Ctrl";
 
 const SHORTCUTS = [
-  { keys: `${PRIMARY_MODIFIER_div}+K`, action: "Focus page search" },
+  { keys: `${PRIMARY_MODIFIER_div}+K`, action: "Search all definitions and translations" },
   { keys: `${PRIMARY_MODIFIER_div}+N`, action: "Capture item on active page" },
   { keys: `${PRIMARY_MODIFIER_div}+Shift+T`, action: "Open translations and add pair" },
   { keys: `${PRIMARY_MODIFIER_div}+Shift+R`, action: "Jump to review workspace" },
   { keys: "Ctrl+Shift+<", action: "Toggle tray hide/show" },
   { keys: `${PRIMARY_MODIFIER_div}+Shift+;`, action: "Global quick define popup toggle" },
   { keys: `${PRIMARY_MODIFIER_div}+Shift+'`, action: "Global quick translate popup toggle" },
+  { keys: `${PRIMARY_MODIFIER_div}+Shift+/`, action: "Global quick search popup toggle" },
   { keys: "Alt+1..9", action: "Navigate top tabs" },
   { keys: "J / K", action: "Previous / next item in lists" },
   { keys: "Enter (Capture)", action: "Run AI define/translate from source term field" },

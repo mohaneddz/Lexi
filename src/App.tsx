@@ -20,7 +20,7 @@ function AppRoutes() {
   const quickParam = new URLSearchParams(location.search).get("quick");
 
   if (quickParam !== null) {
-    return <QuickAction initialMode={quickParam === "translate" ? "translate" : "define"} />;
+    return <QuickAction initialMode={quickParam === "translate" || quickParam === "search" ? quickParam : "define"} />;
   }
 
   return (

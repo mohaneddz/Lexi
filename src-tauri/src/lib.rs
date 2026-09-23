@@ -26,6 +26,7 @@ const QUICK_WINDOW_HEIGHT: f64 = 700.0;
 
 const GLOBAL_DEFINE_SHORTCUT: &str = "CmdOrCtrl+Shift+;";
 const GLOBAL_TRANSLATE_SHORTCUT: &str = "CmdOrCtrl+Shift+'";
+const GLOBAL_SEARCH_SHORTCUT: &str = "CmdOrCtrl+Shift+/";
 const GLOBAL_TRAY_TOGGLE_SHORTCUT: &str = "CmdOrCtrl+Shift+,";
 const WINDOW_STATE_FILE_NAME: &str = "window-state.json";
 
@@ -298,6 +299,10 @@ fn toggle_quick_translate_window<R: Runtime>(app: &AppHandle<R>) -> tauri::Resul
     toggle_quick_window(app, "translate")
 }
 
+fn toggle_quick_search_window<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
+    toggle_quick_window(app, "search")
+}
+
 fn build_tray<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
     let show_item = MenuItem::with_id(app, TRAY_SHOW_ID, "Show Lexi", true, None::<&str>)?;
     let close_webview_item = MenuItem::with_id(
@@ -426,16 +431,20 @@ pub fn run() {
     let translate_shortcut = GLOBAL_TRANSLATE_SHORTCUT
         .parse::<Shortcut>()
         .expect("invalid translate shortcut");
+    let search_shortcut = GLOBAL_SEARCH_SHORTCUT
+        .parse::<Shortcut>()
+        .expect("invalid search shortcut");
     let tray_toggle_shortcut = GLOBAL_TRAY_TOGGLE_SHORTCUT
         .parse::<Shortcut>()
         .expect("invalid tray toggle shortcut");
 
     let define_shortcut_id = define_shortcut.id();
     let translate_shortcut_id = translate_shortcut.id();
+    let search_shortcut_id = search_shortcut.id();
     let tray_toggle_shortcut_id = tray_toggle_shortcut.id();
 
     let global_shortcut_plugin = tauri_plugin_global_shortcut::Builder::new()
-        .with_shortcuts([define_shortcut, translate_shortcut, tray_toggle_shortcut])
+        .with_shortcuts([define_shortcut, translate_shortcut, search_shortcut, tray_toggle_shortcut])
         .expect("failed to register global shortcuts")
         .with_handler(move |app, shortcut, event| {
             if event.state == ShortcutState::Released {
@@ -449,6 +458,11 @@ pub fn run() {
 
             if shortcut.id() == translate_shortcut_id {
                 let _ = toggle_quick_translate_window(app);
+                return;
+            }
+
+            if shortcut.id() == search_shortcut_id {
+                let _ = toggle_quick_search_window(app);
                 return;
             }
 
