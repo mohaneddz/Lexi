@@ -92,7 +92,7 @@ export function useAI() {
 
   const captureWithMeta = useCallback(
     async (request: aiService.CaptureMetaRequest) =>
-      runCall(() => aiService.captureWithMeta(request), { output: "", tags: [], groupId: null }),
+      runCall(() => aiService.captureWithMeta(request), { output: "", context: "", tags: [], groupId: null }),
     [runCall],
   );
 

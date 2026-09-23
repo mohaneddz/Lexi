@@ -138,6 +138,7 @@ export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragReg
       text: trimmed,
       language: mode === "define" ? definitionLanguage || defaultLanguage : sourceLanguage,
       targetLanguage: mode === "define" ? undefined : targetLanguage,
+      context: mode === "translate" ? context : undefined,
       groups: groups.filter((entry) => !entry.isOthers).map(({ id, name, description }) => ({ id, name, description })),
       knownTags: tagVocabulary([...words, ...translations]),
     });
@@ -147,6 +148,8 @@ export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragReg
       setAiGenerated(true);
       setErrors((current) => ({ ...current, outputText: undefined }));
       if (!tagsTouched && withMeta.data.tags.length > 0) setTagsText(withMeta.data.tags.join(", "));
+      // Only fills context you left empty, never replaces what you wrote.
+      if (mode === "translate" && withMeta.data.context && !context.trim()) setContext(withMeta.data.context);
       if (!groupTouched) {
         const fallbackId = groups.find((entry) => entry.isOthers)?.id;
         setGroupId(withMeta.data.groupId ?? fallbackId ?? NO_GROUP);

@@ -68,6 +68,7 @@ const RELATED_WORDS_SCHEMA = z.object({
 
 const CAPTURE_META_SCHEMA = z.object({
   output: z.string(),
+  context: z.string(),
   tags: z.array(z.string()),
   group: z.string(),
 });
@@ -644,21 +645,24 @@ export type CaptureMetaRequest = {
   language: string;
   /** Only set when translating. */
   targetLanguage?: string;
+  /** Context the user already wrote, used to pick the right sense when translating. */
+  context?: string;
   groups: Array<{ id: string; name: string; description?: string }>;
   knownTags: string[];
 };
 
-export type CaptureMeta = { output: string; tags: string[]; groupId: string | null };
+/** `context` is a short usage sentence, only filled when translating. */
+export type CaptureMeta = { output: string; context: string; tags: string[]; groupId: string | null };
 
 /**
  * Defines or translates a captured entry and, in the same request, picks its
  * tags and group, so filling the capture form costs one call instead of three.
  */
 export async function captureWithMeta(request: CaptureMetaRequest): Promise<AIResponse<CaptureMeta>> {
-  const { text, language, targetLanguage, groups, knownTags } = request;
+  const { text, language, targetLanguage, context, groups, knownTags } = request;
   const trimmed = text.trim();
   if (!trimmed) {
-    return { success: false, data: { output: "", tags: [], groupId: null }, error: "Text is required." };
+    return { success: false, data: { output: "", context: "", tags: [], groupId: null }, error: "Text is required." };
   }
 
   const labelToId = new Map(groups.map((group, index) => [`G${index + 1}`, group.id]));
@@ -677,6 +681,12 @@ export async function captureWithMeta(request: CaptureMetaRequest): Promise<AIRe
           ? `Translate this from ${language} to ${targetLanguage}, preserving tone and intent, and put it in output: ${trimmed}`
           : `Write a clear, learner-friendly ${language} definition of "${trimmed}" in one or two sentences, and put it in output.`,
         "",
+        targetLanguage && context?.trim()
+          ? `The user gave this context, so translate the sense it implies: ${context.trim()}`
+          : "",
+        targetLanguage
+          ? `In context, write one short, natural ${language} sentence (under 15 words) showing how "${trimmed}" is typically used.`
+          : "Leave context empty.",
         "Also give 2 to 4 short lowercase tags (topic, register or part of speech, no punctuation).",
         describeTagVocabulary(knownTags),
         "",
@@ -689,13 +699,14 @@ export async function captureWithMeta(request: CaptureMetaRequest): Promise<AIRe
 
     const output = object.output.trim();
     if (!output) {
-      return { success: false, data: { output: "", tags: [], groupId: null }, error: "AI returned an empty result." };
+      return { success: false, data: { output: "", context: "", tags: [], groupId: null }, error: "AI returned an empty result." };
     }
 
     return {
       success: true,
       data: {
         output,
+        context: targetLanguage ? object.context.trim() : "",
         tags: cleanTags(object.tags, 4),
         groupId: labelToId.get(object.group.trim().toUpperCase()) ?? null,
       },
@@ -703,7 +714,7 @@ export async function captureWithMeta(request: CaptureMetaRequest): Promise<AIRe
   } catch (error) {
     return {
       success: false,
-      data: { output: "", tags: [], groupId: null },
+      data: { output: "", context: "", tags: [], groupId: null },
       error: toErrorMessage(targetLanguage ? "Translation failed" : "Definition failed", error),
     };
   }
