@@ -893,7 +893,7 @@ export default function Translations() {
               ) : null}
             </div>
           </div>
-          <div className="flex items-center justify-between border-t border-white/10 p-2"><span className="sync-pill"><Languages className="size-3" />{translations.length} translation pairs</span><span className="sync-pill"><Sparkles className="size-3" />AI assisted translation</span></div>
+          <div className="flex items-center justify-between border-t border-white/10 p-2"><span className="sync-pill"><Languages className="size-3" />{translations.length} translation pairs</span></div>
         </section>
         ) : null}
       </div>

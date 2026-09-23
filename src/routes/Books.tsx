@@ -675,7 +675,6 @@ export default function Books() {
 
         <div className="flex items-center justify-between border-t border-white/10 p-2">
           <span className="sync-pill"><Languages className="size-3" />{searchResults.length} matches</span>
-          <span className="sync-pill"><CircleDot className="size-3" />Offline lookup</span>
         </div>
       </section>
     );

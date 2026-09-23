@@ -490,8 +490,7 @@ export default function Definitions() {
               </div></> : null}
             </div>
           </div>
-          <div className="flex items-center justify-between border-t border-white/10 p-2">
-            <span className="sync-pill"><Sparkles className="size-3" />Dynamic examples enabled</span>
+          <div className="flex items-center justify-end border-t border-white/10 p-2">
             <span className="shortcut-hint subtle-caption inline-flex items-center gap-1"><kbd className="key-cap">J</kbd>/<kbd className="key-cap">K</kbd> move through entries</span>
           </div>
         </section>
