@@ -146,7 +146,7 @@ export function BookDetailPanel({
         <section className="space-y-3">
           <p className="font-medium">About this book</p>
           {paragraphs.map((paragraph) => (
-            <p key={paragraph.slice(0, 40)} className="detail-text text-[1.02rem] leading-relaxed">{paragraph}</p>
+            <p key={paragraph.slice(0, 40)} className="word-sub text-[0.92rem] leading-relaxed">{paragraph}</p>
           ))}
         </section>
 
