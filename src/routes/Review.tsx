@@ -1,5 +1,6 @@
-import { type ComponentType, useEffect, useMemo, useState } from "react";
+import { type ComponentType, useCallback, useEffect, useMemo, useState } from "react";
 import {
+  ArrowRight,
   Check,
   CircleDot,
   Flame,
@@ -12,11 +13,54 @@ import {
 import { ChoicesSkeleton, ListRowsSkeleton } from "@/components/lexi/Skeletons";
 import { Button } from "@/components/ui/button";
 import { useAI } from "@/hooks/useAI";
+import { useTranslations } from "@/hooks/useTranslations";
 import { useWords } from "@/hooks/useWords";
 import { cn } from "@/lib/utils";
-import { buildExample, getReviewStatus, setReviewStatus, type ReviewStatus } from "@/utils/review";
+import type { ReviewState, RevisionMode, Translation, Word } from "@/types";
+import {
+  buildExample,
+  describeDueIn,
+  getReviewStatus,
+  isDue,
+  nextIntervalDays,
+  reviewStateOf,
+  scheduleReview,
+  type ReviewStatus,
+} from "@/utils/review";
 import { getSettings, readAiCacheEntry, writeAiCache } from "@/utils/storage";
-import type { RevisionMode } from "@/types";
+
+type KindFilter = "all" | "word" | "translation";
+
+/** A word or translation pair, seen the same way by every review mode. */
+type ReviewItem = {
+  kind: "word" | "translation";
+  id: string;
+  /** What's shown: the word, or the source side of a pair. */
+  prompt: string;
+  /** What has to be recalled: the definition, or the translation. */
+  answer: string;
+  promptLanguage: string;
+  answerLanguage: string;
+  /** An example sentence (words) or the saved context (translations), shown with the answer. */
+  extra: string;
+  groupIds: string[];
+  dateAdded: number;
+  review: ReviewState;
+};
+
+type DailyProgress = { attempts: number; correct: number };
+
+const KIND_FILTERS: Array<{ value: KindFilter; label: string }> = [
+  { value: "all", label: "All" },
+  { value: "word", label: "Definitions" },
+  { value: "translation", label: "Translations" },
+];
+
+const MODES: Array<{ value: RevisionMode; label: string; icon: ComponentType<{ className?: string }> }> = [
+  { value: "flashcard", label: "Flashcards", icon: Gamepad2 },
+  { value: "multiple-choice", label: "Multiple Choice", icon: Check },
+  { value: "typing", label: "Typing", icon: Keyboard },
+];
 
 function statusClass(status: ReviewStatus): string {
   switch (status) {
@@ -47,169 +91,230 @@ function normalizeAnswer(value: string): string {
   return value.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
-const MODES: Array<{ value: RevisionMode; div: string; icon: ComponentType<{ className?: string }> }> = [
-  { value: "flashcard", div: "Flashcards", icon: Gamepad2 },
-  { value: "multiple-choice", div: "Multiple Choice", icon: Check },
-  { value: "typing", div: "Typing", icon: Keyboard },
-];
+function wordToItem(word: Word): ReviewItem {
+  return {
+    kind: "word",
+    id: word.id,
+    prompt: word.word,
+    answer: word.definition,
+    promptLanguage: word.language,
+    answerLanguage: word.language,
+    extra: buildExample(word),
+    groupIds: word.groupIds ?? [],
+    dateAdded: word.dateAdded,
+    review: reviewStateOf(word),
+  };
+}
+
+function translationToItem(translation: Translation): ReviewItem {
+  return {
+    kind: "translation",
+    id: translation.id,
+    prompt: translation.sourceWord,
+    answer: translation.targetWord,
+    promptLanguage: translation.sourceLanguage,
+    answerLanguage: translation.targetLanguage,
+    extra: translation.context?.trim() || translation.sourceExamples?.[0] || "",
+    groupIds: translation.groupIds ?? [],
+    dateAdded: translation.dateAdded,
+    review: reviewStateOf(translation),
+  };
+}
+
+function shuffle<T>(items: T[]): T[] {
+  const next = [...items];
+  for (let i = next.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [next[i], next[j]] = [next[j], next[i]];
+  }
+  return next;
+}
+
+const PROGRESS_KEY_PREFIX = "lexi:review:progress";
+
+function todayKey(): string {
+  const now = new Date();
+  return `${PROGRESS_KEY_PREFIX}:${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+}
+
+function readDailyProgress(): DailyProgress {
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(todayKey()) ?? "null") as Partial<DailyProgress> | null;
+    return { attempts: parsed?.attempts ?? 0, correct: parsed?.correct ?? 0 };
+  } catch {
+    return { attempts: 0, correct: 0 };
+  }
+}
+
+function writeDailyProgress(progress: DailyProgress): void {
+  try {
+    window.localStorage.setItem(todayKey(), JSON.stringify(progress));
+  } catch {
+    // A full or blocked store only means today's count resets on reload.
+  }
+}
 
 export default function Review() {
-  const { words, updateWord, loading } = useWords();
+  const { words, updateWord, loading: wordsLoading } = useWords();
+  const { translations, updateTranslation, loading: translationsLoading } = useTranslations();
   const { suggestDistractorDefinitions } = useAI();
 
   const [query, setQuery] = useState("");
+  const [kindFilter, setKindFilter] = useState<KindFilter>("all");
   const [groupFilterId, setGroupFilterId] = useState("none");
-  const [selectedWordId, setSelectedWordId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [mode, setMode] = useState<RevisionMode>("flashcard");
   const [dailyGoal, setDailyGoal] = useState(20);
+  const [now, setNow] = useState(() => Date.now());
 
   const [showAnswer, setShowAnswer] = useState(false);
   const [typedAnswer, setTypedAnswer] = useState("");
-  const [attempts, setAttempts] = useState(0);
-  const [correct, setCorrect] = useState(0);
+  const [progress, setProgress] = useState<DailyProgress>(() => readDailyProgress());
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
   const [feedback, setFeedback] = useState<"idle" | "correct" | "wrong">("idle");
-  const [mcOptionsByWordId, setMcOptionsByWordId] = useState<Record<string, string[]>>({});
+  const [distractorsById, setDistractorsById] = useState<Record<string, string[]>>({});
   const [mcLoading, setMcLoading] = useState(false);
 
   const [lightningMode, setLightningMode] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(60);
 
+  const loading = wordsLoading || translationsLoading;
+
   useEffect(() => {
-    getSettings().then((settings) => {
+    void getSettings().then((settings) => {
       setMode(settings.defaultRevisionMode);
       setDailyGoal(settings.dailyReviewGoal);
     });
   }, []);
 
-  const queue = useMemo(() => {
+  // Keeps "due" honest while the page stays open, e.g. across midnight.
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const allItems = useMemo(
+    () => [...words.map(wordToItem), ...translations.map(translationToItem)],
+    [translations, words],
+  );
+
+  const filteredItems = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
+    return allItems
+      .filter((item) => kindFilter === "all" || item.kind === kindFilter)
+      .filter((item) => groupFilterId === "none" || item.groupIds.includes(groupFilterId))
+      .filter((item) => !normalizedQuery
+        || item.prompt.toLowerCase().includes(normalizedQuery)
+        || item.answer.toLowerCase().includes(normalizedQuery));
+  }, [allItems, groupFilterId, kindFilter, query]);
 
-    return words
-      .filter((word) => getReviewStatus(word) !== "Mastered")
-      .filter((word) => groupFilterId === "none" || (word.groupIds || []).includes(groupFilterId))
-      .filter((word) => {
-        if (!normalizedQuery) {
-          return true;
-        }
+  // Reviews that are due come first, most overdue at the top; entries never
+  // reviewed follow, oldest first.
+  const queue = useMemo(
+    () => filteredItems
+      .filter((item) => isDue(item, now))
+      .sort((a, b) => {
+        const aNew = a.review.stage === 0 ? 1 : 0;
+        const bNew = b.review.stage === 0 ? 1 : 0;
+        return aNew - bNew || a.review.dueAt - b.review.dueAt || a.dateAdded - b.dateAdded;
+      }),
+    [filteredItems, now],
+  );
 
-        return (
-          word.word.toLowerCase().includes(normalizedQuery) ||
-          word.definition.toLowerCase().includes(normalizedQuery)
-        );
-      })
-      .sort((a, b) => a.dateAdded - b.dateAdded);
-  }, [groupFilterId, query, words]);
+  const nextUpcoming = useMemo(() => {
+    const upcoming = filteredItems.filter((item) => !isDue(item, now)).map((item) => item.review.dueAt);
+    return upcoming.length > 0 ? Math.min(...upcoming) : null;
+  }, [filteredItems, now]);
 
   useEffect(() => {
     if (queue.length === 0) {
-      setSelectedWordId(null);
+      setSelectedId(null);
       return;
     }
 
-    if (!selectedWordId || !queue.some((word) => word.id === selectedWordId)) {
-      setSelectedWordId(queue[0].id);
+    if (!selectedId || !queue.some((item) => item.id === selectedId)) {
+      setSelectedId(queue[0].id);
       setShowAnswer(false);
       setTypedAnswer("");
-      setFeedback("idle");
     }
-  }, [queue, selectedWordId]);
+  }, [queue, selectedId]);
 
-  const selectedWord = useMemo(() => {
-    if (!selectedWordId) {
-      return null;
-    }
+  const selected = useMemo(
+    () => (selectedId ? queue.find((item) => item.id === selectedId) ?? null : null),
+    [queue, selectedId],
+  );
 
-    return queue.find((word) => word.id === selectedWordId) ?? null;
-  }, [queue, selectedWordId]);
-
-  const options = useMemo(() => {
-    if (!selectedWord) {
-      return [] as string[];
-    }
-
-    const distractors = mcOptionsByWordId[selectedWord.id] ?? [];
-    const values = [selectedWord.definition, ...distractors];
-    return values.sort(() => Math.random() - 0.5);
-  }, [mcOptionsByWordId, selectedWord]);
-
+  /**
+   * Wrong answers for multiple choice. Translations borrow other saved
+   * translations into the same language, which needs no AI. Words get
+   * AI-written near-misses, saved per word, and fall back to other saved
+   * definitions when the AI isn't available.
+   */
   useEffect(() => {
-    if (!selectedWord || mode !== "multiple-choice") {
+    if (!selected || mode !== "multiple-choice" || distractorsById[selected.id]) {
       return;
     }
 
-    if ((mcOptionsByWordId[selectedWord.id] || []).length === 3) {
+    const otherAnswers = shuffle(Array.from(new Set(
+      allItems
+        .filter((item) => item.kind === selected.kind && item.id !== selected.id && item.answerLanguage === selected.answerLanguage)
+        .map((item) => item.answer)
+        .filter((answer) => normalizeAnswer(answer) !== normalizeAnswer(selected.answer)),
+    ))).slice(0, 3);
+
+    if (selected.kind === "translation") {
+      setDistractorsById((prev) => ({ ...prev, [selected.id]: otherAnswers }));
       return;
     }
 
     let cancelled = false;
-
-    const createFallbackDistractors = () => {
-      const base = selectedWord.definition.trim();
-      return [
-        `A minor variation of "${selectedWord.word}" used only in formal legal writing.`,
-        `A broader concept often confused with "${selectedWord.word}", but with weaker intensity.`,
-        `A contextual meaning of "${selectedWord.word}" tied only to historical documents.`,
-      ].filter((item) => item.toLowerCase() !== base.toLowerCase()).slice(0, 3);
-    };
-
     const generate = async () => {
       setMcLoading(true);
       try {
-        // Distractors are saved per word, and only reused while the
-        // definition they were written against hasn't changed.
-        const cached = await readAiCacheEntry<{ definition: string; distractors: string[] }>("distractors", selectedWord.id);
-        if (cancelled) {
-          return;
-        }
-        if (cached?.definition === selectedWord.definition && cached.distractors.length === 3) {
-          setMcOptionsByWordId((prev) => ({ ...prev, [selectedWord.id]: cached.distractors }));
+        // Only reused while the definition they were written against is unchanged.
+        const cached = await readAiCacheEntry<{ definition: string; distractors: string[] }>("distractors", selected.id);
+        if (cancelled) return;
+        if (cached?.definition === selected.answer && cached.distractors.length === 3) {
+          setDistractorsById((prev) => ({ ...prev, [selected.id]: cached.distractors }));
           return;
         }
 
-        const result = await suggestDistractorDefinitions(
-          selectedWord.word,
-          selectedWord.definition,
-          selectedWord.language,
-        );
-
-        if (cancelled) {
-          return;
-        }
+        const result = await suggestDistractorDefinitions(selected.prompt, selected.answer, selected.answerLanguage);
+        if (cancelled) return;
 
         const aiWorked = result.success && result.data.length === 3;
-        const distractors = aiWorked ? result.data : createFallbackDistractors();
-        // The canned fallback isn't saved, so the AI gets another go next time.
         if (aiWorked) {
-          void writeAiCache("distractors", selectedWord.id, { definition: selectedWord.definition, distractors });
+          void writeAiCache("distractors", selected.id, { definition: selected.answer, distractors: result.data });
         }
-
-        setMcOptionsByWordId((prev) => ({
-          ...prev,
-          [selectedWord.id]: distractors,
-        }));
+        setDistractorsById((prev) => ({ ...prev, [selected.id]: aiWorked ? result.data : otherAnswers }));
       } finally {
-        if (!cancelled) {
-          setMcLoading(false);
-        }
+        if (!cancelled) setMcLoading(false);
       }
     };
 
     void generate();
-
     return () => {
       cancelled = true;
     };
-  }, [mcOptionsByWordId, mode, selectedWord, suggestDistractorDefinitions]);
+  }, [allItems, distractorsById, mode, selected, suggestDistractorDefinitions]);
 
-  const totalMastered = useMemo(
-    () => words.filter((word) => getReviewStatus(word) === "Mastered").length,
-    [words],
+  const options = useMemo(() => {
+    if (!selected) return [] as string[];
+    const distractors = distractorsById[selected.id];
+    if (!distractors) return [] as string[];
+    return shuffle([selected.answer, ...distractors]);
+    // Shuffled once per entry, not on every re-render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected?.id, selected?.answer, distractorsById]);
+
+  const mastered = useMemo(
+    () => allItems.filter((item) => getReviewStatus(item) === "Mastered").length,
+    [allItems],
   );
 
-  const goalProgress = dailyGoal <= 0 ? 0 : Math.min(100, Math.round((attempts / dailyGoal) * 100));
+  const goalProgress = dailyGoal <= 0 ? 0 : Math.min(100, Math.round((progress.attempts / dailyGoal) * 100));
 
   useEffect(() => {
     if (!lightningMode) {
@@ -240,94 +345,75 @@ export default function Review() {
     return () => window.removeEventListener("lexi:group-filter-changed", onGroupFilterChanged);
   }, []);
 
-  const moveToNextWord = () => {
-    if (!selectedWord || queue.length === 0) {
-      return;
-    }
-
-    const currentIndex = queue.findIndex((word) => word.id === selectedWord.id);
-    const nextIndex = currentIndex >= queue.length - 1 ? 0 : currentIndex + 1;
-    setSelectedWordId(queue[nextIndex].id);
+  const selectItem = useCallback((id: string | null) => {
+    setSelectedId(id);
     setShowAnswer(false);
     setTypedAnswer("");
-    setFeedback("idle");
-  };
+  }, []);
 
-  const markStatus = async (status: ReviewStatus) => {
-    if (!selectedWord) {
-      return;
+  const moveToNext = useCallback(() => {
+    if (!selected || queue.length === 0) return;
+    const currentIndex = queue.findIndex((item) => item.id === selected.id);
+    const next = queue[(currentIndex + 1) % queue.length];
+    selectItem(next && next.id !== selected.id ? next.id : null);
+  }, [queue, selectItem, selected]);
+
+  /** Grades the current entry, schedules its next review, and moves on. */
+  const recordResult = useCallback(async (isCorrect: boolean) => {
+    if (!selected) return;
+
+    setProgress((current) => {
+      const next = { attempts: current.attempts + 1, correct: current.correct + (isCorrect ? 1 : 0) };
+      writeDailyProgress(next);
+      return next;
+    });
+    setFeedback(isCorrect ? "correct" : "wrong");
+    if (isCorrect) {
+      setStreak((prev) => {
+        const next = prev + 1;
+        setBestStreak((best) => Math.max(best, next));
+        return next;
+      });
+    } else {
+      setStreak(0);
     }
+
+    // Answered entries stop being due, so the next one is picked before
+    // this one drops out of the queue.
+    const answered = selected;
+    moveToNext();
 
     setIsSaving(true);
     try {
-      await updateWord(selectedWord.id, {
-        tags: setReviewStatus(selectedWord.tags, status),
-      });
+      const review = scheduleReview(answered, isCorrect);
+      if (answered.kind === "word") await updateWord(answered.id, { review });
+      else await updateTranslation(answered.id, { review });
     } finally {
       setIsSaving(false);
     }
+  }, [moveToNext, selected, updateTranslation, updateWord]);
+
+  const handleChoice = (choice: string) => {
+    if (!selected) return;
+    void recordResult(choice === selected.answer);
   };
 
-  const recordResult = async (isCorrect: boolean) => {
-    setAttempts((prev) => prev + 1);
-
-    if (isCorrect) {
-      setCorrect((prev) => prev + 1);
-      setStreak((prev) => {
-        const next = prev + 1;
-        setBestStreak((current) => Math.max(current, next));
-        return next;
-      });
-      setFeedback("correct");
-
-      if (selectedWord) {
-        const nextStatus: ReviewStatus = getReviewStatus(selectedWord) === "Learning" ? "Mastered" : "Learning";
-        await markStatus(nextStatus);
-      }
-    } else {
-      setStreak(0);
-      setFeedback("wrong");
-
-      if (selectedWord) {
-        await markStatus("New");
-      }
-    }
-  };
-
-  const handleFlashcardKnown = async (known: boolean) => {
-    await recordResult(known);
-    setTimeout(() => moveToNextWord(), 220);
-  };
-
-  const handleChoice = async (choice: string) => {
-    if (!selectedWord) {
-      return;
-    }
-
-    const isCorrect = choice === selectedWord.definition;
-    await recordResult(isCorrect);
-    setTimeout(() => moveToNextWord(), 220);
-  };
-
-  const handleTypingSubmit = async () => {
-    if (!selectedWord) {
-      return;
-    }
-
-    const isCorrect = normalizeAnswer(typedAnswer) === normalizeAnswer(selectedWord.word);
-    await recordResult(isCorrect);
-    setTimeout(() => moveToNextWord(), 260);
+  const handleTypingSubmit = () => {
+    if (!selected) return;
+    // Words show the definition and ask for the word; pairs show the source and ask for the translation.
+    const expected = selected.kind === "word" ? selected.prompt : selected.answer;
+    void recordResult(normalizeAnswer(typedAnswer) === normalizeAnswer(expected));
   };
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (!selectedWord || queue.length === 0) {
+      if (!selected || queue.length === 0) {
         return;
       }
 
       if (event.key.toLowerCase() === "n" && !isTypingTarget(event.target)) {
         event.preventDefault();
-        moveToNextWord();
+        moveToNext();
         return;
       }
 
@@ -340,10 +426,10 @@ export default function Review() {
           }
         } else if (event.key === "1") {
           event.preventDefault();
-          void handleFlashcardKnown(false);
+          void recordResult(false);
         } else if (event.key === "2" || event.code === "Space") {
           event.preventDefault();
-          void handleFlashcardKnown(true);
+          void recordResult(true);
         }
       }
 
@@ -351,19 +437,23 @@ export default function Review() {
         const idx = Number(event.key);
         if (!Number.isNaN(idx) && idx >= 1 && idx <= options.length) {
           event.preventDefault();
-          void handleChoice(options[idx - 1]);
+          handleChoice(options[idx - 1]);
         }
       }
 
       if (mode === "typing" && event.key === "Enter" && isTypingTarget(event.target)) {
         event.preventDefault();
-        void handleTypingSubmit();
+        handleTypingSubmit();
       }
     };
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [isSaving, mode, options, queue.length, selectedWord, showAnswer, typedAnswer]);
+  });
+
+  const promptLabel = selected?.kind === "translation"
+    ? `${selected.promptLanguage} to ${selected.answerLanguage}`
+    : selected?.promptLanguage;
 
   return (
     <div className="grid min-h-full grid-cols-1 gap-3 xl:h-full xl:grid-cols-[1.04fr_1fr]">
@@ -378,22 +468,39 @@ export default function Review() {
             <div className="bar-fill" style={{ width: `${goalProgress}%` }} />
           </div>
 
-          <p className="subtle-caption">{attempts}/{dailyGoal} toward daily revision goal. Mastered: {totalMastered}</p>
+          <p className="subtle-caption">
+            {progress.attempts}/{dailyGoal} reviewed today. Mastered: {mastered}
+          </p>
 
-          <div className="search-field-wrap">
-            <Search className="search-field-icon" />
-            <input
-              type="search"
-              className="frost-input search-field-input"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Filter revision items"
-            />
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="search-field-wrap min-w-[180px] flex-1">
+              <Search className="search-field-icon" />
+              <input
+                type="search"
+                className="frost-input search-field-input"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Filter revision items"
+              />
+            </div>
+            <div className="flex gap-1.5">
+              {KIND_FILTERS.map((entry) => (
+                <button
+                  key={entry.value}
+                  type="button"
+                  className="lexi-toggle"
+                  aria-pressed={kindFilter === entry.value}
+                  onClick={() => setKindFilter(entry.value)}
+                >
+                  {entry.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
         <div className="table-head grid-cols-[minmax(0,1fr)_110px_26px]">
-          <span>Word</span>
+          <span>Entry</span>
           <span>Status</span>
           <span />
         </div>
@@ -403,34 +510,34 @@ export default function Review() {
             <ListRowsSkeleton />
           ) : queue.length === 0 ? (
             <div className="flex h-full min-h-[240px] flex-col items-center justify-center gap-2 px-5 text-center">
-              <p className="section-title">Queue clear</p>
+              <p className="section-title">Nothing due</p>
               <p className="subtle-caption max-w-sm">
-                Every tracked word is mastered, or your filters are hiding results.
+                {nextUpcoming !== null
+                  ? `You're caught up. The next review is due ${describeDueIn(nextUpcoming, now)}.`
+                  : "Add words or translations and they'll show up here to review."}
               </p>
             </div>
           ) : (
-            queue.map((word) => {
-              const status = getReviewStatus(word);
+            queue.map((item) => {
+              const status = getReviewStatus(item);
 
               return (
                 <div
-                  key={word.id}
+                  key={`${item.kind}:${item.id}`}
                   className={cn(
                     "word-row grid-cols-[minmax(0,1fr)_110px_26px]",
-                    selectedWordId === word.id && "word-row-active",
+                    selectedId === item.id && "word-row-active",
                   )}
                   role="button"
                   tabIndex={0}
-                  onClick={() => {
-                    setSelectedWordId(word.id);
-                    setShowAnswer(false);
-                    setTypedAnswer("");
-                    setFeedback("idle");
-                  }}
+                  onClick={() => selectItem(item.id)}
                 >
                   <div className="min-w-0">
-                    <p className="serif-display truncate text-[1.65rem] leading-[0.9]">{word.word}</p>
-                    <p className="word-sub mt-1.5 truncate text-sm">{word.definition}</p>
+                    <p className="serif-display truncate text-[1.65rem] leading-[0.9]">{item.prompt}</p>
+                    <p className="word-sub mt-1.5 flex min-w-0 items-center gap-1.5 truncate text-sm">
+                      {item.kind === "translation" ? <ArrowRight className="size-3 shrink-0" /> : null}
+                      <span className="truncate">{item.answer}</span>
+                    </p>
                   </div>
 
                   <span className={cn("status-pill", statusClass(status))}>{status}</span>
@@ -473,7 +580,7 @@ export default function Review() {
       </section>
 
       <section className="frost-panel flex min-h-[22rem] xl:min-h-0 flex-col overflow-hidden animate-slide-in-up">
-        {selectedWord ? (
+        {selected ? (
           <>
             <div className="space-y-3 border-b border-white/10 p-4">
               <div className="flex items-center justify-between gap-2">
@@ -490,11 +597,10 @@ export default function Review() {
                           setMode(entry.value);
                           setShowAnswer(false);
                           setTypedAnswer("");
-                          setFeedback("idle");
                         }}
                       >
                         <Icon className="size-3.5" />
-                        {entry.div}
+                        {entry.label}
                       </button>
                     );
                   })}
@@ -518,30 +624,37 @@ export default function Review() {
                 </button>
               </div>
 
-              <div className="flex items-center gap-2 text-sm">
+              <div className="flex flex-wrap items-center gap-2 text-sm">
                 <span className={cn("status-pill", feedback === "correct" ? "status-mastered" : feedback === "wrong" ? "status-new" : "status-learning")}>
                   {feedback === "correct" ? "Correct" : feedback === "wrong" ? "Missed" : "In progress"}
                 </span>
-                <span className="subtle-caption">Accuracy: {attempts === 0 ? 0 : Math.round((correct / attempts) * 100)}%</span>
+                <span className="subtle-caption">
+                  Accuracy today: {progress.attempts === 0 ? 0 : Math.round((progress.correct / progress.attempts) * 100)}%
+                </span>
               </div>
             </div>
 
             <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-5 md:p-6">
+              <div className="mb-4 flex flex-wrap items-center gap-1.5">
+                <span className="lexi-chip compact">{selected.kind === "word" ? "Definition" : "Translation"}</span>
+                <span className="lexi-chip compact">{promptLabel}</span>
+              </div>
+
               {mode === "flashcard" ? (
                 <div className="space-y-6">
-                  <h2 className="detail-title">{selectedWord.word}</h2>
+                  <h2 className="detail-title">{selected.prompt}</h2>
 
                   {showAnswer ? (
                     <>
-                      <p className="detail-text">{selectedWord.definition}</p>
-                      {buildExample(selectedWord) ? (
-                        <p className="serif-display text-2xl italic text-muted-foreground">{buildExample(selectedWord)}</p>
-                      ) : (
-                        <p className="subtle-caption">No examples yet for this word.</p>
-                      )}
+                      <p className="detail-text">{selected.answer}</p>
+                      {selected.extra ? (
+                        <p className="serif-display text-2xl italic text-muted-foreground">{selected.extra}</p>
+                      ) : null}
                     </>
                   ) : (
-                    <p className="serif-display text-3xl text-muted-foreground">Recall the meaning, then reveal it.</p>
+                    <p className="serif-display text-3xl text-muted-foreground">
+                      {selected.kind === "word" ? "Recall the meaning, then reveal it." : `Recall it in ${selected.answerLanguage}, then reveal it.`}
+                    </p>
                   )}
 
                   <div className="flex flex-wrap gap-2">
@@ -562,7 +675,7 @@ export default function Review() {
                           variant="outline"
                           disabled={isSaving}
                           className="border-white/15 bg-white/6 hover:bg-white/14"
-                          onClick={() => void handleFlashcardKnown(false)}
+                          onClick={() => void recordResult(false)}
                         >
                           Again
                           <kbd className="key-cap ml-2">1</kbd>
@@ -571,7 +684,7 @@ export default function Review() {
                           type="button"
                           disabled={isSaving}
                           className="lexi-btn-primary"
-                          onClick={() => void handleFlashcardKnown(true)}
+                          onClick={() => void recordResult(true)}
                         >
                           <Check className="mr-2 size-4" />
                           I Knew It
@@ -585,19 +698,25 @@ export default function Review() {
 
               {mode === "multiple-choice" ? (
                 <div className="space-y-6">
-                  <h2 className="detail-title">{selectedWord.word}</h2>
-                  <p className="subtle-caption">Choose the matching definition:</p>
+                  <h2 className="detail-title">{selected.prompt}</h2>
+                  <p className="subtle-caption">
+                    {selected.kind === "word" ? "Choose the matching definition:" : `Choose the ${selected.answerLanguage} translation:`}
+                  </p>
 
-                  {mcLoading && options.length < 4 ? (
+                  {mcLoading || options.length === 0 ? (
                     <ChoicesSkeleton />
+                  ) : options.length < 2 ? (
+                    <p className="subtle-caption">
+                      Not enough other {selected.kind === "word" ? "definitions" : `${selected.answerLanguage} translations`} to build choices from yet. Try flashcards for this one.
+                    </p>
                   ) : (
                     <div className="space-y-2">
                       {options.map((option, index) => (
                         <button
-                          key={`${selectedWord.id}-${index}`}
+                          key={`${selected.id}-${index}`}
                           type="button"
                           className="frost-panel-soft w-full p-3 text-left transition-colors hover:bg-white/10"
-                          onClick={() => void handleChoice(option)}
+                          onClick={() => handleChoice(option)}
                         >
                           <span className="mr-2 text-muted-foreground">{index + 1}.</span>
                           {option}
@@ -610,14 +729,16 @@ export default function Review() {
 
               {mode === "typing" ? (
                 <div className="space-y-6">
-                  <h2 className="detail-title">Type The Word</h2>
-                  <p className="serif-display text-3xl text-muted-foreground">{selectedWord.definition}</p>
+                  <h2 className="detail-title">{selected.kind === "word" ? "Type The Word" : `Type It In ${selected.answerLanguage}`}</h2>
+                  <p className="serif-display text-3xl text-muted-foreground">
+                    {selected.kind === "word" ? selected.answer : selected.prompt}
+                  </p>
 
                   <input
                     className="frost-input"
                     value={typedAnswer}
                     onChange={(event) => setTypedAnswer(event.target.value)}
-                    placeholder="Type the matching word"
+                    placeholder={selected.kind === "word" ? "Type the matching word" : `Type the ${selected.answerLanguage} translation`}
                   />
 
                   <div className="flex flex-wrap gap-2">
@@ -625,14 +746,14 @@ export default function Review() {
                       type="button"
                       variant="outline"
                       className="border-white/15 bg-white/6 hover:bg-white/14"
-                      onClick={() => setTypedAnswer(selectedWord.word)}
+                      onClick={() => setTypedAnswer(selected.kind === "word" ? selected.prompt : selected.answer)}
                     >
                       Show answer
                     </Button>
                     <Button
                       type="button"
                       className="lexi-btn-primary"
-                      onClick={() => void handleTypingSubmit()}
+                      onClick={handleTypingSubmit}
                     >
                       Submit
                     </Button>
@@ -642,13 +763,15 @@ export default function Review() {
             </div>
 
             <div className="flex items-center justify-between border-t border-white/10 p-2">
-              <span className="sync-pill">
-                <CircleDot className="size-3" />
-                Revision synced
+              <span className="subtle-caption px-1">
+                {selected.review.stage === 0
+                  ? "First review"
+                  : `Stage ${selected.review.stage}, missed ${selected.review.lapses ?? 0} times`}
+                {` · a right answer brings it back in ${nextIntervalDays(selected)} ${nextIntervalDays(selected) === 1 ? "day" : "days"}`}
               </span>
               <span className="sync-pill">
                 <Flame className="size-3" />
-                {correct}/{attempts} correct
+                {progress.correct}/{progress.attempts} correct today
               </span>
             </div>
           </>
@@ -656,7 +779,9 @@ export default function Review() {
           <div className="flex h-full min-h-[320px] flex-col items-center justify-center px-6 text-center">
             <h2 className="section-title">Nothing to review</h2>
             <p className="subtle-caption mt-2 max-w-sm">
-              Add words and mark them as New/Learning to start revision modes and minigames.
+              {nextUpcoming !== null
+                ? `Everything is reviewed for now. Come back ${describeDueIn(nextUpcoming, now)}.`
+                : "Save a word or translation and it'll be ready to review straight away."}
             </p>
           </div>
         )}

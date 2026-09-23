@@ -71,9 +71,9 @@ const SHORTCUTS = [
   { keys: `${PRIMARY_MODIFIER_div}+Shift+'`, action: "Global quick translate popup toggle" },
   { keys: "Alt+1..9", action: "Navigate top tabs" },
   { keys: "J / K", action: "Previous / next item in lists" },
-  { keys: "1 / 2 / 3", action: "Set status New/Learning/Mastered" },
   { keys: "Enter (Capture)", action: "Run AI define/translate from source term field" },
-  { keys: "Space", action: "Reveal/advance flashcards" },
+  { keys: "Space", action: "Reveal a flashcard" },
+  { keys: "1 / 2 (Review)", action: "Flashcard: again / I knew it" },
   { keys: "1..4 (Review)", action: "Pick multiple-choice answer" },
 ];
 

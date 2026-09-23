@@ -12,7 +12,7 @@ import { useWords } from "@/hooks/useWords";
 import { getGroupIcon } from "@/lib/group-icons";
 import type { AppSettings, LexiGroup } from "@/types";
 import { getSettings, readAiCache, writeAiCache } from "@/utils/storage";
-import { getReviewStatus } from "@/utils/review";
+import { isDue } from "@/utils/review";
 import {
   buildFallbackDefinitionSuggestions,
   buildFallbackTranslationSuggestions,
@@ -389,8 +389,8 @@ export default function Home() {
   }, [kind, visibleGroups, languages, ready, enabledBookIds.length, sameTranslationLanguages, perSection]);
 
   const dueCount = useMemo(
-    () => words.filter((word) => getReviewStatus(word) !== "Mastered").length,
-    [words],
+    () => words.filter((word) => isDue(word)).length + translations.filter((translation) => isDue(translation)).length,
+    [translations, words],
   );
 
   const activeGroup = groups.find((group) => group.id === groupFilterId) ?? null;

@@ -6,6 +6,7 @@ import { useTranslations } from "@/hooks/useTranslations";
 import { useWords } from "@/hooks/useWords";
 import type { Translation, Word } from "@/types";
 import { formatDate } from "@/utils/formatters";
+import { getReviewStatus } from "@/utils/review";
 import { descriptiveTags, tagVocabulary } from "@/utils/tags";
 
 /** Entries per AI request. Tagging is light work, so batches can be bigger than Organize's. */
@@ -175,22 +176,14 @@ export default function Stats() {
     return [...words].sort((a, b) => b.dateAdded - a.dateAdded).slice(0, 6);
   }, [words]);
 
+  // Same rules as the Review page, across words and translations.
   const statusDistribution = useMemo(() => {
     const totals = { New: 0, Learning: 0, Mastered: 0 };
-
-    for (const word of words) {
-      const tags = word.tags.map((tag) => tag.toLowerCase());
-      if (tags.includes("mastered")) {
-        totals.Mastered += 1;
-      } else if (tags.includes("learning") || tags.includes("review")) {
-        totals.Learning += 1;
-      } else {
-        totals.New += 1;
-      }
+    for (const entry of [...words, ...translations]) {
+      totals[getReviewStatus(entry)] += 1;
     }
-
     return totals;
-  }, [words]);
+  }, [translations, words]);
 
   const topTags = useMemo(() => {
     const counts = new Map<string, number>();
