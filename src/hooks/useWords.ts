@@ -82,6 +82,19 @@ export function useWords() {
     }
   }, []);
 
+  // Update many words with a single store write
+  const updateWords = useCallback(async (changes: Record<string, Partial<Word>>) => {
+    try {
+      await storage.updateWordsBulk(changes);
+      announceDataChanged('words');
+      setWords(prev => prev.map(w => (changes[w.id] ? { ...w, ...changes[w.id] } : w)));
+    } catch (err) {
+      setError('Failed to update words');
+      console.error(err);
+      throw err;
+    }
+  }, []);
+
   // Delete a word
   const deleteWord = useCallback(async (id: string) => {
     try {
@@ -128,6 +141,7 @@ export function useWords() {
     error,
     addWord,
     updateWord,
+    updateWords,
     deleteWord,
     getWordById,
     getWordsByLanguage,

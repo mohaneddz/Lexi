@@ -87,6 +87,7 @@ function normalizeTranslation(translation: Translation): Translation {
     sourceWord: capitalizeLeadingCharacter(translation.sourceWord),
     targetWord: capitalizeLeadingCharacter(translation.targetWord),
     favorite: Boolean(translation.favorite),
+    tags: Array.isArray(translation.tags) ? translation.tags : [],
     groupIds: Array.isArray(translation.groupIds) ? translation.groupIds : [],
     sourceExamples: Array.isArray(translation.sourceExamples) ? translation.sourceExamples : [],
     targetExamples: Array.isArray(translation.targetExamples) ? translation.targetExamples : [],
@@ -146,6 +147,12 @@ export async function updateWord(id: string, updates: Partial<Word>): Promise<vo
   }
 }
 
+/** Applies many word updates in one store write, for sweeps like auto-tagging. */
+export async function updateWordsBulk(changes: Record<string, Partial<Word>>): Promise<void> {
+  const words = await getWords();
+  await saveWords(words.map((word) => (changes[word.id] ? normalizeWord({ ...word, ...changes[word.id] }) : word)));
+}
+
 export async function deleteWord(id: string): Promise<void> {
   const words = await getWords();
   const filtered = words.filter(w => w.id !== id);
@@ -180,6 +187,14 @@ export async function updateTranslation(
     translations[index] = normalizeTranslation({ ...translations[index], ...updates });
     await saveTranslations(translations);
   }
+}
+
+/** Applies many translation updates in one store write. */
+export async function updateTranslationsBulk(changes: Record<string, Partial<Translation>>): Promise<void> {
+  const translations = await getTranslations();
+  await saveTranslations(translations.map((translation) => (
+    changes[translation.id] ? normalizeTranslation({ ...translation, ...changes[translation.id] }) : translation
+  )));
 }
 
 export async function deleteTranslation(id: string): Promise<void> {

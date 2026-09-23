@@ -84,6 +84,18 @@ export function useAI() {
     [runCall],
   );
 
+  const suggestTagsBatch = useCallback(
+    async (items: aiService.TagBatchItem[], knownTags: string[]) =>
+      runCall(() => aiService.suggestTagsBatch(items, knownTags), []),
+    [runCall],
+  );
+
+  const captureWithMeta = useCallback(
+    async (request: aiService.CaptureMetaRequest) =>
+      runCall(() => aiService.captureWithMeta(request), { output: "", tags: [], groupId: null }),
+    [runCall],
+  );
+
   const suggestGroupIcon = useCallback(
     async (groupName: string, groupDescription: string | undefined, availableIconNames: string[]) =>
       runCall(() => aiService.suggestGroupIcon(groupName, groupDescription, availableIconNames), ""),
@@ -119,6 +131,8 @@ export function useAI() {
     testConnection,
     suggestGroup,
     suggestGroupsBatch,
+    suggestTagsBatch,
+    captureWithMeta,
     suggestGroupIcon,
     suggestDistractorDefinitions,
     suggestRelatedTranslations,

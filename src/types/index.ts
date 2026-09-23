@@ -23,6 +23,7 @@ export interface Translation {
   aiGenerated: boolean;
   favorite?: boolean;
   context?: string;
+  tags?: string[];
   groupIds?: string[];
   sourceExamples?: string[];
   targetExamples?: string[];

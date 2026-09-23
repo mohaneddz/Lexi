@@ -14,6 +14,7 @@ import {
   Plus,
   Search,
   Settings,
+  Tags,
   Type,
   WandSparkles,
 } from "lucide-react";
@@ -66,6 +67,10 @@ function triggerOrganize(): void {
   window.dispatchEvent(new CustomEvent("lexi:organize"));
 }
 
+function triggerAutoTag(): void {
+  window.dispatchEvent(new CustomEvent("lexi:autotag"));
+}
+
 function isTypingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) {
     return false;
@@ -92,9 +97,10 @@ export function AppShell({ children }: AppShellProps) {
   const [canScrollTabsRight, setCanScrollTabsRight] = useState(false);
   const { groups } = useGroups();
   const isGroupsRoute = location.pathname === "/groups";
+  const isStatsRoute = location.pathname === "/stats";
   const groupTabsDisabled =
     isGroupsRoute ||
-    location.pathname === "/stats" ||
+    isStatsRoute ||
     location.pathname === "/settings" ||
     location.pathname === "/books";
 
@@ -433,6 +439,16 @@ export function AppShell({ children }: AppShellProps) {
                 >
                   <WandSparkles className="size-4" />
                   <span className="hidden sm:inline">Organize</span>
+                </button>
+              ) : isStatsRoute ? (
+                <button
+                  type="button"
+                  className="topbar-capture-btn inline-flex h-10 items-center gap-2 rounded-lg border border-white/14 bg-white/10 px-3.5 text-sm font-semibold text-foreground transition hover:bg-white/16"
+                  onClick={triggerAutoTag}
+                  title="Tag every untagged word and translation"
+                >
+                  <Tags className="size-4" />
+                  <span className="hidden sm:inline">Auto tag</span>
                 </button>
               ) : (
                 <button

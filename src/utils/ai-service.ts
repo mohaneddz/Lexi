@@ -3,6 +3,7 @@ import { generateObject, generateText } from "ai";
 import { z } from "zod";
 
 import type { AIResponse } from "@/types";
+import { isReviewStatusTag } from "@/utils/review";
 import { getSettings } from "@/utils/storage";
 
 export const DEFAULT_MODEL = "openai/gpt-oss-20b";
@@ -49,6 +50,19 @@ const GROUP_BATCH_SUGGESTION_SCHEMA = z.object({
     item: z.number().int(),
     group: z.string(),
   })),
+});
+
+const TAG_BATCH_SUGGESTION_SCHEMA = z.object({
+  items: z.array(z.object({
+    item: z.number().int(),
+    tags: z.array(z.string()),
+  })),
+});
+
+const CAPTURE_META_SCHEMA = z.object({
+  output: z.string(),
+  tags: z.array(z.string()),
+  group: z.string(),
 });
 
 const DISTRACTOR_DEFINITIONS_SCHEMA = z.object({
@@ -212,7 +226,7 @@ function normalizeTag(tag: string): string {
   return tag
     .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/[^\p{L}\p{N}\s-]/gu, "")
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
@@ -550,6 +564,138 @@ export async function getExamples(
       success: false,
       data: [],
       error: toErrorMessage("Example generation failed", error),
+    };
+  }
+}
+
+function cleanTags(tags: string[], limit: number): string[] {
+  return Array.from(new Set(tags.map(normalizeTag).filter((tag) => tag.length >= 2 && tag.length <= 30 && !isReviewStatusTag(tag)))).slice(0, limit);
+}
+
+function describeTagVocabulary(knownTags: string[]): string {
+  return knownTags.length > 0
+    ? `Reuse these existing tags whenever they fit, so tagging stays consistent: ${knownTags.slice(0, 40).join(", ")}`
+    : "";
+}
+
+export type TagBatchItem = { label: string; definition: string };
+
+/**
+ * Tags several entries in one request. Returns one tag list per item, in
+ * order; an item the model skipped comes back empty so it can be retried.
+ */
+export async function suggestTagsBatch(
+  items: TagBatchItem[],
+  knownTags: string[],
+): Promise<AIResponse<string[][]>> {
+  if (items.length === 0) {
+    return { success: true, data: [] };
+  }
+
+  try {
+    const itemsList = items
+      .map((item, index) => `${index + 1}. ${item.label.trim()} :: ${item.definition.trim().slice(0, 200)}`)
+      .join("\n");
+
+    const object = await runStructuredPrompt({
+      schema: TAG_BATCH_SUGGESTION_SCHEMA,
+      system:
+        "You create compact learning tags for vocabulary entries. Return JSON only and keep tags short.",
+      prompt: [
+        "Items (number. entry :: meaning):",
+        itemsList,
+        "",
+        `Return tags for each of the ${items.length} items: its number and 2 to 4 tags.`,
+        "Tags are lowercase words or short phrases describing topic, register or part of speech. No punctuation.",
+        describeTagVocabulary(knownTags),
+      ].filter(Boolean).join("\n"),
+      temperature: 0.2,
+    });
+
+    const result: string[][] = items.map(() => []);
+    for (const entry of object.items) {
+      const index = entry.item - 1;
+      if (index < 0 || index >= items.length) continue;
+      result[index] = cleanTags(entry.tags, 4);
+    }
+
+    return { success: true, data: result };
+  } catch (error) {
+    return {
+      success: false,
+      data: [],
+      error: toErrorMessage("Batch tag suggestion failed", error),
+    };
+  }
+}
+
+export type CaptureMetaRequest = {
+  text: string;
+  /** Define: the word's language. Translate: the source language. */
+  language: string;
+  /** Only set when translating. */
+  targetLanguage?: string;
+  groups: Array<{ id: string; name: string; description?: string }>;
+  knownTags: string[];
+};
+
+export type CaptureMeta = { output: string; tags: string[]; groupId: string | null };
+
+/**
+ * Defines or translates a captured entry and, in the same request, picks its
+ * tags and group, so filling the capture form costs one call instead of three.
+ */
+export async function captureWithMeta(request: CaptureMetaRequest): Promise<AIResponse<CaptureMeta>> {
+  const { text, language, targetLanguage, groups, knownTags } = request;
+  const trimmed = text.trim();
+  if (!trimmed) {
+    return { success: false, data: { output: "", tags: [], groupId: null }, error: "Text is required." };
+  }
+
+  const labelToId = new Map(groups.map((group, index) => [`G${index + 1}`, group.id]));
+  const groupsList = groups.length > 0
+    ? groups.map((group, index) => `G${index + 1}: ${group.name}${group.description ? ` (${group.description})` : ""}`).join("\n")
+    : "(none)";
+
+  try {
+    const object = await runStructuredPrompt({
+      schema: CAPTURE_META_SCHEMA,
+      system: targetLanguage
+        ? "You are a precise translation assistant for a vocabulary app. Return JSON only."
+        : "You are a concise dictionary assistant for a vocabulary app. Return JSON only.",
+      prompt: [
+        targetLanguage
+          ? `Translate this from ${language} to ${targetLanguage}, preserving tone and intent, and put it in output: ${trimmed}`
+          : `Write a clear, learner-friendly ${language} definition of "${trimmed}" in one or two sentences, and put it in output.`,
+        "",
+        "Also give 2 to 4 short lowercase tags (topic, register or part of speech, no punctuation).",
+        describeTagVocabulary(knownTags),
+        "",
+        "Groups:",
+        groupsList,
+        "Put the label of the best fitting group (such as G1) in group, or NONE if nothing clearly fits.",
+      ].filter(Boolean).join("\n"),
+      temperature: 0.2,
+    });
+
+    const output = object.output.trim();
+    if (!output) {
+      return { success: false, data: { output: "", tags: [], groupId: null }, error: "AI returned an empty result." };
+    }
+
+    return {
+      success: true,
+      data: {
+        output,
+        tags: cleanTags(object.tags, 4),
+        groupId: labelToId.get(object.group.trim().toUpperCase()) ?? null,
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      data: { output: "", tags: [], groupId: null },
+      error: toErrorMessage(targetLanguage ? "Translation failed" : "Definition failed", error),
     };
   }
 }

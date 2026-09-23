@@ -89,6 +89,19 @@ export function useTranslations() {
         }
     }, []);
 
+    // Update many translations with a single store write
+    const updateTranslations = useCallback(async (changes: Record<string, Partial<Translation>>) => {
+        try {
+            await storage.updateTranslationsBulk(changes);
+            announceDataChanged('translations');
+            setTranslations(prev => prev.map(t => (changes[t.id] ? { ...t, ...changes[t.id] } : t)));
+        } catch (err) {
+            setError('Failed to update translations');
+            console.error(err);
+            throw err;
+        }
+    }, []);
+
     // Delete a translation
     const deleteTranslation = useCallback(async (id: string) => {
         try {
@@ -131,6 +144,7 @@ export function useTranslations() {
         error,
         addTranslation,
         updateTranslation,
+        updateTranslations,
         deleteTranslation,
         getTranslationById,
         getTranslationsByLanguagePair,

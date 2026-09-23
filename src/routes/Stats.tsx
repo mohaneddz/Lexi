@@ -1,13 +1,114 @@
-import { useMemo } from "react";
-import { Activity, BookOpenText, Globe2, Languages } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Activity, BookOpenText, Globe2, Languages, Loader2, Tags } from "lucide-react";
 
+import { useAI } from "@/hooks/useAI";
 import { useTranslations } from "@/hooks/useTranslations";
 import { useWords } from "@/hooks/useWords";
+import type { Translation, Word } from "@/types";
 import { formatDate } from "@/utils/formatters";
+import { descriptiveTags, tagVocabulary } from "@/utils/tags";
+
+/** Entries per AI request. Tagging is light work, so batches can be bigger than Organize's. */
+const AUTO_TAG_BATCH_SIZE = 20;
 
 export default function Stats() {
-  const { words } = useWords();
-  const { translations } = useTranslations();
+  const { words, updateWords } = useWords();
+  const { translations, updateTranslations } = useTranslations();
+  const { suggestTagsBatch } = useAI();
+
+  const [tagging, setTagging] = useState(false);
+  const [tagProgress, setTagProgress] = useState<{ done: number; total: number } | null>(null);
+  const [tagSummary, setTagSummary] = useState<string | null>(null);
+
+  const untaggedCount = useMemo(
+    () => words.filter((word) => descriptiveTags(word.tags).length === 0).length
+      + translations.filter((translation) => descriptiveTags(translation.tags).length === 0).length,
+    [translations, words],
+  );
+
+  /**
+   * Tags every word and translation that has no descriptive tags yet, in
+   * batches, reusing the tags already in use so the vocabulary stays tidy.
+   * Each batch is saved as it lands, so stopping halfway keeps the work done.
+   */
+  const runAutoTag = useCallback(async () => {
+    if (tagging) return;
+
+    type PendingItem =
+      | { kind: "word"; entry: Word; label: string; definition: string }
+      | { kind: "translation"; entry: Translation; label: string; definition: string };
+
+    const pending: PendingItem[] = [
+      ...words
+        .filter((word) => descriptiveTags(word.tags).length === 0)
+        .map((word) => ({ kind: "word" as const, entry: word, label: word.word, definition: word.definition })),
+      ...translations
+        .filter((translation) => descriptiveTags(translation.tags).length === 0)
+        .map((translation) => ({
+          kind: "translation" as const,
+          entry: translation,
+          label: `${translation.sourceWord} (${translation.sourceLanguage}) -> ${translation.targetWord} (${translation.targetLanguage})`,
+          definition: translation.context?.trim() || "",
+        })),
+    ];
+
+    if (pending.length === 0) {
+      setTagSummary("Every word and translation already has tags.");
+      return;
+    }
+
+    setTagging(true);
+    setTagSummary(null);
+    setTagProgress({ done: 0, total: pending.length });
+
+    const knownTags = tagVocabulary([...words, ...translations]);
+    let tagged = 0;
+    let lastError: string | undefined;
+
+    for (let start = 0; start < pending.length; start += AUTO_TAG_BATCH_SIZE) {
+      const batch = pending.slice(start, start + AUTO_TAG_BATCH_SIZE);
+      const result = await suggestTagsBatch(batch.map(({ label, definition }) => ({ label, definition })), knownTags);
+
+      if (!result.success) {
+        lastError = result.error;
+      } else {
+        const wordChanges: Record<string, Partial<Word>> = {};
+        const translationChanges: Record<string, Partial<Translation>> = {};
+
+        batch.forEach((item, index) => {
+          const tags = result.data[index] ?? [];
+          if (tags.length === 0) return;
+          // Existing tags (review status, "suggested") are kept alongside the new ones.
+          const merged = Array.from(new Set([...(item.entry.tags ?? []), ...tags]));
+          if (item.kind === "word") wordChanges[item.entry.id] = { tags: merged };
+          else translationChanges[item.entry.id] = { tags: merged };
+          tagged += 1;
+          for (const tag of tags) if (!knownTags.includes(tag)) knownTags.push(tag);
+        });
+
+        if (Object.keys(wordChanges).length > 0) await updateWords(wordChanges);
+        if (Object.keys(translationChanges).length > 0) await updateTranslations(translationChanges);
+      }
+
+      setTagProgress({ done: Math.min(start + batch.length, pending.length), total: pending.length });
+    }
+
+    setTagging(false);
+    setTagProgress(null);
+    setTagSummary(
+      lastError && tagged < pending.length
+        ? `Tagged ${tagged} of ${pending.length}. Some batches failed: ${lastError}`
+        : `Tagged ${tagged} of ${pending.length} entries.`,
+    );
+  }, [suggestTagsBatch, tagging, translations, updateTranslations, updateWords, words]);
+
+  useEffect(() => {
+    const onAutoTag = () => {
+      void runAutoTag();
+    };
+    window.addEventListener("lexi:autotag", onAutoTag);
+    return () => window.removeEventListener("lexi:autotag", onAutoTag);
+  }, [runAutoTag]);
 
   const totalLanguages = useMemo(() => new Set(words.map((word) => word.language)).size, [words]);
 
@@ -94,16 +195,16 @@ export default function Stats() {
   const topTags = useMemo(() => {
     const counts = new Map<string, number>();
 
-    for (const word of words) {
-      for (const tag of word.tags) {
+    for (const entry of [...words, ...translations]) {
+      for (const tag of descriptiveTags(entry.tags)) {
         counts.set(tag, (counts.get(tag) ?? 0) + 1);
       }
     }
 
     return Array.from(counts.entries())
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 8);
-  }, [words]);
+      .slice(0, 12);
+  }, [translations, words]);
 
   return (
     <div className="grid min-h-full grid-cols-1 gap-3 xl:h-full xl:grid-cols-[1.25fr_0.95fr]">
@@ -255,8 +356,16 @@ export default function Stats() {
           </div>
         </div>
 
-        <div className="flex items-center justify-end border-t border-white/10 p-2">
-          <span className="sync-pill">
+        <div className="flex items-center justify-between gap-2 border-t border-white/10 p-2">
+          <span className="subtle-caption flex min-w-0 items-center gap-1.5 px-1">
+            {tagging ? <Loader2 className="size-3 shrink-0 animate-spin" /> : <Tags className="size-3 shrink-0" />}
+            <span className="truncate">
+              {tagging && tagProgress
+                ? `Tagging ${tagProgress.done}/${tagProgress.total}...`
+                : tagSummary ?? (untaggedCount > 0 ? `${untaggedCount} entries without tags` : "Everything is tagged")}
+            </span>
+          </span>
+          <span className="sync-pill shrink-0">
             <Languages className="size-3" />
             {totalLanguages} active languages
           </span>

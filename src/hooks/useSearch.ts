@@ -48,9 +48,9 @@ export function useSearch<T extends Word | Translation>(items: T[]) {
         }
       }
 
-      // Tag filter (only for words)
-      if (selectedTags.length > 0 && 'tags' in item) {
-        const hasTag = selectedTags.some(tag => item.tags.includes(tag));
+      // Tag filter
+      if (selectedTags.length > 0) {
+        const hasTag = selectedTags.some(tag => (item.tags ?? []).includes(tag));
         if (!hasTag) return false;
       }
 

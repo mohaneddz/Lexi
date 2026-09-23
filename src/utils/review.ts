@@ -33,9 +33,15 @@ export function getReviewStatus(word: Word): ReviewStatus {
   return "Learning";
 }
 
+const STATUS_TAGS = new Set([...MASTERED_TAGS, ...LEARNING_TAGS, ...NEW_TAGS]);
+
+/** Tags that record review progress rather than describe the entry. */
+export function isReviewStatusTag(tag: string): boolean {
+  return STATUS_TAGS.has(normalizeTag(tag));
+}
+
 export function setReviewStatus(tags: string[], status: ReviewStatus): string[] {
-  const statusTags = new Set([...MASTERED_TAGS, ...LEARNING_TAGS, ...NEW_TAGS]);
-  const nextTags = tags.filter((tag) => !statusTags.has(normalizeTag(tag)));
+  const nextTags = tags.filter((tag) => !isReviewStatusTag(tag));
 
   switch (status) {
     case "Learning":
