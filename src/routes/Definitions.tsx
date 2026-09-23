@@ -102,11 +102,11 @@ export default function Definitions() {
       if (isTypingTarget(event.target) || !selectedId) return;
       const currentIndex = filteredWords.findIndex((word) => word.id === selectedId);
       if (currentIndex === -1) return;
-      if (event.key.toLowerCase() === "j" || event.key === "ArrowDown") {
+      if (event.key.toLowerCase() === "k" || event.key === "ArrowDown") {
         event.preventDefault();
         setSelectedId(filteredWords[Math.min(filteredWords.length - 1, currentIndex + 1)].id);
       }
-      if (event.key.toLowerCase() === "k" || event.key === "ArrowUp") {
+      if (event.key.toLowerCase() === "j" || event.key === "ArrowUp") {
         event.preventDefault();
         setSelectedId(filteredWords[Math.max(0, currentIndex - 1)].id);
       }

@@ -239,11 +239,11 @@ export default function Translations() {
       if (isTypingTarget(event.target) || !selectedId || filteredTranslations.length === 0) return;
       const currentIndex = filteredTranslations.findIndex((translation) => translation.id === selectedId);
       if (currentIndex < 0) return;
-      if (event.key.toLowerCase() === "j" || event.key === "ArrowDown") {
+      if (event.key.toLowerCase() === "k" || event.key === "ArrowDown") {
         event.preventDefault();
         setSelectedId(filteredTranslations[Math.min(filteredTranslations.length - 1, currentIndex + 1)].id);
       }
-      if (event.key.toLowerCase() === "k" || event.key === "ArrowUp") {
+      if (event.key.toLowerCase() === "j" || event.key === "ArrowUp") {
         event.preventDefault();
         setSelectedId(filteredTranslations[Math.max(0, currentIndex - 1)].id);
       }

@@ -114,7 +114,7 @@ export function TranslationCard({ translation, onEdit, onDelete }: TranslationCa
                                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                                     <AlertDialogAction
                                         onClick={() => onDelete(translation.id)}
-                                        className="bg-destructive hover:bg-destructive/90"
+                                        className="bg-destructive text-white hover:bg-destructive/90"
                                     >
                                         Delete
                                     </AlertDialogAction>
