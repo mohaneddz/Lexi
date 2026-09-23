@@ -525,5 +525,1178 @@
     ],
     "sizeBytes": 3426631,
     "coverUrl": "/books/covers/dict-wordnet-verbs.svg"
+  },
+  {
+    "id": "wikt-computing-en-ar",
+    "title": "Computing Vocabulary (English to Arabic)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "564 computing terms between English and Arabic: hardware, software, programming, networks and the internet. Built from Wiktionary's translation tables and its Arabic entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-computing-en-ar.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Arabic"
+    ],
+    "sizeBytes": 93655,
+    "coverUrl": "/books/covers/field-computing.jpg"
+  },
+  {
+    "id": "wikt-computing-en-de",
+    "title": "Computing Vocabulary (English to German)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "2,507 computing terms between English and German: hardware, software, programming, networks and the internet. Built from Wiktionary's translation tables and its German entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-computing-en-de.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "German"
+    ],
+    "sizeBytes": 275569,
+    "coverUrl": "/books/covers/field-computing.jpg"
+  },
+  {
+    "id": "wikt-computing-en-fr",
+    "title": "Computing Vocabulary (English to French)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "2,188 computing terms between English and French: hardware, software, programming, networks and the internet. Built from Wiktionary's translation tables and its French entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-computing-en-fr.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "French"
+    ],
+    "sizeBytes": 237610,
+    "coverUrl": "/books/covers/field-computing.jpg"
+  },
+  {
+    "id": "wikt-computing-en-es",
+    "title": "Computing Vocabulary (English to Spanish)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "1,694 computing terms between English and Spanish: hardware, software, programming, networks and the internet. Built from Wiktionary's translation tables and its Spanish entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-computing-en-es.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Spanish"
+    ],
+    "sizeBytes": 189502,
+    "coverUrl": "/books/covers/field-computing.jpg"
+  },
+  {
+    "id": "wikt-computing-en-zh",
+    "title": "Computing Vocabulary (English to Chinese)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "2,935 computing terms between English and Chinese: hardware, software, programming, networks and the internet. Built from Wiktionary's translation tables and its Chinese entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-computing-en-zh.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Chinese"
+    ],
+    "sizeBytes": 447694,
+    "coverUrl": "/books/covers/field-computing.jpg"
+  },
+  {
+    "id": "wikt-ai-en-ar",
+    "title": "AI and Data Science Vocabulary (English to Arabic)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "75 ai and data science terms between English and Arabic: artificial intelligence, machine learning, statistics, probability and robotics. Built from Wiktionary's translation tables and its Arabic entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-ai-en-ar.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Arabic"
+    ],
+    "sizeBytes": 12958,
+    "coverUrl": "/books/covers/field-ai.jpg"
+  },
+  {
+    "id": "wikt-ai-en-de",
+    "title": "AI and Data Science Vocabulary (English to German)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "204 ai and data science terms between English and German: artificial intelligence, machine learning, statistics, probability and robotics. Built from Wiktionary's translation tables and its German entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-ai-en-de.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "German"
+    ],
+    "sizeBytes": 23472,
+    "coverUrl": "/books/covers/field-ai.jpg"
+  },
+  {
+    "id": "wikt-ai-en-fr",
+    "title": "AI and Data Science Vocabulary (English to French)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "196 ai and data science terms between English and French: artificial intelligence, machine learning, statistics, probability and robotics. Built from Wiktionary's translation tables and its French entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-ai-en-fr.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "French"
+    ],
+    "sizeBytes": 22148,
+    "coverUrl": "/books/covers/field-ai.jpg"
+  },
+  {
+    "id": "wikt-ai-en-es",
+    "title": "AI and Data Science Vocabulary (English to Spanish)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "158 ai and data science terms between English and Spanish: artificial intelligence, machine learning, statistics, probability and robotics. Built from Wiktionary's translation tables and its Spanish entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-ai-en-es.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Spanish"
+    ],
+    "sizeBytes": 18184,
+    "coverUrl": "/books/covers/field-ai.jpg"
+  },
+  {
+    "id": "wikt-ai-en-zh",
+    "title": "AI and Data Science Vocabulary (English to Chinese)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "239 ai and data science terms between English and Chinese: artificial intelligence, machine learning, statistics, probability and robotics. Built from Wiktionary's translation tables and its Chinese entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-ai-en-zh.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Chinese"
+    ],
+    "sizeBytes": 36748,
+    "coverUrl": "/books/covers/field-ai.jpg"
+  },
+  {
+    "id": "wikt-mathematics-en-ar",
+    "title": "Mathematics Vocabulary (English to Arabic)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "464 mathematics terms between English and Arabic: algebra, geometry, calculus, number theory, logic and set theory. Built from Wiktionary's translation tables and its Arabic entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-mathematics-en-ar.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Arabic"
+    ],
+    "sizeBytes": 75128,
+    "coverUrl": "/books/covers/field-mathematics.jpg"
+  },
+  {
+    "id": "wikt-mathematics-en-de",
+    "title": "Mathematics Vocabulary (English to German)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "2,253 mathematics terms between English and German: algebra, geometry, calculus, number theory, logic and set theory. Built from Wiktionary's translation tables and its German entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-mathematics-en-de.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "German"
+    ],
+    "sizeBytes": 245212,
+    "coverUrl": "/books/covers/field-mathematics.jpg"
+  },
+  {
+    "id": "wikt-mathematics-en-fr",
+    "title": "Mathematics Vocabulary (English to French)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "2,220 mathematics terms between English and French: algebra, geometry, calculus, number theory, logic and set theory. Built from Wiktionary's translation tables and its French entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-mathematics-en-fr.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "French"
+    ],
+    "sizeBytes": 240023,
+    "coverUrl": "/books/covers/field-mathematics.jpg"
+  },
+  {
+    "id": "wikt-mathematics-en-es",
+    "title": "Mathematics Vocabulary (English to Spanish)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "1,671 mathematics terms between English and Spanish: algebra, geometry, calculus, number theory, logic and set theory. Built from Wiktionary's translation tables and its Spanish entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-mathematics-en-es.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Spanish"
+    ],
+    "sizeBytes": 179463,
+    "coverUrl": "/books/covers/field-mathematics.jpg"
+  },
+  {
+    "id": "wikt-mathematics-en-zh",
+    "title": "Mathematics Vocabulary (English to Chinese)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "2,152 mathematics terms between English and Chinese: algebra, geometry, calculus, number theory, logic and set theory. Built from Wiktionary's translation tables and its Chinese entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-mathematics-en-zh.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Chinese"
+    ],
+    "sizeBytes": 307060,
+    "coverUrl": "/books/covers/field-mathematics.jpg"
+  },
+  {
+    "id": "wikt-medicine-en-ar",
+    "title": "Medicine and Anatomy Vocabulary (English to Arabic)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "1,543 medicine and anatomy terms between English and Arabic: anatomy, diseases, symptoms, surgery and pharmacology. Built from Wiktionary's translation tables and its Arabic entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-medicine-en-ar.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Arabic"
+    ],
+    "sizeBytes": 254178,
+    "coverUrl": "/books/covers/dict-topic-body.png"
+  },
+  {
+    "id": "wikt-medicine-en-de",
+    "title": "Medicine and Anatomy Vocabulary (English to German)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "4,572 medicine and anatomy terms between English and German: anatomy, diseases, symptoms, surgery and pharmacology. Built from Wiktionary's translation tables and its German entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-medicine-en-de.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "German"
+    ],
+    "sizeBytes": 501262,
+    "coverUrl": "/books/covers/dict-topic-body.png"
+  },
+  {
+    "id": "wikt-medicine-en-fr",
+    "title": "Medicine and Anatomy Vocabulary (English to French)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "5,499 medicine and anatomy terms between English and French: anatomy, diseases, symptoms, surgery and pharmacology. Built from Wiktionary's translation tables and its French entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-medicine-en-fr.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "French"
+    ],
+    "sizeBytes": 584515,
+    "coverUrl": "/books/covers/dict-topic-body.png"
+  },
+  {
+    "id": "wikt-medicine-en-es",
+    "title": "Medicine and Anatomy Vocabulary (English to Spanish)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "5,922 medicine and anatomy terms between English and Spanish: anatomy, diseases, symptoms, surgery and pharmacology. Built from Wiktionary's translation tables and its Spanish entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-medicine-en-es.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Spanish"
+    ],
+    "sizeBytes": 634486,
+    "coverUrl": "/books/covers/dict-topic-body.png"
+  },
+  {
+    "id": "wikt-medicine-en-zh",
+    "title": "Medicine and Anatomy Vocabulary (English to Chinese)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "6,000 medicine and anatomy terms between English and Chinese: anatomy, diseases, symptoms, surgery and pharmacology. Built from Wiktionary's translation tables and its Chinese entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-medicine-en-zh.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Chinese"
+    ],
+    "sizeBytes": 890445,
+    "coverUrl": "/books/covers/dict-topic-body.png"
+  },
+  {
+    "id": "wikt-zoology-en-ar",
+    "title": "Zoology Vocabulary (English to Arabic)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "613 zoology terms between English and Arabic: mammals, birds, fish, insects, reptiles and animal anatomy. Built from Wiktionary's translation tables and its Arabic entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-zoology-en-ar.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Arabic"
+    ],
+    "sizeBytes": 99413,
+    "coverUrl": "/books/covers/dict-topic-animals.jpg"
+  },
+  {
+    "id": "wikt-zoology-en-de",
+    "title": "Zoology Vocabulary (English to German)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "1,536 zoology terms between English and German: mammals, birds, fish, insects, reptiles and animal anatomy. Built from Wiktionary's translation tables and its German entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-zoology-en-de.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "German"
+    ],
+    "sizeBytes": 174019,
+    "coverUrl": "/books/covers/dict-topic-animals.jpg"
+  },
+  {
+    "id": "wikt-zoology-en-fr",
+    "title": "Zoology Vocabulary (English to French)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "1,421 zoology terms between English and French: mammals, birds, fish, insects, reptiles and animal anatomy. Built from Wiktionary's translation tables and its French entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-zoology-en-fr.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "French"
+    ],
+    "sizeBytes": 152289,
+    "coverUrl": "/books/covers/dict-topic-animals.jpg"
+  },
+  {
+    "id": "wikt-zoology-en-es",
+    "title": "Zoology Vocabulary (English to Spanish)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "1,969 zoology terms between English and Spanish: mammals, birds, fish, insects, reptiles and animal anatomy. Built from Wiktionary's translation tables and its Spanish entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-zoology-en-es.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Spanish"
+    ],
+    "sizeBytes": 215481,
+    "coverUrl": "/books/covers/dict-topic-animals.jpg"
+  },
+  {
+    "id": "wikt-zoology-en-zh",
+    "title": "Zoology Vocabulary (English to Chinese)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "1,561 zoology terms between English and Chinese: mammals, birds, fish, insects, reptiles and animal anatomy. Built from Wiktionary's translation tables and its Chinese entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-zoology-en-zh.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Chinese"
+    ],
+    "sizeBytes": 216801,
+    "coverUrl": "/books/covers/dict-topic-animals.jpg"
+  },
+  {
+    "id": "wikt-astronomy-en-ar",
+    "title": "Astronomy and Space Vocabulary (English to Arabic)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "313 astronomy and space terms between English and Arabic: stars, planets, constellations, cosmology and spaceflight. Built from Wiktionary's translation tables and its Arabic entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-astronomy-en-ar.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Arabic"
+    ],
+    "sizeBytes": 53267,
+    "coverUrl": "/books/covers/dict-topic-astronomy.jpg"
+  },
+  {
+    "id": "wikt-astronomy-en-de",
+    "title": "Astronomy and Space Vocabulary (English to German)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "849 astronomy and space terms between English and German: stars, planets, constellations, cosmology and spaceflight. Built from Wiktionary's translation tables and its German entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-astronomy-en-de.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "German"
+    ],
+    "sizeBytes": 91040,
+    "coverUrl": "/books/covers/dict-topic-astronomy.jpg"
+  },
+  {
+    "id": "wikt-astronomy-en-fr",
+    "title": "Astronomy and Space Vocabulary (English to French)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "911 astronomy and space terms between English and French: stars, planets, constellations, cosmology and spaceflight. Built from Wiktionary's translation tables and its French entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-astronomy-en-fr.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "French"
+    ],
+    "sizeBytes": 97822,
+    "coverUrl": "/books/covers/dict-topic-astronomy.jpg"
+  },
+  {
+    "id": "wikt-astronomy-en-es",
+    "title": "Astronomy and Space Vocabulary (English to Spanish)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "744 astronomy and space terms between English and Spanish: stars, planets, constellations, cosmology and spaceflight. Built from Wiktionary's translation tables and its Spanish entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-astronomy-en-es.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Spanish"
+    ],
+    "sizeBytes": 79241,
+    "coverUrl": "/books/covers/dict-topic-astronomy.jpg"
+  },
+  {
+    "id": "wikt-astronomy-en-zh",
+    "title": "Astronomy and Space Vocabulary (English to Chinese)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "1,212 astronomy and space terms between English and Chinese: stars, planets, constellations, cosmology and spaceflight. Built from Wiktionary's translation tables and its Chinese entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-astronomy-en-zh.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Chinese"
+    ],
+    "sizeBytes": 172645,
+    "coverUrl": "/books/covers/dict-topic-astronomy.jpg"
+  },
+  {
+    "id": "wikt-physics-en-ar",
+    "title": "Physics Vocabulary (English to Arabic)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "481 physics terms between English and Arabic: mechanics, electricity, optics, thermodynamics and particle physics. Built from Wiktionary's translation tables and its Arabic entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-physics-en-ar.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Arabic"
+    ],
+    "sizeBytes": 79258,
+    "coverUrl": "/books/covers/field-physics.jpg"
+  },
+  {
+    "id": "wikt-physics-en-de",
+    "title": "Physics Vocabulary (English to German)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "1,956 physics terms between English and German: mechanics, electricity, optics, thermodynamics and particle physics. Built from Wiktionary's translation tables and its German entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-physics-en-de.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "German"
+    ],
+    "sizeBytes": 216475,
+    "coverUrl": "/books/covers/field-physics.jpg"
+  },
+  {
+    "id": "wikt-physics-en-fr",
+    "title": "Physics Vocabulary (English to French)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "1,760 physics terms between English and French: mechanics, electricity, optics, thermodynamics and particle physics. Built from Wiktionary's translation tables and its French entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-physics-en-fr.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "French"
+    ],
+    "sizeBytes": 188588,
+    "coverUrl": "/books/covers/field-physics.jpg"
+  },
+  {
+    "id": "wikt-physics-en-es",
+    "title": "Physics Vocabulary (English to Spanish)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "1,401 physics terms between English and Spanish: mechanics, electricity, optics, thermodynamics and particle physics. Built from Wiktionary's translation tables and its Spanish entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-physics-en-es.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Spanish"
+    ],
+    "sizeBytes": 157577,
+    "coverUrl": "/books/covers/field-physics.jpg"
+  },
+  {
+    "id": "wikt-physics-en-zh",
+    "title": "Physics Vocabulary (English to Chinese)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "2,225 physics terms between English and Chinese: mechanics, electricity, optics, thermodynamics and particle physics. Built from Wiktionary's translation tables and its Chinese entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-physics-en-zh.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Chinese"
+    ],
+    "sizeBytes": 319651,
+    "coverUrl": "/books/covers/field-physics.jpg"
+  },
+  {
+    "id": "wikt-chemistry-en-ar",
+    "title": "Chemistry Vocabulary (English to Arabic)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "551 chemistry terms between English and Arabic: elements, compounds, reactions, organic chemistry and biochemistry. Built from Wiktionary's translation tables and its Arabic entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-chemistry-en-ar.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Arabic"
+    ],
+    "sizeBytes": 87918,
+    "coverUrl": "/books/covers/field-chemistry.jpg"
+  },
+  {
+    "id": "wikt-chemistry-en-de",
+    "title": "Chemistry Vocabulary (English to German)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "4,388 chemistry terms between English and German: elements, compounds, reactions, organic chemistry and biochemistry. Built from Wiktionary's translation tables and its German entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-chemistry-en-de.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "German"
+    ],
+    "sizeBytes": 464403,
+    "coverUrl": "/books/covers/field-chemistry.jpg"
+  },
+  {
+    "id": "wikt-chemistry-en-fr",
+    "title": "Chemistry Vocabulary (English to French)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "4,733 chemistry terms between English and French: elements, compounds, reactions, organic chemistry and biochemistry. Built from Wiktionary's translation tables and its French entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-chemistry-en-fr.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "French"
+    ],
+    "sizeBytes": 486147,
+    "coverUrl": "/books/covers/field-chemistry.jpg"
+  },
+  {
+    "id": "wikt-chemistry-en-es",
+    "title": "Chemistry Vocabulary (English to Spanish)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "3,640 chemistry terms between English and Spanish: elements, compounds, reactions, organic chemistry and biochemistry. Built from Wiktionary's translation tables and its Spanish entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-chemistry-en-es.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Spanish"
+    ],
+    "sizeBytes": 376050,
+    "coverUrl": "/books/covers/field-chemistry.jpg"
+  },
+  {
+    "id": "wikt-chemistry-en-zh",
+    "title": "Chemistry Vocabulary (English to Chinese)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "4,298 chemistry terms between English and Chinese: elements, compounds, reactions, organic chemistry and biochemistry. Built from Wiktionary's translation tables and its Chinese entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-chemistry-en-zh.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Chinese"
+    ],
+    "sizeBytes": 596236,
+    "coverUrl": "/books/covers/field-chemistry.jpg"
+  },
+  {
+    "id": "wikt-botany-en-ar",
+    "title": "Botany and Biology Vocabulary (English to Arabic)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "778 botany and biology terms between English and Arabic: plants, trees, flowers, fungi, cells, genetics and ecology. Built from Wiktionary's translation tables and its Arabic entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-botany-en-ar.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Arabic"
+    ],
+    "sizeBytes": 130248,
+    "coverUrl": "/books/covers/dict-topic-plants.jpg"
+  },
+  {
+    "id": "wikt-botany-en-de",
+    "title": "Botany and Biology Vocabulary (English to German)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "2,906 botany and biology terms between English and German: plants, trees, flowers, fungi, cells, genetics and ecology. Built from Wiktionary's translation tables and its German entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-botany-en-de.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "German"
+    ],
+    "sizeBytes": 321537,
+    "coverUrl": "/books/covers/dict-topic-plants.jpg"
+  },
+  {
+    "id": "wikt-botany-en-fr",
+    "title": "Botany and Biology Vocabulary (English to French)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "3,863 botany and biology terms between English and French: plants, trees, flowers, fungi, cells, genetics and ecology. Built from Wiktionary's translation tables and its French entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-botany-en-fr.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "French"
+    ],
+    "sizeBytes": 405706,
+    "coverUrl": "/books/covers/dict-topic-plants.jpg"
+  },
+  {
+    "id": "wikt-botany-en-es",
+    "title": "Botany and Biology Vocabulary (English to Spanish)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "3,724 botany and biology terms between English and Spanish: plants, trees, flowers, fungi, cells, genetics and ecology. Built from Wiktionary's translation tables and its Spanish entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-botany-en-es.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Spanish"
+    ],
+    "sizeBytes": 398625,
+    "coverUrl": "/books/covers/dict-topic-plants.jpg"
+  },
+  {
+    "id": "wikt-botany-en-zh",
+    "title": "Botany and Biology Vocabulary (English to Chinese)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "3,009 botany and biology terms between English and Chinese: plants, trees, flowers, fungi, cells, genetics and ecology. Built from Wiktionary's translation tables and its Chinese entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-botany-en-zh.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Chinese"
+    ],
+    "sizeBytes": 432398,
+    "coverUrl": "/books/covers/dict-topic-plants.jpg"
+  },
+  {
+    "id": "wikt-business-en-ar",
+    "title": "Business and Finance Vocabulary (English to Arabic)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "536 business and finance terms between English and Arabic: economics, banking, accounting, trade, marketing and the stock market. Built from Wiktionary's translation tables and its Arabic entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-business-en-ar.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Arabic"
+    ],
+    "sizeBytes": 91283,
+    "coverUrl": "/books/covers/field-business.jpg"
+  },
+  {
+    "id": "wikt-business-en-de",
+    "title": "Business and Finance Vocabulary (English to German)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "3,833 business and finance terms between English and German: economics, banking, accounting, trade, marketing and the stock market. Built from Wiktionary's translation tables and its German entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-business-en-de.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "German"
+    ],
+    "sizeBytes": 519157,
+    "coverUrl": "/books/covers/field-business.jpg"
+  },
+  {
+    "id": "wikt-business-en-fr",
+    "title": "Business and Finance Vocabulary (English to French)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "2,498 business and finance terms between English and French: economics, banking, accounting, trade, marketing and the stock market. Built from Wiktionary's translation tables and its French entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-business-en-fr.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "French"
+    ],
+    "sizeBytes": 282103,
+    "coverUrl": "/books/covers/field-business.jpg"
+  },
+  {
+    "id": "wikt-business-en-es",
+    "title": "Business and Finance Vocabulary (English to Spanish)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "1,906 business and finance terms between English and Spanish: economics, banking, accounting, trade, marketing and the stock market. Built from Wiktionary's translation tables and its Spanish entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-business-en-es.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Spanish"
+    ],
+    "sizeBytes": 213854,
+    "coverUrl": "/books/covers/field-business.jpg"
+  },
+  {
+    "id": "wikt-business-en-zh",
+    "title": "Business and Finance Vocabulary (English to Chinese)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "3,994 business and finance terms between English and Chinese: economics, banking, accounting, trade, marketing and the stock market. Built from Wiktionary's translation tables and its Chinese entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-business-en-zh.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Chinese"
+    ],
+    "sizeBytes": 610454,
+    "coverUrl": "/books/covers/field-business.jpg"
+  },
+  {
+    "id": "wikt-law-en-ar",
+    "title": "Law and Government Vocabulary (English to Arabic)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "947 law and government terms between English and Arabic: courts, contracts, crime, legislation and government. Built from Wiktionary's translation tables and its Arabic entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-law-en-ar.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Arabic"
+    ],
+    "sizeBytes": 160034,
+    "coverUrl": "/books/covers/field-law.jpg"
+  },
+  {
+    "id": "wikt-law-en-de",
+    "title": "Law and Government Vocabulary (English to German)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "4,672 law and government terms between English and German: courts, contracts, crime, legislation and government. Built from Wiktionary's translation tables and its German entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-law-en-de.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "German"
+    ],
+    "sizeBytes": 578223,
+    "coverUrl": "/books/covers/field-law.jpg"
+  },
+  {
+    "id": "wikt-law-en-fr",
+    "title": "Law and Government Vocabulary (English to French)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "3,706 law and government terms between English and French: courts, contracts, crime, legislation and government. Built from Wiktionary's translation tables and its French entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-law-en-fr.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "French"
+    ],
+    "sizeBytes": 427408,
+    "coverUrl": "/books/covers/field-law.jpg"
+  },
+  {
+    "id": "wikt-law-en-es",
+    "title": "Law and Government Vocabulary (English to Spanish)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "3,115 law and government terms between English and Spanish: courts, contracts, crime, legislation and government. Built from Wiktionary's translation tables and its Spanish entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-law-en-es.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Spanish"
+    ],
+    "sizeBytes": 356480,
+    "coverUrl": "/books/covers/field-law.jpg"
+  },
+  {
+    "id": "wikt-law-en-zh",
+    "title": "Law and Government Vocabulary (English to Chinese)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "4,532 law and government terms between English and Chinese: courts, contracts, crime, legislation and government. Built from Wiktionary's translation tables and its Chinese entries.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-law-en-zh.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Chinese"
+    ],
+    "sizeBytes": 714697,
+    "coverUrl": "/books/covers/field-law.jpg"
+  },
+  {
+    "id": "wikt-general-en-ar",
+    "title": "General Dictionary (English to Arabic)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "The 22,413 most widely translated English words and senses with their Arabic equivalents, from Wiktionary's translation tables.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-general-en-ar.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Arabic"
+    ],
+    "sizeBytes": 3723937,
+    "coverUrl": "/books/covers/general-dictionary.jpg"
+  },
+  {
+    "id": "wikt-general-en-de",
+    "title": "General Dictionary (English to German)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "The 25,000 most widely translated English words and senses with their German equivalents, from Wiktionary's translation tables.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-general-en-de.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "German"
+    ],
+    "sizeBytes": 2706248,
+    "coverUrl": "/books/covers/general-dictionary.jpg"
+  },
+  {
+    "id": "wikt-general-en-fr",
+    "title": "General Dictionary (English to French)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "The 25,000 most widely translated English words and senses with their French equivalents, from Wiktionary's translation tables.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-general-en-fr.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "French"
+    ],
+    "sizeBytes": 2592905,
+    "coverUrl": "/books/covers/general-dictionary.jpg"
+  },
+  {
+    "id": "wikt-general-en-es",
+    "title": "General Dictionary (English to Spanish)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "The 25,000 most widely translated English words and senses with their Spanish equivalents, from Wiktionary's translation tables.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-general-en-es.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Spanish"
+    ],
+    "sizeBytes": 2723780,
+    "coverUrl": "/books/covers/general-dictionary.jpg"
+  },
+  {
+    "id": "wikt-general-en-zh",
+    "title": "General Dictionary (English to Chinese)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "The 25,000 most widely translated English words and senses with their Chinese equivalents, from Wiktionary's translation tables.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-general-en-zh.v1.json",
+    "inputLanguages": [
+      "English"
+    ],
+    "outputLanguages": [
+      "Chinese"
+    ],
+    "sizeBytes": 3711910,
+    "coverUrl": "/books/covers/general-dictionary.jpg"
+  },
+  {
+    "id": "wikt-general-de-ar",
+    "title": "General Dictionary (German to Arabic)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "20,044 German words paired directly with Arabic, matched through shared senses in Wiktionary's translation tables rather than word-by-word through English.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-general-de-ar.v1.json",
+    "inputLanguages": [
+      "German"
+    ],
+    "outputLanguages": [
+      "Arabic"
+    ],
+    "sizeBytes": 3554195,
+    "coverUrl": "/books/covers/general-dictionary.jpg"
+  },
+  {
+    "id": "wikt-general-fr-ar",
+    "title": "General Dictionary (French to Arabic)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "19,635 French words paired directly with Arabic, matched through shared senses in Wiktionary's translation tables rather than word-by-word through English.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-general-fr-ar.v1.json",
+    "inputLanguages": [
+      "French"
+    ],
+    "outputLanguages": [
+      "Arabic"
+    ],
+    "sizeBytes": 3417197,
+    "coverUrl": "/books/covers/general-dictionary.jpg"
+  },
+  {
+    "id": "wikt-general-es-ar",
+    "title": "General Dictionary (Spanish to Arabic)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "19,189 Spanish words paired directly with Arabic, matched through shared senses in Wiktionary's translation tables rather than word-by-word through English.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-general-es-ar.v1.json",
+    "inputLanguages": [
+      "Spanish"
+    ],
+    "outputLanguages": [
+      "Arabic"
+    ],
+    "sizeBytes": 3413939,
+    "coverUrl": "/books/covers/general-dictionary.jpg"
+  },
+  {
+    "id": "wikt-general-zh-ar",
+    "title": "General Dictionary (Chinese to Arabic)",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "17,061 Chinese words paired directly with Arabic, matched through shared senses in Wiktionary's translation tables rather than word-by-word through English.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-general-zh-ar.v1.json",
+    "inputLanguages": [
+      "Chinese"
+    ],
+    "outputLanguages": [
+      "Arabic"
+    ],
+    "sizeBytes": 3353215,
+    "coverUrl": "/books/covers/general-dictionary.jpg"
+  },
+  {
+    "id": "cedict-zh-en",
+    "title": "CC-CEDICT Chinese-English Dictionary",
+    "type": "translation",
+    "version": "1.0.0",
+    "description": "117,159 entries from CC-CEDICT, the community Chinese-English dictionary. Search by simplified or traditional characters, or by pinyin with or without tone marks.",
+    "source": "CC-CEDICT (MDBG)",
+    "sourceUrl": "/books/packs/cedict-zh-en.v1.json",
+    "inputLanguages": [
+      "Chinese"
+    ],
+    "outputLanguages": [
+      "English"
+    ],
+    "sizeBytes": 20669408,
+    "coverUrl": "/books/covers/cedict.jpg"
+  },
+  {
+    "id": "wikt-mono-fr",
+    "title": "Dictionnaire du Wiktionnaire",
+    "type": "dictionary",
+    "version": "1.0.0",
+    "description": "24,985 entries. French definitions of French words, from the French Wiktionary (Wiktionnaire).",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-mono-fr.v1.json",
+    "inputLanguages": [
+      "French"
+    ],
+    "outputLanguages": [
+      "French"
+    ],
+    "sizeBytes": 4907245,
+    "coverUrl": "/books/covers/mono-fr.jpg"
+  },
+  {
+    "id": "wikt-mono-de",
+    "title": "Wörterbuch aus dem Wiktionary",
+    "type": "dictionary",
+    "version": "1.0.0",
+    "description": "24,993 entries. German definitions of German words, from the German Wiktionary.",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-mono-de.v1.json",
+    "inputLanguages": [
+      "German"
+    ],
+    "outputLanguages": [
+      "German"
+    ],
+    "sizeBytes": 3989969,
+    "coverUrl": "/books/covers/mono-de.jpg"
+  },
+  {
+    "id": "wikt-mono-es",
+    "title": "Diccionario del Wikcionario",
+    "type": "dictionary",
+    "version": "1.0.0",
+    "description": "24,993 entries. Spanish definitions of Spanish words, from the Spanish Wiktionary (Wikcionario).",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-mono-es.v1.json",
+    "inputLanguages": [
+      "Spanish"
+    ],
+    "outputLanguages": [
+      "Spanish"
+    ],
+    "sizeBytes": 4865720,
+    "coverUrl": "/books/covers/mono-es.jpg"
+  },
+  {
+    "id": "wikt-mono-zh",
+    "title": "維基詞典漢語詞典",
+    "type": "dictionary",
+    "version": "1.0.0",
+    "description": "24,958 entries. Chinese definitions of Chinese words, from the Chinese Wiktionary (維基詞典).",
+    "source": "Wiktionary (via Wiktextract)",
+    "sourceUrl": "/books/packs/wikt-mono-zh.v1.json",
+    "inputLanguages": [
+      "Chinese"
+    ],
+    "outputLanguages": [
+      "Chinese"
+    ],
+    "sizeBytes": 2687412,
+    "coverUrl": "/books/covers/mono-zh.jpg"
   }
 ]
