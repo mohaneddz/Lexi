@@ -35,3 +35,25 @@ directly:
 - `dict-topic-substances.svg`, `dict-topic-nature.svg` — searches turned up
   nothing public domain that actually depicts the subject, so these are drawn
   instead of using a loosely related stock image.
+
+## Field, general and monolingual books
+
+Fetched by `scripts/books/fetch_covers.py`, which only accepts files Commons lists as public domain.
+
+| Cover | Work | Commons file |
+| --- | --- | --- |
+| `field-computing.jpg` | Drawing of Charles Babbage's Difference Engine | `Babbage difference engine drawing.gif` |
+| `field-ai.jpg` | Kempelen's chess-playing Turk, from Robert Willis's 1821 account | `Chess Automaton Willis 1821 09.png` |
+| `field-mathematics.jpg` | Oliver Byrne's *The First Six Books of the Elements of Euclid*, 1847 | `The First Six Books of the Elements of Euclid.jpg` |
+| `field-physics.jpg` | Title page of Newton's *Philosophiæ Naturalis Principia Mathematica*, 1687 | `Newton's Philosophiae Naturalis Principia Mathematica 1687 (presentation copy to James II).jpg` |
+| `field-chemistry.jpg` | Plate from Lavoisier's *Traité élémentaire de chimie*, 1789 | `Antoine Lavoisier Traité Élémentaire de Chimie 1789.jpg` |
+| `field-business.jpg` | Title page of Adam Smith's *The Wealth of Nations* | `Smith - Inquiry into the nature and causes of the wealth of nations, 1922 - 5231847.tif` |
+| `field-law.jpg` | Title page of the *Code civil*, 1803 | `Code civil avec les discours, 1803.jpg` |
+| `general-dictionary.jpg` | Title page of Samuel Johnson's *A Dictionary of the English Language*, 1755 | `JohnsonDictionary.png` |
+| `cedict.jpg` | A page of the *Kangxi Dictionary* (website watermark cropped) | `Kangxi dictionary's 日 page.gif` |
+| `mono-fr.jpg` | Frontispiece of the *Dictionnaire de l'Académie française*, 1694 | `Acad-1694-Im2.png` |
+| `mono-de.jpg` | Title page of the Grimms' *Deutsches Wörterbuch*, 1854 | `Deutsches Wörterbuch Grimm - Titel Band 1.png` |
+| `mono-es.jpg` | Title page of the *Diccionario de Autoridades*, 1726 | `Autoridades.jpg` |
+| `mono-zh.jpg` | A page of the *Shuowen Jiezi*, Xu Xuan's edition | `Shuowen Jiezi, by Xu Xuan.png` |
+
+The Medicine, Zoology, Astronomy and Botany field books reuse `dict-topic-body.png`, `dict-topic-animals.jpg`, `dict-topic-astronomy.jpg` and `dict-topic-plants.jpg` from above.

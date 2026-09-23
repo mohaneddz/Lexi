@@ -6,7 +6,7 @@
 </h1>
 Lexi is a modern, privacy-first, AI-assisted vocabulary desktop app for capturing words, building translations, reviewing definitions, and learning faster with global quick actions.
 
-**Status:** Phase 1 and 2 (capture, definitions, translations, groups, review, stats) are complete and working. The working tree currently has an unfinished, uncommitted "Books" reading feature and some other in-progress changes on top of the last commit — treat anything not covered by Phase 1/2 above as unstable until that work is committed and reconciled.
+**Status:** Capture, definitions, translations, groups, spaced-repetition review, stats and offline books all work. Books currently ship inside the app; moving them to a separate installer is planned (see the roadmap).
 
 ---
 
@@ -161,7 +161,25 @@ Contributions are welcome.
 - [x] Stats dashboard.
 - [x] Tray integration and hide-to-tray behavior.
 
-### Phase 3: Next Improvements
+### Phase 3: Offline Books
+- [x] Dictionary and translation books, searchable from capture, Home suggestions and the Books page.
+- [x] Field books (Computing, AI and Data Science, Mathematics, Medicine, Zoology, Astronomy, Physics, Chemistry, Botany, Business, Law) between English and Arabic, German, French, Spanish and Chinese.
+- [x] General dictionaries from English, direct German/French/Spanish/Chinese to Arabic pairs, CC-CEDICT, and French, German, Spanish and Chinese monolingual dictionaries.
+- [x] Reproducible build: `scripts/books/fetch_sources.py` then `scripts/books/build_books.py` (sources in [`public/books/SOURCES.md`](public/books/SOURCES.md)).
+
+### Phase 4: Book Installer (planned)
+Books are bundled into the app today, which makes every download carry every book (tens of MB) whether it's wanted or not. The plan is to ship them separately:
+
+- [ ] **Separate `Lexi Books` installer (.exe).** A small standalone app, released next to Lexi on GitHub Releases, that holds the book packs.
+- [ ] **Book picker.** On launch it lists every book grouped by field and language pair, with entry counts and sizes. Everything is selected by default; you can untick what you don't want, or filter by language.
+- [ ] **Installs into the current Lexi.** It finds Lexi's data folder (`%APPDATA%\com.lexi.app`), writes each selected pack to `books\<id>\<version>.json` (the same place imported books already live), and updates a `books\installed.json` manifest. No admin rights needed, since it's all per-user.
+- [ ] **Lexi reads the manifest.** On start, and when the manifest changes while Lexi is running, installed books are merged into the catalog and appear on the Books page like bundled ones. A "Get more books" button points to the installer.
+- [ ] **Small core bundle.** Only a starter set stays inside Lexi (English definitions and one general dictionary per language); the field and large general books move to the installer.
+- [ ] **Integrity and updates.** Packs are compressed and listed in the manifest with SHA-256 checksums and versions. Re-running a newer installer updates changed books and skips unchanged ones.
+- [ ] **Uninstall from either side.** Books can be removed from the installer's list or from Lexi's Books page, which deletes the pack and its manifest entry.
+- [ ] **Release process.** The installer and its checksums are built by the same release workflow as Lexi.
+
+### Phase 5: Next Improvements
 - [ ] Richer progress analytics.
 - [ ] Import/export workflows.
 - [ ] Expanded language tooling and quality controls.
