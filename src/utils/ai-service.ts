@@ -87,8 +87,10 @@ const RELATED_TRANSLATIONS_SCHEMA = z.object({
 });
 
 const GROUP_WORD_SUGGESTIONS_SCHEMA = z.object({
-  terms: z.array(z.string().min(1).max(60)).min(1).max(14),
-  confidence: z.number().min(0).max(1),
+  terms: z.array(z.object({
+    term: z.string(),
+    detail: z.string(),
+  })),
 });
 
 function resolveEnvApiKey(): string {
@@ -1134,26 +1136,32 @@ export type GroupWordSuggestionRequest = {
   /** Words to avoid re-suggesting: already saved, already dismissed, already shown this session. */
   excludeWords: string[];
   count?: number;
+  /** Translate each term into this language instead of defining it. */
+  targetLanguage?: string;
 };
 
+export type GroupWordSuggestion = { term: string; detail: string };
+
+/** How many excluded words fit in the prompt before it gets too long to be worth the tokens. */
+const MAX_EXCLUDED_IN_PROMPT = 150;
+
 /**
- * Suggests new candidate words for a themed group, using the group's own
- * existing words as few-shot examples so the result matches its actual
- * topic and difficulty rather than a generic guess from the group's name
- * alone. Returns bare terms, not definitions — the caller looks those up in
- * its own offline books so the definition stays grounded rather than
- * AI-invented wherever possible.
+ * Suggests new words for a themed group, few-shotted with the group's own
+ * words so they match its real topic and difficulty. Each term comes back
+ * with its definition (or translation) in the same request, so a section
+ * costs one call however many terms it needs; the caller still prefers an
+ * offline book's definition whenever a book has the term.
  */
 export async function suggestGroupWords(
   request: GroupWordSuggestionRequest,
-): Promise<AIResponse<string[]>> {
-  const { groupName, groupDescription, language, exampleWords, excludeWords, count = 6 } = request;
+): Promise<AIResponse<GroupWordSuggestion[]>> {
+  const { groupName, groupDescription, language, exampleWords, excludeWords, count = 6, targetLanguage } = request;
 
   try {
     const exampleList = exampleWords.length > 0
       ? exampleWords.join(", ")
       : "(this group has no words yet — use the name and description to judge the theme)";
-    const exclusionList = excludeWords.length > 0 ? excludeWords.slice(0, 60).join(", ") : "none";
+    const exclusionList = excludeWords.length > 0 ? excludeWords.slice(0, MAX_EXCLUDED_IN_PROMPT).join(", ") : "none";
 
     const object = await runStructuredPrompt({
       schema: GROUP_WORD_SUGGESTIONS_SCHEMA,
@@ -1168,7 +1176,9 @@ export async function suggestGroupWords(
         "Match the topic and difficulty level of the existing words as closely as possible.",
         "Do not repeat the group name itself, and do not repeat any of these already-known words:",
         exclusionList,
-        "Return only the words themselves, one per array entry, not definitions or explanations.",
+        targetLanguage
+          ? `For each term, put its ${targetLanguage} translation in detail (just the translation, no explanation).`
+          : `For each term, put a clear, learner-friendly ${language} definition in one sentence in detail.`,
       ].filter(Boolean).join("\n"),
       temperature: 0.65,
     });
@@ -1177,11 +1187,11 @@ export async function suggestGroupWords(
     const seen = new Set<string>();
 
     const terms = object.terms
-      .map((term) => term.trim())
-      .filter((term) => term.length > 0)
-      .filter((term) => !excludeSet.has(term.toLowerCase()))
-      .filter((term) => {
-        const key = term.toLowerCase();
+      .map((entry) => ({ term: entry.term.trim(), detail: entry.detail.trim() }))
+      .filter((entry) => entry.term.length > 0 && entry.detail.length > 0)
+      .filter((entry) => !excludeSet.has(entry.term.toLowerCase()))
+      .filter((entry) => {
+        const key = entry.term.toLowerCase();
         if (seen.has(key)) return false;
         seen.add(key);
         return true;
@@ -1191,7 +1201,7 @@ export async function suggestGroupWords(
       return { success: false, data: [], error: "AI returned no usable terms." };
     }
 
-    return { success: true, data: terms, confidence: object.confidence };
+    return { success: true, data: terms };
   } catch (error) {
     return {
       success: false,

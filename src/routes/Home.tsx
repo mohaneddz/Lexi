@@ -22,6 +22,12 @@ import {
 
 const DISMISSED_KEY_PREFIX = "lexi:home:dismissed";
 const DEFAULT_PER_SECTION = 4;
+/** Spare suggestions kept behind the ones on show, so adding or dismissing one doesn't cost an AI call. */
+const RESERVE_PER_SECTION = 3;
+/** AI attempts per generation before the offline miner fills the rest. */
+const AI_ROUNDS = 2;
+/** Automatic refills per section per session, so a group the AI has run dry on can't loop. */
+const MAX_TOP_UPS_PER_SECTION = 3;
 
 type SectionKey = string;
 
@@ -80,7 +86,7 @@ export default function Home() {
   const { translations, addTranslation, loading: translationsLoading } = useTranslations();
   const { groups, loading: groupsLoading } = useGroups();
   const { lookup, enabledBookIds, loading: booksLoading } = useBooks();
-  const { suggestGroupWords, defineWord, translate } = useAI();
+  const { suggestGroupWords } = useAI();
 
   const [kind, setKind] = useState<SuggestionKind>("definition");
   const [groupFilterId, setGroupFilterId] = useState("none");
@@ -97,6 +103,7 @@ export default function Home() {
   // section — or generating a later group — doesn't repeat a word another
   // section already offered.
   const shownTermsRef = useRef<Set<string>>(new Set());
+  const topUpsRef = useRef<Map<SectionKey, number>>(new Map());
 
   useEffect(() => {
     void getSettings().then((settings) => {
@@ -181,24 +188,26 @@ export default function Home() {
   }, [lookup]);
 
   /**
-   * Generates one section: tries the AI first, few-shotted with the group's
-   * own words, grounding each returned term in an enabled book when one has
-   * it. Falls back to the offline term-mining approach — same one used
-   * before AI suggestions existed — whenever the AI is unavailable, errors,
-   * or returns nothing usable, so the page still works with no API key.
-   * Results are saved, so a section only costs AI quota once until it's
-   * refreshed by hand.
+   * Fills one section. The AI suggests terms few-shotted on the group's own
+   * words, with each term's definition or translation in the same request,
+   * and an enabled book's entry replaces that whenever a book has the term.
+   * A section keeps a few spares beyond the count on show, so adding or
+   * dismissing one slides the next in without another call. If the AI comes
+   * up short it gets one more try, and the offline term miner fills
+   * whatever is still missing. Results are saved, so a section only spends
+   * quota again when it's refreshed, runs out of spares, or the count goes up.
    */
   const generateSection = useCallback(async (
     generateKind: SuggestionKind,
     group: LexiGroup,
-    options: { force?: boolean } = {},
+    options: { force?: boolean; topUp?: boolean } = {},
   ) => {
     if (!languages) return;
     const key = sectionKey(generateKind, group, languages);
     const currentDismissed = generateKind === "definition" ? dismissedDefinitions : dismissedTranslations;
     const language = generateKind === "definition" ? languages.definition : languages.source;
     const targetLanguage = languages.target;
+    const target = perSection + RESERVE_PER_SECTION;
 
     setSections((current) => ({
       ...current,
@@ -211,36 +220,27 @@ export default function Home() {
       },
     }));
 
-    const previouslyShown = options.force ? new Set(sections[key]?.suggestions.map((s) => s.term.toLowerCase()) ?? []) : new Set<string>();
+    const existing = sections[key]?.suggestions ?? [];
+    const previouslyShown = options.force ? new Set(existing.map((s) => s.term.toLowerCase())) : new Set<string>();
     const exclude = new Set<string>([...shownTermsRef.current, ...previouslyShown]);
 
     const groupWords = scopeWords(group);
     const groupTranslations = translations.filter((translation) => (translation.groupIds || []).includes(group.id));
 
-    const runFallback = (): Suggestion[] => {
-      // Others with nothing of its own mines the whole vocabulary instead,
-      // which is what the old catch-all section did.
-      const scopedWords = group.isOthers && groupWords.length === 0 ? words : groupWords;
-      if (generateKind === "definition") {
-        return buildFallbackDefinitionSuggestions({
-          words, scopedWords, dismissed: currentDismissed, findDefinition, exclude, limit: perSection,
-        });
-      }
-      return buildFallbackTranslationSuggestions({
-        words,
-        translations,
-        scopedWords,
-        sourceLanguage: language,
-        targetLanguage,
-        dismissed: currentDismissed,
-        findTranslation: (term) => findTranslation(term, language, targetLanguage),
-        exclude,
-        limit: perSection,
-      });
-    };
+    const known = knownTerms(words);
+    for (const translation of translations) {
+      if (translation.sourceLanguage === language) known.add(translation.sourceWord.trim().toLowerCase());
+    }
 
-    let picked: Suggestion[] = [];
-    let usedAi = false;
+    // A top-up keeps whatever is still usable and only adds to it.
+    const picked: Suggestion[] = options.topUp
+      ? existing.filter((suggestion) => {
+        const normalized = suggestion.term.trim().toLowerCase();
+        return !known.has(normalized) && !currentDismissed.has(normalized);
+      })
+      : [];
+    const pickedTerms = new Set(picked.map((suggestion) => suggestion.term.toLowerCase()));
+    let usedAi = picked.length > 0 && (sections[key]?.usedAi ?? false);
     let error: string | null = null;
 
     const exampleWords = Array.from(new Set([
@@ -249,74 +249,91 @@ export default function Home() {
       ...groupWords.map((word) => word.word),
     ])).slice(0, 6);
 
+    // What the AI is told to avoid, most likely repeats first, since only
+    // so many fit in the prompt: this group's own words, what this section
+    // and its siblings already showed, dismissals, then everything else.
+    const promptExclusions = () => Array.from(new Set([
+      ...groupWords.map((word) => word.word.toLowerCase()),
+      ...pickedTerms,
+      ...exclude,
+      ...shownTermsRef.current,
+      ...currentDismissed,
+      ...known,
+    ]));
+
     // Others has no theme of its own, so the AI only gets a go once it holds
     // some words to few-shot on; a regular group can be judged by its name.
-    if (!group.isOthers || exampleWords.length > 0) {
-      const known = knownTerms(words);
-      for (const translation of translations) {
-        if (translation.sourceLanguage === language) known.add(translation.sourceWord.trim().toLowerCase());
-      }
+    const canUseAi = !group.isOthers || exampleWords.length > 0;
 
+    for (let round = 0; canUseAi && round < AI_ROUNDS && picked.length < target; round += 1) {
+      const missing = target - picked.length;
       const result = await suggestGroupWords({
         groupName: group.name,
         groupDescription: group.description,
         language,
         exampleWords,
-        excludeWords: [...known, ...exclude, ...currentDismissed],
-        count: perSection + 2,
+        excludeWords: promptExclusions(),
+        // A little over what's missing, since some answers still get filtered out.
+        count: missing + 3,
+        targetLanguage: generateKind === "translation" ? targetLanguage : undefined,
       });
 
-      if (result.success && result.data.length > 0) {
-        usedAi = true;
-        for (const term of result.data) {
-          if (picked.length >= perSection) break;
-          const normalized = term.toLowerCase();
-          // Checks the live ref, not the snapshot taken before the AI call,
-          // so a sibling group that claimed this term while this one was
-          // waiting on the network is still caught.
-          if (known.has(normalized) || shownTermsRef.current.has(normalized) || currentDismissed.has(normalized)) continue;
-
-          // Claimed immediately, not after the pick, so a sibling group
-          // generating at the same time can't land on the same term while
-          // this one is still mid-lookup.
-          shownTermsRef.current.add(normalized);
-
-          if (generateKind === "definition") {
-            const found = findDefinition(term);
-            if (found) {
-              picked.push({ term, detail: found.definition, bookTitle: found.bookTitle, language, seenIn: [] });
-              continue;
-            }
-            // No enabled book has this term, so the AI defines just this
-            // one word rather than dropping it; it chose it for this group.
-            const defined = await defineWord(term, language);
-            if (defined.success && defined.data) {
-              picked.push({ term, detail: defined.data, language, seenIn: [] });
-            }
-            continue;
-          }
-
-          const found = findTranslation(term, language, targetLanguage);
-          if (found) {
-            picked.push({ term, detail: found.targetWord, bookTitle: found.bookTitle, language, targetLanguage, seenIn: [] });
-            continue;
-          }
-          const translated = await translate(term, language, targetLanguage);
-          if (translated.success && translated.data) {
-            picked.push({ term, detail: translated.data, language, targetLanguage, seenIn: [] });
-          }
-        }
-      } else if (!result.success) {
+      if (!result.success) {
         error = result.error ?? null;
+        break;
+      }
+
+      for (const entry of result.data) {
+        if (picked.length >= target) break;
+        const normalized = entry.term.toLowerCase();
+        // Checks the live ref, not a snapshot from before the AI call, so a
+        // sibling group that claimed this term meanwhile is still caught.
+        if (known.has(normalized) || pickedTerms.has(normalized) || shownTermsRef.current.has(normalized) || currentDismissed.has(normalized)) continue;
+        shownTermsRef.current.add(normalized);
+        pickedTerms.add(normalized);
+        usedAi = true;
+
+        if (generateKind === "definition") {
+          const found = findDefinition(entry.term);
+          picked.push(found
+            ? { term: entry.term, detail: found.definition, bookTitle: found.bookTitle, language, seenIn: [] }
+            : { term: entry.term, detail: entry.detail, language, seenIn: [] });
+        } else {
+          const found = findTranslation(entry.term, language, targetLanguage);
+          picked.push(found
+            ? { term: entry.term, detail: found.targetWord, bookTitle: found.bookTitle, language, targetLanguage, seenIn: [] }
+            : { term: entry.term, detail: entry.detail, language, targetLanguage, seenIn: [] });
+        }
       }
     }
 
-    if (picked.length === 0) {
-      picked = runFallback();
-      usedAi = false;
+    // Whatever the AI couldn't fill comes from the offline miner, which
+    // needs no network or key. Others with nothing of its own mines the
+    // whole vocabulary, as the old catch-all section did.
+    if (picked.length < target) {
+      const scopedWords = group.isOthers && groupWords.length === 0 ? words : groupWords;
+      const fallbackExclude = new Set([...exclude, ...pickedTerms, ...shownTermsRef.current]);
+      const limit = target - picked.length;
+      const extra = generateKind === "definition"
+        ? buildFallbackDefinitionSuggestions({
+          words, scopedWords, dismissed: currentDismissed, findDefinition, exclude: fallbackExclude, limit,
+        })
+        : buildFallbackTranslationSuggestions({
+          words,
+          translations,
+          scopedWords,
+          sourceLanguage: language,
+          targetLanguage,
+          dismissed: currentDismissed,
+          findTranslation: (term) => findTranslation(term, language, targetLanguage),
+          exclude: fallbackExclude,
+          limit,
+        });
+      for (const suggestion of extra) {
+        shownTermsRef.current.add(suggestion.term.toLowerCase());
+        picked.push(suggestion);
+      }
     }
-
-    for (const suggestion of picked) shownTermsRef.current.add(suggestion.term.toLowerCase());
 
     const finalError = picked.length === 0 ? error : null;
     setSections((current) => ({
@@ -331,8 +348,8 @@ export default function Home() {
       void writeAiCache("homeSuggestions", key, entry);
     }
   }, [
-    defineWord, dismissedDefinitions, dismissedTranslations, findDefinition, findTranslation, languages,
-    perSection, scopeWords, sections, suggestGroupWords, translate, translations, words,
+    dismissedDefinitions, dismissedTranslations, findDefinition, findTranslation, languages,
+    perSection, scopeWords, sections, suggestGroupWords, translations, words,
   ]);
 
   const generateSectionRef = useRef(generateSection);
@@ -402,6 +419,23 @@ export default function Home() {
       return !dismissed.has(normalized) && !savedTerms.has(normalized);
     }).slice(0, perSection);
   };
+
+  // Once a section's spares are used up by adds and dismissals, it refills
+  // itself instead of sitting at two or three suggestions.
+  useEffect(() => {
+    if (!ready || !languages || sameTranslationLanguages) return;
+    for (const group of visibleGroups) {
+      const key = sectionKey(kind, group, languages);
+      const state = sections[key];
+      if (!state || state.loading || state.error) continue;
+      if (visibleSuggestions(state).length >= perSection) continue;
+      const attempts = topUpsRef.current.get(key) ?? 0;
+      if (attempts >= MAX_TOP_UPS_PER_SECTION) continue;
+      topUpsRef.current.set(key, attempts + 1);
+      void generateSectionRef.current(kind, group, { topUp: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sections, savedTerms, dismissedDefinitions, dismissedTranslations, perSection, ready, kind, languages, visibleGroups]);
 
   const handleAdd = async (suggestion: Suggestion, group: LexiGroup) => {
     setPendingTerm(suggestion.term);
