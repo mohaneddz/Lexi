@@ -51,11 +51,6 @@ const GROUP_BATCH_SUGGESTION_SCHEMA = z.object({
   })),
 });
 
-const GROUP_ICON_SUGGESTION_SCHEMA = z.object({
-  iconName: z.string().min(1),
-  confidence: z.number().min(0).max(1),
-});
-
 const DISTRACTOR_DEFINITIONS_SCHEMA = z.object({
   distractors: z.array(z.string().min(8).max(260)).length(3),
   confidence: z.number().min(0).max(1),
@@ -717,46 +712,56 @@ export async function suggestGroupIcon(
     };
   }
 
-  const candidateIcons = availableIconNames.slice(0, 260);
+  // Lucide names are compared with case, spaces, dashes and underscores
+  // stripped, so "book-open" or "Book Open" still finds BookOpen.
+  const compact = (value: string) => value.toLowerCase().replace(/[\s_-]+/g, "");
+  const byCompactName = new Map(availableIconNames.map((name) => [compact(name), name]));
+
+  // Plain text rather than structured output: the model already knows
+  // Lucide's names, so there's no need to send the icon list (it's over a
+  // thousand names), and a strict JSON schema here kept failing validation.
+  const prompt = [
+    `Group name: ${trimmedName}`,
+    `Group description: ${groupDescription?.trim() || "None"}`,
+    "",
+    "Suggest the 5 best Lucide icon names for this group, most fitting first.",
+    "Use exact Lucide component names in PascalCase, such as BookOpen, Plane or Briefcase.",
+    "Reply with only the names, comma separated, nothing else.",
+  ].join("\n");
 
   try {
-    const object = await runStructuredPrompt({
-      schema: GROUP_ICON_SUGGESTION_SCHEMA,
-      system:
-        "You pick the most semantically appropriate Lucide icon name for a given group. Return strict JSON only.",
-      prompt: [
-        `Group name: ${trimmedName}`,
-        `Group description: ${groupDescription?.trim() || "None"}`,
-        "",
-        "Choose one icon name from this exact list:",
-        candidateIcons.join(", "),
-        "",
-        "Return only one icon name from the list in iconName.",
-      ].join("\n"),
-      temperature: 0.1,
-    });
+    const config = await resolveAiConfig();
+    const groq = createGroq({ apiKey: config.apiKey });
+    const candidateModels = config.model !== DEFAULT_MODEL ? [config.model, DEFAULT_MODEL] : [config.model];
 
-    const normalized = object.iconName.replace(/\s+/g, "");
-    const matched = candidateIcons.find(
-      (name) =>
-        name === object.iconName ||
-        name === normalized ||
-        name.toLowerCase() === object.iconName.toLowerCase() ||
-        name.toLowerCase() === normalized.toLowerCase(),
-    );
+    let lastError: unknown = null;
+    for (const model of candidateModels) {
+      try {
+        const result = await generateText({
+          model: groq(model),
+          system: "You pick Lucide icons for groups in a vocabulary app. Reply with icon names only.",
+          prompt,
+          temperature: 0.1,
+        });
 
-    if (!matched) {
-      return {
-        success: true,
-        data: "Folder",
-        confidence: 0.4,
-      };
+        const suggested = result.text
+          .split(/[,\n]+/)
+          .map((entry) => entry.replace(/[`"'*.]/g, "").replace(/^\s*\d+[).]?\s*/, "").trim())
+          .filter(Boolean);
+        const matched = suggested.map((entry) => byCompactName.get(compact(entry))).find(Boolean);
+        if (matched) {
+          return { success: true, data: matched };
+        }
+        lastError = new Error(`None of the suggested icons exist: ${suggested.slice(0, 5).join(", ") || "empty reply"}`);
+      } catch (runError) {
+        lastError = runError;
+      }
     }
 
     return {
-      success: true,
-      data: matched,
-      confidence: object.confidence,
+      success: false,
+      data: "",
+      error: toErrorMessage("Group icon suggestion failed", lastError),
     };
   } catch (error) {
     return {
