@@ -28,7 +28,7 @@ export function WordCard({ word, onEdit, onDelete }: WordCardProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(`${word.word}: ${word.definition}`);
+    await navigator.clipboard.writeText(word.definition);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

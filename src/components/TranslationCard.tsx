@@ -28,9 +28,7 @@ export function TranslationCard({ translation, onEdit, onDelete }: TranslationCa
     const [copied, setCopied] = useState(false);
 
     const handleCopy = async () => {
-        await navigator.clipboard.writeText(
-            `${translation.sourceWord} (${translation.sourceLanguage}) → ${translation.targetWord} (${translation.targetLanguage})`
-        );
+        await navigator.clipboard.writeText(translation.targetWord);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     };

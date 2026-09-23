@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 
 import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
+import { CategorySuggestions } from "@/components/CategorySuggestions";
 import { EditTranslationDialog } from "@/components/EditTranslationDialog";
 import { TextPromptDialog } from "@/components/TextPromptDialog";
 import { GroupBadge } from "@/components/lexi/GroupBadge";
@@ -48,7 +49,8 @@ import { useTranslations } from "@/hooks/useTranslations";
 import { useWords } from "@/hooks/useWords";
 import { cardMinWidthFor } from "@/lib/surface-view";
 import { cn } from "@/lib/utils";
-import type { Translation, ViewMode } from "@/types";
+import type { LexiGroup, Translation, ViewMode } from "@/types";
+import type { Suggestion } from "@/utils/wordSuggestions";
 import type { RelatedTranslationSuggestion } from "@/utils/ai-service";
 import { capitalizeTerm, formatDate } from "@/utils/formatters";
 import { resolveGroupAssignment } from "@/utils/group-assignment";
@@ -202,8 +204,8 @@ export default function Translations() {
       setSelectedId(null);
       return;
     }
-    if (!selectedId || !filteredTranslations.some((translation) => translation.id === selectedId)) {
-      setSelectedId(filteredTranslations[0].id);
+    if (selectedId && !filteredTranslations.some((translation) => translation.id === selectedId)) {
+      setSelectedId(null);
     }
   }, [filteredTranslations, selectedId]);
 
@@ -342,10 +344,7 @@ export default function Translations() {
 
   const copyExamples = async () => {
     if (!selectedTranslation) return;
-    const lines = [
-      selectedSourceExample ? `${selectedTranslation.sourceLanguage}: ${selectedSourceExample}` : null,
-      selectedTargetExample ? `${selectedTranslation.targetLanguage}: ${selectedTargetExample}` : null,
-    ].filter((line): line is string => Boolean(line));
+    const lines = [selectedSourceExample, selectedTargetExample].filter((line): line is string => Boolean(line));
 
     if (lines.length === 0) return;
     await navigator.clipboard.writeText(lines.join("\n"));
@@ -382,7 +381,7 @@ export default function Translations() {
   };
 
   const handleCopyTranslation = async (translation: Translation) => {
-    await navigator.clipboard.writeText(`${translation.sourceWord} -> ${translation.targetWord}`);
+    await navigator.clipboard.writeText(translation.targetWord);
   };
 
   const toggleTranslationGroup = async (translation: Translation, groupId: string) => {
@@ -585,6 +584,10 @@ export default function Translations() {
     }
   };
 
+  const addCategorySuggestion = async (suggestion: Suggestion, group: LexiGroup) => {
+    await addTranslation({ sourceWord: suggestion.term, sourceLanguage: suggestion.language, targetWord: suggestion.detail, targetLanguage: suggestion.targetLanguage ?? suggestion.language, aiGenerated: !suggestion.bookTitle, groupIds: [group.id], tags: [] });
+  };
+
   const contentGridStyle = {
     gridTemplateColumns: `repeat(auto-fill, minmax(${cardMinWidthFor(viewMode, zoom)}px, 1fr))`,
   };
@@ -595,7 +598,7 @@ export default function Translations() {
       className={cn("word-row", bulkMode ? "grid-cols-[28px_minmax(0,1fr)_26px]" : "grid-cols-[minmax(0,1fr)_26px]", selectedId === translation.id && "word-row-active")}
       role="button"
       tabIndex={0}
-      onClick={() => bulkMode ? toggleBulkTranslation(translation.id) : setSelectedId(translation.id)}
+      onClick={() => bulkMode ? toggleBulkTranslation(translation.id) : setSelectedId(selectedId === translation.id ? null : translation.id)}
       onContextMenu={(event) => {
         event.preventDefault();
         openActionMenu(translation, event.clientX, event.clientY);
@@ -622,7 +625,7 @@ export default function Translations() {
       className={cn("lexi-browser-card tile", selectedId === translation.id && "active")}
       role="button"
       tabIndex={0}
-      onClick={() => bulkMode ? toggleBulkTranslation(translation.id) : setSelectedId(translation.id)}
+      onClick={() => bulkMode ? toggleBulkTranslation(translation.id) : setSelectedId(selectedId === translation.id ? null : translation.id)}
       onContextMenu={(event) => {
         event.preventDefault();
         openActionMenu(translation, event.clientX, event.clientY);
@@ -653,7 +656,7 @@ export default function Translations() {
       className={cn("lexi-browser-card", selectedId === translation.id && "active")}
       role="button"
       tabIndex={0}
-      onClick={() => bulkMode ? toggleBulkTranslation(translation.id) : setSelectedId(translation.id)}
+      onClick={() => bulkMode ? toggleBulkTranslation(translation.id) : setSelectedId(selectedId === translation.id ? null : translation.id)}
       onContextMenu={(event) => {
         event.preventDefault();
         openActionMenu(translation, event.clientX, event.clientY);
@@ -844,7 +847,7 @@ export default function Translations() {
                   <div className="space-y-2"><div className="flex items-center justify-between"><p className="font-medium">Linked Vocabulary</p><Sparkles className="size-4 text-muted-foreground" /></div>{linkedWords.length === 0 ? <div className="frost-panel-soft p-3 text-sm text-muted-foreground">No linked word entries yet.</div> : <div className="flex flex-wrap gap-1.5">{linkedWords.map((word) => <span key={word.id} className="lexi-chip">{word.word}</span>)}</div>}</div>
                 </>
               ) : (
-                <div className="flex h-full min-h-[220px] flex-col items-center justify-center text-center"><p className="section-title">Choose a translation</p><p className="subtle-caption mt-2 max-w-sm">Explore context, linked words, and language flow for each pair.</p></div>
+                <CategorySuggestions kind="translation" groupFilterId={groupFilterId} words={words} translations={translations} onAdd={addCategorySuggestion} />
               )}
               {selectedTranslation ? (
                 <>

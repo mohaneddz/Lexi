@@ -625,7 +625,7 @@ export default function Books() {
                       size="sm"
                       variant="outline"
                       className="border-white/15 bg-white/6 hover:bg-white/14"
-                      onClick={() => void navigator.clipboard.writeText(`${result.input} -> ${result.output}`)}
+                      onClick={() => void navigator.clipboard.writeText(result.output)}
                     >
                       <Copy className="mr-1.5 size-3.5" />
                       Copy

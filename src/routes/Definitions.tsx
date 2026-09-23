@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Copy, Grid2x2, LayoutGrid, List, Loader2, Minus, PanelRightClose, PanelRightOpen, Plus, RefreshCcw, Search, SlidersHorizontal, Sparkles, WandSparkles, ZoomIn } from "lucide-react";
 
 import { TagList } from "@/components/lexi/TagList";
+import { CategorySuggestions } from "@/components/CategorySuggestions";
 import { ExampleSkeleton, ListRowsSkeleton, SuggestionCardsSkeleton } from "@/components/lexi/Skeletons";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +24,8 @@ import type { ViewMode, Word } from "@/types";
 import { getReviewStatus, type ReviewStatus } from "@/utils/review";
 import { capitalizeTerm, truncateText } from "@/utils/formatters";
 import type { RelatedWordSuggestion } from "@/utils/ai-service";
+import type { Suggestion } from "@/utils/wordSuggestions";
+import type { LexiGroup } from "@/types";
 import { getSettings, readAiCacheEntry, writeAiCache } from "@/utils/storage";
 import { parseJsonArray } from "@/utils/suggestions";
 import { SUGGESTED_TAG } from "@/utils/tags";
@@ -131,8 +134,8 @@ export default function Definitions() {
       setSelectedId(null);
       return;
     }
-    if (!selectedId || !filteredWords.some((word) => word.id === selectedId)) {
-      setSelectedId(filteredWords[0].id);
+    if (selectedId && !filteredWords.some((word) => word.id === selectedId)) {
+      setSelectedId(null);
     }
   }, [filteredWords, selectedId]);
 
@@ -185,7 +188,7 @@ export default function Definitions() {
 
   const copyDefinition = async () => {
     if (!selectedWord) return;
-    await navigator.clipboard.writeText(`${selectedWord.word}: ${selectedWord.definition}`);
+    await navigator.clipboard.writeText(selectedWord.definition);
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
   };
@@ -299,6 +302,10 @@ export default function Definitions() {
     }
   };
 
+  const addCategorySuggestion = async (suggestion: Suggestion, group: LexiGroup) => {
+    await addWord({ word: suggestion.term, definition: suggestion.detail, language: suggestion.language, tags: [], aiGenerated: !suggestion.bookTitle, groupIds: [group.id] });
+  };
+
   const contentGridStyle = {
     gridTemplateColumns: `repeat(auto-fill, minmax(${cardMinWidthFor(viewMode, zoom)}px, 1fr))`,
   };
@@ -368,7 +375,7 @@ export default function Definitions() {
               filteredWords.map((word) => {
                 const status = getReviewStatus(word);
                 return (
-                  <div key={word.id} className={cn("word-row grid-cols-[minmax(0,1fr)_88px]", selectedId === word.id && "word-row-active")} role="button" tabIndex={0} onClick={() => { setSelectedId(word.id); setExampleVersion(0); }}>
+                  <div key={word.id} className={cn("word-row grid-cols-[minmax(0,1fr)_88px]", selectedId === word.id && "word-row-active")} role="button" tabIndex={0} onClick={() => { setSelectedId(selectedId === word.id ? null : word.id); setExampleVersion(0); }}>
                     <div className="min-w-0"><p className="serif-display truncate text-[1.6rem] leading-[0.95]">{word.word}</p><div className="mt-1.5 flex flex-wrap gap-1.5"><span className="lexi-chip">{word.language}</span></div><p className="word-sub mt-1.5 text-sm">{truncateText(word.definition, 95)}</p></div>
                     <span className={cn("status-pill", status === "Mastered" ? "status-mastered" : status === "Learning" ? "status-learning" : "status-new")}>{status}</span>
                   </div>
@@ -377,7 +384,7 @@ export default function Definitions() {
             ) : viewMode === "tiles" ? (
               <div className="grid gap-3 p-3" style={contentGridStyle}>
                 {filteredWords.map((word) => (
-                  <article key={word.id} className={cn("lexi-browser-card tile", selectedId === word.id && "active")} role="button" tabIndex={0} onClick={() => { setSelectedId(word.id); setExampleVersion(0); }}>
+                  <article key={word.id} className={cn("lexi-browser-card tile", selectedId === word.id && "active")} role="button" tabIndex={0} onClick={() => { setSelectedId(selectedId === word.id ? null : word.id); setExampleVersion(0); }}>
                     <p className="serif-display truncate text-xl leading-[0.95]">{word.word}</p>
                     <span className="lexi-chip compact w-fit">{word.language}</span>
                     <span className={cn("status-pill mt-auto w-fit", getReviewStatus(word) === "Mastered" ? "status-mastered" : getReviewStatus(word) === "Learning" ? "status-learning" : "status-new")}>{getReviewStatus(word)}</span>
@@ -387,7 +394,7 @@ export default function Definitions() {
             ) : (
               <div className="grid gap-3 p-3" style={contentGridStyle}>
                 {filteredWords.map((word) => (
-                  <article key={word.id} className={cn("lexi-browser-card", selectedId === word.id && "active")} role="button" tabIndex={0} onClick={() => { setSelectedId(word.id); setExampleVersion(0); }}>
+                  <article key={word.id} className={cn("lexi-browser-card", selectedId === word.id && "active")} role="button" tabIndex={0} onClick={() => { setSelectedId(selectedId === word.id ? null : word.id); setExampleVersion(0); }}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0"><p className="serif-display break-words text-[2rem] leading-[0.92]">{word.word}</p><div className="mt-1.5 flex flex-wrap gap-1.5"><span className="lexi-chip">{word.language}</span></div></div>
                     </div>
@@ -445,9 +452,9 @@ export default function Definitions() {
                   <div className="flex flex-wrap gap-2"><Button type="button" variant="outline" className="border-white/15 bg-white/6 hover:bg-white/14" onClick={() => void copyDefinition()}><Copy className="mr-2 size-3.5" />{copied ? "Copied" : "Copy Definition"}</Button><span className="sync-pill"><Sparkles className="size-3" />{selectedWord.aiGenerated ? "AI generated" : "Manually curated"}</span></div>
                 </>
               ) : (
-                <div className="flex h-full min-h-[220px] flex-col items-center justify-center text-center"><p className="section-title">Pick an entry</p><p className="subtle-caption mt-2 max-w-sm">Compare definitions and examples in one place.</p></div>
+                <CategorySuggestions kind="definition" groupFilterId={groupFilterId} words={words} translations={[]} onAdd={addCategorySuggestion} />
               )}
-              <div className="ghost-divider" />
+              {selectedWord ? <><div className="ghost-divider" />
               <div className="space-y-3">
                 <div className="flex items-center justify-between"><p className="font-medium">Related Words</p><Sparkles className="size-4 text-muted-foreground" /></div>
                 {!selectedWord ? (
@@ -474,7 +481,7 @@ export default function Definitions() {
                     ))}
                   </div>
                 )}
-              </div>
+              </div></> : null}
             </div>
           </div>
           <div className="flex items-center justify-between border-t border-white/10 p-2">
