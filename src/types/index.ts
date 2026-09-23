@@ -58,6 +58,15 @@ export interface BookCatalogItem {
   outputLanguages: string[];
   sizeBytes: number;
   checksum?: string;
+  /** Who made the underlying work: people, organizations or projects. */
+  authors?: string[];
+  /** A longer introduction to the book, shown in its detail panel. Paragraphs are separated by a blank line. */
+  about?: string;
+  /** Subject, language and kind labels, shown as chips. */
+  tags?: string[];
+  license?: string;
+  /** The source project's own page. */
+  homepage?: string;
 }
 
 // A book whose payload is stored as a local file rather than fetched from a

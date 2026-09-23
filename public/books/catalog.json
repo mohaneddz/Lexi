@@ -14,7 +14,21 @@
       "English"
     ],
     "sizeBytes": 1757836,
-    "coverUrl": "/books/covers/dict-topic-animals.jpg"
+    "coverUrl": "/books/covers/dict-topic-animals.jpg",
+    "authors": [
+      "Princeton University",
+      "George A. Miller",
+      "Christiane Fellbaum"
+    ],
+    "about": "English words about animals, gathered from WordNet's topic hierarchy: every word whose meaning falls under the matching WordNet categories, with its definition.\n\nWordNet is a lexical database of English begun in 1985 at Princeton University's Cognitive Science Laboratory under the psychologist George A. Miller, later directed by Christiane Fellbaum. Instead of listing words alphabetically, it groups them into sets of synonyms (synsets), each with a short definition, and links those sets by meaning: kinds of, parts of, opposites. It is one of the most widely used resources in linguistics and natural language processing.",
+    "tags": [
+      "English",
+      "Animals",
+      "Definitions",
+      "WordNet"
+    ],
+    "license": "WordNet License",
+    "homepage": "https://wordnet.princeton.edu/"
   },
   {
     "id": "dict-topic-astronomy",
@@ -31,7 +45,21 @@
       "English"
     ],
     "sizeBytes": 33844,
-    "coverUrl": "/books/covers/dict-topic-astronomy.jpg"
+    "coverUrl": "/books/covers/dict-topic-astronomy.jpg",
+    "authors": [
+      "Princeton University",
+      "George A. Miller",
+      "Christiane Fellbaum"
+    ],
+    "about": "English words about astronomy, gathered from WordNet's topic hierarchy: every word whose meaning falls under the matching WordNet categories, with its definition.\n\nWordNet is a lexical database of English begun in 1985 at Princeton University's Cognitive Science Laboratory under the psychologist George A. Miller, later directed by Christiane Fellbaum. Instead of listing words alphabetically, it groups them into sets of synonyms (synsets), each with a short definition, and links those sets by meaning: kinds of, parts of, opposites. It is one of the most widely used resources in linguistics and natural language processing.",
+    "tags": [
+      "English",
+      "Astronomy",
+      "Definitions",
+      "WordNet"
+    ],
+    "license": "WordNet License",
+    "homepage": "https://wordnet.princeton.edu/"
   },
   {
     "id": "trans-countries-en-fr",
@@ -48,7 +76,20 @@
       "French"
     ],
     "sizeBytes": 33978,
-    "coverUrl": "/books/covers/trans-countries-en-fr.jpg"
+    "coverUrl": "/books/covers/trans-countries-en-fr.jpg",
+    "authors": [
+      "Mohammed Le Doze",
+      "mledoze/countries contributors"
+    ],
+    "about": "Every country's name in English paired with its name in another language, including the official long forms (\"Federal Republic of Germany\" as well as \"Germany\"). It comes from mledoze/countries, an open dataset of world countries maintained on GitHub, which collects names, codes, currencies and languages for every country and territory.",
+    "tags": [
+      "Geography",
+      "Countries",
+      "Translation",
+      "French"
+    ],
+    "license": "ODbL",
+    "homepage": "https://github.com/mledoze/countries"
   },
   {
     "id": "trans-countries-en-es",
@@ -65,7 +106,20 @@
       "Spanish"
     ],
     "sizeBytes": 33967,
-    "coverUrl": "/books/covers/trans-countries-en-es.jpg"
+    "coverUrl": "/books/covers/trans-countries-en-es.jpg",
+    "authors": [
+      "Mohammed Le Doze",
+      "mledoze/countries contributors"
+    ],
+    "about": "Every country's name in English paired with its name in another language, including the official long forms (\"Federal Republic of Germany\" as well as \"Germany\"). It comes from mledoze/countries, an open dataset of world countries maintained on GitHub, which collects names, codes, currencies and languages for every country and territory.",
+    "tags": [
+      "Geography",
+      "Countries",
+      "Translation",
+      "Spanish"
+    ],
+    "license": "ODbL",
+    "homepage": "https://github.com/mledoze/countries"
   },
   {
     "id": "trans-countries-en-de",
@@ -82,7 +136,20 @@
       "German"
     ],
     "sizeBytes": 32905,
-    "coverUrl": "/books/covers/trans-countries-en-de.jpg"
+    "coverUrl": "/books/covers/trans-countries-en-de.jpg",
+    "authors": [
+      "Mohammed Le Doze",
+      "mledoze/countries contributors"
+    ],
+    "about": "Every country's name in English paired with its name in another language, including the official long forms (\"Federal Republic of Germany\" as well as \"Germany\"). It comes from mledoze/countries, an open dataset of world countries maintained on GitHub, which collects names, codes, currencies and languages for every country and territory.",
+    "tags": [
+      "Geography",
+      "Countries",
+      "Translation",
+      "German"
+    ],
+    "license": "ODbL",
+    "homepage": "https://github.com/mledoze/countries"
   },
   {
     "id": "trans-countries-en-it",
@@ -99,7 +166,20 @@
       "Italian"
     ],
     "sizeBytes": 33906,
-    "coverUrl": "/books/covers/trans-countries-en-it.jpg"
+    "coverUrl": "/books/covers/trans-countries-en-it.jpg",
+    "authors": [
+      "Mohammed Le Doze",
+      "mledoze/countries contributors"
+    ],
+    "about": "Every country's name in English paired with its name in another language, including the official long forms (\"Federal Republic of Germany\" as well as \"Germany\"). It comes from mledoze/countries, an open dataset of world countries maintained on GitHub, which collects names, codes, currencies and languages for every country and territory.",
+    "tags": [
+      "Geography",
+      "Countries",
+      "Translation",
+      "Italian"
+    ],
+    "license": "ODbL",
+    "homepage": "https://github.com/mledoze/countries"
   },
   {
     "id": "trans-countries-en-pt",
@@ -116,7 +196,20 @@
       "Portuguese"
     ],
     "sizeBytes": 34843,
-    "coverUrl": "/books/covers/trans-countries-en-pt.jpg"
+    "coverUrl": "/books/covers/trans-countries-en-pt.jpg",
+    "authors": [
+      "Mohammed Le Doze",
+      "mledoze/countries contributors"
+    ],
+    "about": "Every country's name in English paired with its name in another language, including the official long forms (\"Federal Republic of Germany\" as well as \"Germany\"). It comes from mledoze/countries, an open dataset of world countries maintained on GitHub, which collects names, codes, currencies and languages for every country and territory.",
+    "tags": [
+      "Geography",
+      "Countries",
+      "Translation",
+      "Portuguese"
+    ],
+    "license": "ODbL",
+    "homepage": "https://github.com/mledoze/countries"
   },
   {
     "id": "trans-countries-en-ja",
@@ -133,7 +226,20 @@
       "Japanese"
     ],
     "sizeBytes": 35413,
-    "coverUrl": "/books/covers/trans-countries-en-ja.jpg"
+    "coverUrl": "/books/covers/trans-countries-en-ja.jpg",
+    "authors": [
+      "Mohammed Le Doze",
+      "mledoze/countries contributors"
+    ],
+    "about": "Every country's name in English paired with its name in another language, including the official long forms (\"Federal Republic of Germany\" as well as \"Germany\"). It comes from mledoze/countries, an open dataset of world countries maintained on GitHub, which collects names, codes, currencies and languages for every country and territory.",
+    "tags": [
+      "Geography",
+      "Countries",
+      "Translation",
+      "Japanese"
+    ],
+    "license": "ODbL",
+    "homepage": "https://github.com/mledoze/countries"
   },
   {
     "id": "trans-countries-en-ko",
@@ -150,7 +256,20 @@
       "Korean"
     ],
     "sizeBytes": 33117,
-    "coverUrl": "/books/covers/trans-countries-en-ko.jpg"
+    "coverUrl": "/books/covers/trans-countries-en-ko.jpg",
+    "authors": [
+      "Mohammed Le Doze",
+      "mledoze/countries contributors"
+    ],
+    "about": "Every country's name in English paired with its name in another language, including the official long forms (\"Federal Republic of Germany\" as well as \"Germany\"). It comes from mledoze/countries, an open dataset of world countries maintained on GitHub, which collects names, codes, currencies and languages for every country and territory.",
+    "tags": [
+      "Geography",
+      "Countries",
+      "Translation",
+      "Korean"
+    ],
+    "license": "ODbL",
+    "homepage": "https://github.com/mledoze/countries"
   },
   {
     "id": "trans-countries-en-zh",
@@ -167,7 +286,20 @@
       "Chinese"
     ],
     "sizeBytes": 32701,
-    "coverUrl": "/books/covers/trans-countries-en-zh.jpg"
+    "coverUrl": "/books/covers/trans-countries-en-zh.jpg",
+    "authors": [
+      "Mohammed Le Doze",
+      "mledoze/countries contributors"
+    ],
+    "about": "Every country's name in English paired with its name in another language, including the official long forms (\"Federal Republic of Germany\" as well as \"Germany\"). It comes from mledoze/countries, an open dataset of world countries maintained on GitHub, which collects names, codes, currencies and languages for every country and territory.",
+    "tags": [
+      "Geography",
+      "Countries",
+      "Translation",
+      "Chinese"
+    ],
+    "license": "ODbL",
+    "homepage": "https://github.com/mledoze/countries"
   },
   {
     "id": "trans-countries-en-ar",
@@ -184,7 +316,20 @@
       "Arabic"
     ],
     "sizeBytes": 37181,
-    "coverUrl": "/books/covers/trans-countries-en-ar.jpg"
+    "coverUrl": "/books/covers/trans-countries-en-ar.jpg",
+    "authors": [
+      "Mohammed Le Doze",
+      "mledoze/countries contributors"
+    ],
+    "about": "Every country's name in English paired with its name in another language, including the official long forms (\"Federal Republic of Germany\" as well as \"Germany\"). It comes from mledoze/countries, an open dataset of world countries maintained on GitHub, which collects names, codes, currencies and languages for every country and territory.",
+    "tags": [
+      "Geography",
+      "Countries",
+      "Translation",
+      "Arabic"
+    ],
+    "license": "ODbL",
+    "homepage": "https://github.com/mledoze/countries"
   },
   {
     "id": "swadesh-en-fr",
@@ -201,7 +346,21 @@
       "French"
     ],
     "sizeBytes": 20816,
-    "coverUrl": "/books/covers/swadesh-en-fr.jpg"
+    "coverUrl": "/books/covers/swadesh-en-fr.jpg",
+    "authors": [
+      "Morris Swadesh (list)",
+      "Wiktionary contributors"
+    ],
+    "about": "The Swadesh list is a set of about 200 basic meanings (pronouns, body parts, numbers, natural features, simple actions and qualities) that the American linguist Morris Swadesh chose in the 1950s as vocabulary nearly every language has its own words for. Linguists use it to compare languages and estimate how closely they are related; for a learner it is the core vocabulary to know first. The translations come from Wiktionary's Swadesh list appendices.",
+    "tags": [
+      "Core vocabulary",
+      "Swadesh list",
+      "Translation",
+      "English",
+      "French"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://en.wiktionary.org/wiki/Appendix:Swadesh_lists"
   },
   {
     "id": "swadesh-en-de",
@@ -218,7 +377,21 @@
       "German"
     ],
     "sizeBytes": 20785,
-    "coverUrl": "/books/covers/swadesh-en-de.jpg"
+    "coverUrl": "/books/covers/swadesh-en-de.jpg",
+    "authors": [
+      "Morris Swadesh (list)",
+      "Wiktionary contributors"
+    ],
+    "about": "The Swadesh list is a set of about 200 basic meanings (pronouns, body parts, numbers, natural features, simple actions and qualities) that the American linguist Morris Swadesh chose in the 1950s as vocabulary nearly every language has its own words for. Linguists use it to compare languages and estimate how closely they are related; for a learner it is the core vocabulary to know first. The translations come from Wiktionary's Swadesh list appendices.",
+    "tags": [
+      "Core vocabulary",
+      "Swadesh list",
+      "Translation",
+      "English",
+      "German"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://en.wiktionary.org/wiki/Appendix:Swadesh_lists"
   },
   {
     "id": "swadesh-en-zh",
@@ -235,7 +408,21 @@
       "Chinese"
     ],
     "sizeBytes": 20755,
-    "coverUrl": "/books/covers/swadesh-en-zh.jpg"
+    "coverUrl": "/books/covers/swadesh-en-zh.jpg",
+    "authors": [
+      "Morris Swadesh (list)",
+      "Wiktionary contributors"
+    ],
+    "about": "The Swadesh list is a set of about 200 basic meanings (pronouns, body parts, numbers, natural features, simple actions and qualities) that the American linguist Morris Swadesh chose in the 1950s as vocabulary nearly every language has its own words for. Linguists use it to compare languages and estimate how closely they are related; for a learner it is the core vocabulary to know first. The translations come from Wiktionary's Swadesh list appendices.",
+    "tags": [
+      "Core vocabulary",
+      "Swadesh list",
+      "Translation",
+      "English",
+      "Chinese"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://en.wiktionary.org/wiki/Appendix:Swadesh_lists"
   },
   {
     "id": "swadesh-ar-fr",
@@ -252,7 +439,21 @@
       "French"
     ],
     "sizeBytes": 22038,
-    "coverUrl": "/books/covers/swadesh-ar-fr.jpg"
+    "coverUrl": "/books/covers/swadesh-ar-fr.jpg",
+    "authors": [
+      "Morris Swadesh (list)",
+      "Wiktionary contributors"
+    ],
+    "about": "The Swadesh list is a set of about 200 basic meanings (pronouns, body parts, numbers, natural features, simple actions and qualities) that the American linguist Morris Swadesh chose in the 1950s as vocabulary nearly every language has its own words for. Linguists use it to compare languages and estimate how closely they are related; for a learner it is the core vocabulary to know first. The translations come from Wiktionary's Swadesh list appendices.",
+    "tags": [
+      "Core vocabulary",
+      "Swadesh list",
+      "Translation",
+      "Arabic",
+      "French"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://en.wiktionary.org/wiki/Appendix:Swadesh_lists"
   },
   {
     "id": "swadesh-ar-de",
@@ -269,7 +470,21 @@
       "German"
     ],
     "sizeBytes": 22007,
-    "coverUrl": "/books/covers/swadesh-ar-de.jpg"
+    "coverUrl": "/books/covers/swadesh-ar-de.jpg",
+    "authors": [
+      "Morris Swadesh (list)",
+      "Wiktionary contributors"
+    ],
+    "about": "The Swadesh list is a set of about 200 basic meanings (pronouns, body parts, numbers, natural features, simple actions and qualities) that the American linguist Morris Swadesh chose in the 1950s as vocabulary nearly every language has its own words for. Linguists use it to compare languages and estimate how closely they are related; for a learner it is the core vocabulary to know first. The translations come from Wiktionary's Swadesh list appendices.",
+    "tags": [
+      "Core vocabulary",
+      "Swadesh list",
+      "Translation",
+      "Arabic",
+      "German"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://en.wiktionary.org/wiki/Appendix:Swadesh_lists"
   },
   {
     "id": "swadesh-ar-zh",
@@ -286,7 +501,21 @@
       "Chinese"
     ],
     "sizeBytes": 21977,
-    "coverUrl": "/books/covers/swadesh-ar-zh.jpg"
+    "coverUrl": "/books/covers/swadesh-ar-zh.jpg",
+    "authors": [
+      "Morris Swadesh (list)",
+      "Wiktionary contributors"
+    ],
+    "about": "The Swadesh list is a set of about 200 basic meanings (pronouns, body parts, numbers, natural features, simple actions and qualities) that the American linguist Morris Swadesh chose in the 1950s as vocabulary nearly every language has its own words for. Linguists use it to compare languages and estimate how closely they are related; for a learner it is the core vocabulary to know first. The translations come from Wiktionary's Swadesh list appendices.",
+    "tags": [
+      "Core vocabulary",
+      "Swadesh list",
+      "Translation",
+      "Arabic",
+      "Chinese"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://en.wiktionary.org/wiki/Appendix:Swadesh_lists"
   },
   {
     "id": "dict-topic-feelings",
@@ -303,7 +532,21 @@
       "English"
     ],
     "sizeBytes": 98693,
-    "coverUrl": "/books/covers/dict-topic-feelings.png"
+    "coverUrl": "/books/covers/dict-topic-feelings.png",
+    "authors": [
+      "Princeton University",
+      "George A. Miller",
+      "Christiane Fellbaum"
+    ],
+    "about": "English words about feelings, gathered from WordNet's topic hierarchy: every word whose meaning falls under the matching WordNet categories, with its definition.\n\nWordNet is a lexical database of English begun in 1985 at Princeton University's Cognitive Science Laboratory under the psychologist George A. Miller, later directed by Christiane Fellbaum. Instead of listing words alphabetically, it groups them into sets of synonyms (synsets), each with a short definition, and links those sets by meaning: kinds of, parts of, opposites. It is one of the most widely used resources in linguistics and natural language processing.",
+    "tags": [
+      "English",
+      "Feelings",
+      "Definitions",
+      "WordNet"
+    ],
+    "license": "WordNet License",
+    "homepage": "https://wordnet.princeton.edu/"
   },
   {
     "id": "dict-topic-food",
@@ -320,7 +563,21 @@
       "English"
     ],
     "sizeBytes": 445250,
-    "coverUrl": "/books/covers/dict-topic-food.jpg"
+    "coverUrl": "/books/covers/dict-topic-food.jpg",
+    "authors": [
+      "Princeton University",
+      "George A. Miller",
+      "Christiane Fellbaum"
+    ],
+    "about": "English words about food, gathered from WordNet's topic hierarchy: every word whose meaning falls under the matching WordNet categories, with its definition.\n\nWordNet is a lexical database of English begun in 1985 at Princeton University's Cognitive Science Laboratory under the psychologist George A. Miller, later directed by Christiane Fellbaum. Instead of listing words alphabetically, it groups them into sets of synonyms (synsets), each with a short definition, and links those sets by meaning: kinds of, parts of, opposites. It is one of the most widely used resources in linguistics and natural language processing.",
+    "tags": [
+      "English",
+      "Food",
+      "Definitions",
+      "WordNet"
+    ],
+    "license": "WordNet License",
+    "homepage": "https://wordnet.princeton.edu/"
   },
   {
     "id": "dict-topic-music",
@@ -337,7 +594,21 @@
       "English"
     ],
     "sizeBytes": 82490,
-    "coverUrl": "/books/covers/dict-topic-music.jpg"
+    "coverUrl": "/books/covers/dict-topic-music.jpg",
+    "authors": [
+      "Princeton University",
+      "George A. Miller",
+      "Christiane Fellbaum"
+    ],
+    "about": "English words about music, gathered from WordNet's topic hierarchy: every word whose meaning falls under the matching WordNet categories, with its definition.\n\nWordNet is a lexical database of English begun in 1985 at Princeton University's Cognitive Science Laboratory under the psychologist George A. Miller, later directed by Christiane Fellbaum. Instead of listing words alphabetically, it groups them into sets of synonyms (synsets), each with a short definition, and links those sets by meaning: kinds of, parts of, opposites. It is one of the most widely used resources in linguistics and natural language processing.",
+    "tags": [
+      "English",
+      "Music",
+      "Definitions",
+      "WordNet"
+    ],
+    "license": "WordNet License",
+    "homepage": "https://wordnet.princeton.edu/"
   },
   {
     "id": "dict-topic-nature",
@@ -354,7 +625,21 @@
       "English"
     ],
     "sizeBytes": 155572,
-    "coverUrl": "/books/covers/dict-topic-nature.svg"
+    "coverUrl": "/books/covers/dict-topic-nature.svg",
+    "authors": [
+      "Princeton University",
+      "George A. Miller",
+      "Christiane Fellbaum"
+    ],
+    "about": "English words about nature, gathered from WordNet's topic hierarchy: every word whose meaning falls under the matching WordNet categories, with its definition.\n\nWordNet is a lexical database of English begun in 1985 at Princeton University's Cognitive Science Laboratory under the psychologist George A. Miller, later directed by Christiane Fellbaum. Instead of listing words alphabetically, it groups them into sets of synonyms (synsets), each with a short definition, and links those sets by meaning: kinds of, parts of, opposites. It is one of the most widely used resources in linguistics and natural language processing.",
+    "tags": [
+      "English",
+      "Nature",
+      "Definitions",
+      "WordNet"
+    ],
+    "license": "WordNet License",
+    "homepage": "https://wordnet.princeton.edu/"
   },
   {
     "id": "dict-topic-people",
@@ -371,7 +656,21 @@
       "English"
     ],
     "sizeBytes": 2814012,
-    "coverUrl": "/books/covers/dict-topic-people.jpg"
+    "coverUrl": "/books/covers/dict-topic-people.jpg",
+    "authors": [
+      "Princeton University",
+      "George A. Miller",
+      "Christiane Fellbaum"
+    ],
+    "about": "English words about people, gathered from WordNet's topic hierarchy: every word whose meaning falls under the matching WordNet categories, with its definition.\n\nWordNet is a lexical database of English begun in 1985 at Princeton University's Cognitive Science Laboratory under the psychologist George A. Miller, later directed by Christiane Fellbaum. Instead of listing words alphabetically, it groups them into sets of synonyms (synsets), each with a short definition, and links those sets by meaning: kinds of, parts of, opposites. It is one of the most widely used resources in linguistics and natural language processing.",
+    "tags": [
+      "English",
+      "People",
+      "Definitions",
+      "WordNet"
+    ],
+    "license": "WordNet License",
+    "homepage": "https://wordnet.princeton.edu/"
   },
   {
     "id": "dict-topic-places",
@@ -388,7 +687,21 @@
       "English"
     ],
     "sizeBytes": 746652,
-    "coverUrl": "/books/covers/dict-topic-places.jpg"
+    "coverUrl": "/books/covers/dict-topic-places.jpg",
+    "authors": [
+      "Princeton University",
+      "George A. Miller",
+      "Christiane Fellbaum"
+    ],
+    "about": "English words about places, gathered from WordNet's topic hierarchy: every word whose meaning falls under the matching WordNet categories, with its definition.\n\nWordNet is a lexical database of English begun in 1985 at Princeton University's Cognitive Science Laboratory under the psychologist George A. Miller, later directed by Christiane Fellbaum. Instead of listing words alphabetically, it groups them into sets of synonyms (synsets), each with a short definition, and links those sets by meaning: kinds of, parts of, opposites. It is one of the most widely used resources in linguistics and natural language processing.",
+    "tags": [
+      "English",
+      "Places",
+      "Definitions",
+      "WordNet"
+    ],
+    "license": "WordNet License",
+    "homepage": "https://wordnet.princeton.edu/"
   },
   {
     "id": "dict-topic-plants",
@@ -405,7 +718,21 @@
       "English"
     ],
     "sizeBytes": 2846865,
-    "coverUrl": "/books/covers/dict-topic-plants.jpg"
+    "coverUrl": "/books/covers/dict-topic-plants.jpg",
+    "authors": [
+      "Princeton University",
+      "George A. Miller",
+      "Christiane Fellbaum"
+    ],
+    "about": "English words about plants, gathered from WordNet's topic hierarchy: every word whose meaning falls under the matching WordNet categories, with its definition.\n\nWordNet is a lexical database of English begun in 1985 at Princeton University's Cognitive Science Laboratory under the psychologist George A. Miller, later directed by Christiane Fellbaum. Instead of listing words alphabetically, it groups them into sets of synonyms (synsets), each with a short definition, and links those sets by meaning: kinds of, parts of, opposites. It is one of the most widely used resources in linguistics and natural language processing.",
+    "tags": [
+      "English",
+      "Plants",
+      "Definitions",
+      "WordNet"
+    ],
+    "license": "WordNet License",
+    "homepage": "https://wordnet.princeton.edu/"
   },
   {
     "id": "dict-topic-substances",
@@ -422,7 +749,21 @@
       "English"
     ],
     "sizeBytes": 687797,
-    "coverUrl": "/books/covers/dict-topic-substances.svg"
+    "coverUrl": "/books/covers/dict-topic-substances.svg",
+    "authors": [
+      "Princeton University",
+      "George A. Miller",
+      "Christiane Fellbaum"
+    ],
+    "about": "English words about substances, gathered from WordNet's topic hierarchy: every word whose meaning falls under the matching WordNet categories, with its definition.\n\nWordNet is a lexical database of English begun in 1985 at Princeton University's Cognitive Science Laboratory under the psychologist George A. Miller, later directed by Christiane Fellbaum. Instead of listing words alphabetically, it groups them into sets of synonyms (synsets), each with a short definition, and links those sets by meaning: kinds of, parts of, opposites. It is one of the most widely used resources in linguistics and natural language processing.",
+    "tags": [
+      "English",
+      "Substances",
+      "Definitions",
+      "WordNet"
+    ],
+    "license": "WordNet License",
+    "homepage": "https://wordnet.princeton.edu/"
   },
   {
     "id": "dict-topic-body",
@@ -439,7 +780,21 @@
       "English"
     ],
     "sizeBytes": 533642,
-    "coverUrl": "/books/covers/dict-topic-body.png"
+    "coverUrl": "/books/covers/dict-topic-body.png",
+    "authors": [
+      "Princeton University",
+      "George A. Miller",
+      "Christiane Fellbaum"
+    ],
+    "about": "English words about body, gathered from WordNet's topic hierarchy: every word whose meaning falls under the matching WordNet categories, with its definition.\n\nWordNet is a lexical database of English begun in 1985 at Princeton University's Cognitive Science Laboratory under the psychologist George A. Miller, later directed by Christiane Fellbaum. Instead of listing words alphabetically, it groups them into sets of synonyms (synsets), each with a short definition, and links those sets by meaning: kinds of, parts of, opposites. It is one of the most widely used resources in linguistics and natural language processing.",
+    "tags": [
+      "English",
+      "Body",
+      "Definitions",
+      "WordNet"
+    ],
+    "license": "WordNet License",
+    "homepage": "https://wordnet.princeton.edu/"
   },
   {
     "id": "dict-webster-essentials",
@@ -456,7 +811,20 @@
       "English"
     ],
     "sizeBytes": 26854591,
-    "coverUrl": "/books/covers/dict-webster-essentials.jpg"
+    "coverUrl": "/books/covers/dict-webster-essentials.jpg",
+    "authors": [
+      "Noah Webster",
+      "G. & C. Merriam Co."
+    ],
+    "about": "Definitions from Webster's Revised Unabridged Dictionary, the 1913 edition published by G. & C. Merriam Co. and descended from Noah Webster's American Dictionary of the English Language of 1828. Its copyright has expired, which is why it underlies so many free dictionaries. The definitions are thorough and often literary, with quotations from classic writers, though the language and some senses are over a century old.",
+    "tags": [
+      "English",
+      "Definitions",
+      "Historical",
+      "Public domain"
+    ],
+    "license": "Public domain",
+    "homepage": "https://github.com/matthewreagan/WebstersEnglishDictionary"
   },
   {
     "id": "dict-wordnet-adjectives",
@@ -473,7 +841,21 @@
       "English"
     ],
     "sizeBytes": 4481321,
-    "coverUrl": "/books/covers/dict-wordnet-adjectives.svg"
+    "coverUrl": "/books/covers/dict-wordnet-adjectives.svg",
+    "authors": [
+      "Princeton University",
+      "George A. Miller",
+      "Christiane Fellbaum"
+    ],
+    "about": "English adjectives from WordNet, each with its WordNet definition.\n\nWordNet is a lexical database of English begun in 1985 at Princeton University's Cognitive Science Laboratory under the psychologist George A. Miller, later directed by Christiane Fellbaum. Instead of listing words alphabetically, it groups them into sets of synonyms (synsets), each with a short definition, and links those sets by meaning: kinds of, parts of, opposites. It is one of the most widely used resources in linguistics and natural language processing.",
+    "tags": [
+      "English",
+      "Adjectives",
+      "Definitions",
+      "WordNet"
+    ],
+    "license": "WordNet License",
+    "homepage": "https://wordnet.princeton.edu/"
   },
   {
     "id": "dict-wordnet-adverbs",
@@ -490,7 +872,21 @@
       "English"
     ],
     "sizeBytes": 814175,
-    "coverUrl": "/books/covers/dict-wordnet-adverbs.svg"
+    "coverUrl": "/books/covers/dict-wordnet-adverbs.svg",
+    "authors": [
+      "Princeton University",
+      "George A. Miller",
+      "Christiane Fellbaum"
+    ],
+    "about": "English adverbs from WordNet, each with its WordNet definition.\n\nWordNet is a lexical database of English begun in 1985 at Princeton University's Cognitive Science Laboratory under the psychologist George A. Miller, later directed by Christiane Fellbaum. Instead of listing words alphabetically, it groups them into sets of synonyms (synsets), each with a short definition, and links those sets by meaning: kinds of, parts of, opposites. It is one of the most widely used resources in linguistics and natural language processing.",
+    "tags": [
+      "English",
+      "Adverbs",
+      "Definitions",
+      "WordNet"
+    ],
+    "license": "WordNet License",
+    "homepage": "https://wordnet.princeton.edu/"
   },
   {
     "id": "dict-wordnet-nouns",
@@ -507,7 +903,21 @@
       "English"
     ],
     "sizeBytes": 20300442,
-    "coverUrl": "/books/covers/dict-wordnet-nouns.svg"
+    "coverUrl": "/books/covers/dict-wordnet-nouns.svg",
+    "authors": [
+      "Princeton University",
+      "George A. Miller",
+      "Christiane Fellbaum"
+    ],
+    "about": "English nouns from WordNet, each with its WordNet definition.\n\nWordNet is a lexical database of English begun in 1985 at Princeton University's Cognitive Science Laboratory under the psychologist George A. Miller, later directed by Christiane Fellbaum. Instead of listing words alphabetically, it groups them into sets of synonyms (synsets), each with a short definition, and links those sets by meaning: kinds of, parts of, opposites. It is one of the most widely used resources in linguistics and natural language processing.",
+    "tags": [
+      "English",
+      "Nouns",
+      "Definitions",
+      "WordNet"
+    ],
+    "license": "WordNet License",
+    "homepage": "https://wordnet.princeton.edu/"
   },
   {
     "id": "dict-wordnet-verbs",
@@ -524,7 +934,21 @@
       "English"
     ],
     "sizeBytes": 3426631,
-    "coverUrl": "/books/covers/dict-wordnet-verbs.svg"
+    "coverUrl": "/books/covers/dict-wordnet-verbs.svg",
+    "authors": [
+      "Princeton University",
+      "George A. Miller",
+      "Christiane Fellbaum"
+    ],
+    "about": "English verbs from WordNet, each with its WordNet definition.\n\nWordNet is a lexical database of English begun in 1985 at Princeton University's Cognitive Science Laboratory under the psychologist George A. Miller, later directed by Christiane Fellbaum. Instead of listing words alphabetically, it groups them into sets of synonyms (synsets), each with a short definition, and links those sets by meaning: kinds of, parts of, opposites. It is one of the most widely used resources in linguistics and natural language processing.",
+    "tags": [
+      "English",
+      "Verbs",
+      "Definitions",
+      "WordNet"
+    ],
+    "license": "WordNet License",
+    "homepage": "https://wordnet.princeton.edu/"
   },
   {
     "id": "wikt-computing-en-ar",
@@ -541,7 +965,21 @@
       "Arabic"
     ],
     "sizeBytes": 93655,
-    "coverUrl": "/books/covers/field-computing.jpg"
+    "coverUrl": "/books/covers/field-computing.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for the vocabulary of computers and software: hardware, programming, operating systems, networks, databases, security and the internet, between English and Arabic. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a Arabic translation, and Arabic words from Wiktionary's own Arabic entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Computing",
+      "English",
+      "Arabic",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-computing-en-de",
@@ -558,7 +996,21 @@
       "German"
     ],
     "sizeBytes": 275569,
-    "coverUrl": "/books/covers/field-computing.jpg"
+    "coverUrl": "/books/covers/field-computing.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for the vocabulary of computers and software: hardware, programming, operating systems, networks, databases, security and the internet, between English and German. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a German translation, and German words from Wiktionary's own German entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Computing",
+      "English",
+      "German",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-computing-en-fr",
@@ -575,7 +1027,21 @@
       "French"
     ],
     "sizeBytes": 237610,
-    "coverUrl": "/books/covers/field-computing.jpg"
+    "coverUrl": "/books/covers/field-computing.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for the vocabulary of computers and software: hardware, programming, operating systems, networks, databases, security and the internet, between English and French. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a French translation, and French words from Wiktionary's own French entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Computing",
+      "English",
+      "French",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-computing-en-es",
@@ -592,7 +1058,21 @@
       "Spanish"
     ],
     "sizeBytes": 189502,
-    "coverUrl": "/books/covers/field-computing.jpg"
+    "coverUrl": "/books/covers/field-computing.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for the vocabulary of computers and software: hardware, programming, operating systems, networks, databases, security and the internet, between English and Spanish. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a Spanish translation, and Spanish words from Wiktionary's own Spanish entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Computing",
+      "English",
+      "Spanish",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-computing-en-zh",
@@ -609,7 +1089,21 @@
       "Chinese"
     ],
     "sizeBytes": 447694,
-    "coverUrl": "/books/covers/field-computing.jpg"
+    "coverUrl": "/books/covers/field-computing.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for the vocabulary of computers and software: hardware, programming, operating systems, networks, databases, security and the internet, between English and Chinese. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a Chinese translation, and Chinese words from Wiktionary's own Chinese entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Computing",
+      "English",
+      "Chinese",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-ai-en-ar",
@@ -626,7 +1120,21 @@
       "Arabic"
     ],
     "sizeBytes": 12958,
-    "coverUrl": "/books/covers/field-ai.jpg"
+    "coverUrl": "/books/covers/field-ai.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for the vocabulary of artificial intelligence and data: machine learning, statistics, probability, robotics and related methods, between English and Arabic. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a Arabic translation, and Arabic words from Wiktionary's own Arabic entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "AI and Data Science",
+      "English",
+      "Arabic",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-ai-en-de",
@@ -643,7 +1151,21 @@
       "German"
     ],
     "sizeBytes": 23472,
-    "coverUrl": "/books/covers/field-ai.jpg"
+    "coverUrl": "/books/covers/field-ai.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for the vocabulary of artificial intelligence and data: machine learning, statistics, probability, robotics and related methods, between English and German. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a German translation, and German words from Wiktionary's own German entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "AI and Data Science",
+      "English",
+      "German",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-ai-en-fr",
@@ -660,7 +1182,21 @@
       "French"
     ],
     "sizeBytes": 22148,
-    "coverUrl": "/books/covers/field-ai.jpg"
+    "coverUrl": "/books/covers/field-ai.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for the vocabulary of artificial intelligence and data: machine learning, statistics, probability, robotics and related methods, between English and French. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a French translation, and French words from Wiktionary's own French entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "AI and Data Science",
+      "English",
+      "French",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-ai-en-es",
@@ -677,7 +1213,21 @@
       "Spanish"
     ],
     "sizeBytes": 18184,
-    "coverUrl": "/books/covers/field-ai.jpg"
+    "coverUrl": "/books/covers/field-ai.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for the vocabulary of artificial intelligence and data: machine learning, statistics, probability, robotics and related methods, between English and Spanish. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a Spanish translation, and Spanish words from Wiktionary's own Spanish entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "AI and Data Science",
+      "English",
+      "Spanish",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-ai-en-zh",
@@ -694,7 +1244,21 @@
       "Chinese"
     ],
     "sizeBytes": 36748,
-    "coverUrl": "/books/covers/field-ai.jpg"
+    "coverUrl": "/books/covers/field-ai.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for the vocabulary of artificial intelligence and data: machine learning, statistics, probability, robotics and related methods, between English and Chinese. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a Chinese translation, and Chinese words from Wiktionary's own Chinese entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "AI and Data Science",
+      "English",
+      "Chinese",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-mathematics-en-ar",
@@ -711,7 +1275,21 @@
       "Arabic"
     ],
     "sizeBytes": 75128,
-    "coverUrl": "/books/covers/field-mathematics.jpg"
+    "coverUrl": "/books/covers/field-mathematics.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for mathematical vocabulary across algebra, geometry, calculus, number theory, logic, topology and set theory, between English and Arabic. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a Arabic translation, and Arabic words from Wiktionary's own Arabic entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Mathematics",
+      "English",
+      "Arabic",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-mathematics-en-de",
@@ -728,7 +1306,21 @@
       "German"
     ],
     "sizeBytes": 245212,
-    "coverUrl": "/books/covers/field-mathematics.jpg"
+    "coverUrl": "/books/covers/field-mathematics.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for mathematical vocabulary across algebra, geometry, calculus, number theory, logic, topology and set theory, between English and German. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a German translation, and German words from Wiktionary's own German entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Mathematics",
+      "English",
+      "German",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-mathematics-en-fr",
@@ -745,7 +1337,21 @@
       "French"
     ],
     "sizeBytes": 240023,
-    "coverUrl": "/books/covers/field-mathematics.jpg"
+    "coverUrl": "/books/covers/field-mathematics.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for mathematical vocabulary across algebra, geometry, calculus, number theory, logic, topology and set theory, between English and French. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a French translation, and French words from Wiktionary's own French entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Mathematics",
+      "English",
+      "French",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-mathematics-en-es",
@@ -762,7 +1368,21 @@
       "Spanish"
     ],
     "sizeBytes": 179463,
-    "coverUrl": "/books/covers/field-mathematics.jpg"
+    "coverUrl": "/books/covers/field-mathematics.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for mathematical vocabulary across algebra, geometry, calculus, number theory, logic, topology and set theory, between English and Spanish. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a Spanish translation, and Spanish words from Wiktionary's own Spanish entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Mathematics",
+      "English",
+      "Spanish",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-mathematics-en-zh",
@@ -779,7 +1399,21 @@
       "Chinese"
     ],
     "sizeBytes": 307060,
-    "coverUrl": "/books/covers/field-mathematics.jpg"
+    "coverUrl": "/books/covers/field-mathematics.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for mathematical vocabulary across algebra, geometry, calculus, number theory, logic, topology and set theory, between English and Chinese. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a Chinese translation, and Chinese words from Wiktionary's own Chinese entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Mathematics",
+      "English",
+      "Chinese",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-medicine-en-ar",
@@ -796,7 +1430,21 @@
       "Arabic"
     ],
     "sizeBytes": 254178,
-    "coverUrl": "/books/covers/dict-topic-body.png"
+    "coverUrl": "/books/covers/dict-topic-body.png",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for medical vocabulary: anatomy, diseases and symptoms, surgery, pharmacology and the clinical specialties, between English and Arabic. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a Arabic translation, and Arabic words from Wiktionary's own Arabic entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Medicine",
+      "English",
+      "Arabic",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-medicine-en-de",
@@ -813,7 +1461,21 @@
       "German"
     ],
     "sizeBytes": 501262,
-    "coverUrl": "/books/covers/dict-topic-body.png"
+    "coverUrl": "/books/covers/dict-topic-body.png",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for medical vocabulary: anatomy, diseases and symptoms, surgery, pharmacology and the clinical specialties, between English and German. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a German translation, and German words from Wiktionary's own German entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Medicine",
+      "English",
+      "German",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-medicine-en-fr",
@@ -830,7 +1492,21 @@
       "French"
     ],
     "sizeBytes": 584515,
-    "coverUrl": "/books/covers/dict-topic-body.png"
+    "coverUrl": "/books/covers/dict-topic-body.png",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for medical vocabulary: anatomy, diseases and symptoms, surgery, pharmacology and the clinical specialties, between English and French. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a French translation, and French words from Wiktionary's own French entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Medicine",
+      "English",
+      "French",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-medicine-en-es",
@@ -847,7 +1523,21 @@
       "Spanish"
     ],
     "sizeBytes": 634486,
-    "coverUrl": "/books/covers/dict-topic-body.png"
+    "coverUrl": "/books/covers/dict-topic-body.png",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for medical vocabulary: anatomy, diseases and symptoms, surgery, pharmacology and the clinical specialties, between English and Spanish. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a Spanish translation, and Spanish words from Wiktionary's own Spanish entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Medicine",
+      "English",
+      "Spanish",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-medicine-en-zh",
@@ -864,7 +1554,21 @@
       "Chinese"
     ],
     "sizeBytes": 890445,
-    "coverUrl": "/books/covers/dict-topic-body.png"
+    "coverUrl": "/books/covers/dict-topic-body.png",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for medical vocabulary: anatomy, diseases and symptoms, surgery, pharmacology and the clinical specialties, between English and Chinese. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a Chinese translation, and Chinese words from Wiktionary's own Chinese entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Medicine",
+      "English",
+      "Chinese",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-zoology-en-ar",
@@ -881,7 +1585,21 @@
       "Arabic"
     ],
     "sizeBytes": 99413,
-    "coverUrl": "/books/covers/dict-topic-animals.jpg"
+    "coverUrl": "/books/covers/dict-topic-animals.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for the animal kingdom: mammals, birds, fish, insects, reptiles and amphibians, with the terms used to describe their bodies and behaviour, between English and Arabic. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a Arabic translation, and Arabic words from Wiktionary's own Arabic entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Zoology",
+      "English",
+      "Arabic",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-zoology-en-de",
@@ -898,7 +1616,21 @@
       "German"
     ],
     "sizeBytes": 174019,
-    "coverUrl": "/books/covers/dict-topic-animals.jpg"
+    "coverUrl": "/books/covers/dict-topic-animals.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for the animal kingdom: mammals, birds, fish, insects, reptiles and amphibians, with the terms used to describe their bodies and behaviour, between English and German. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a German translation, and German words from Wiktionary's own German entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Zoology",
+      "English",
+      "German",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-zoology-en-fr",
@@ -915,7 +1647,21 @@
       "French"
     ],
     "sizeBytes": 152289,
-    "coverUrl": "/books/covers/dict-topic-animals.jpg"
+    "coverUrl": "/books/covers/dict-topic-animals.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for the animal kingdom: mammals, birds, fish, insects, reptiles and amphibians, with the terms used to describe their bodies and behaviour, between English and French. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a French translation, and French words from Wiktionary's own French entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Zoology",
+      "English",
+      "French",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-zoology-en-es",
@@ -932,7 +1678,21 @@
       "Spanish"
     ],
     "sizeBytes": 215481,
-    "coverUrl": "/books/covers/dict-topic-animals.jpg"
+    "coverUrl": "/books/covers/dict-topic-animals.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for the animal kingdom: mammals, birds, fish, insects, reptiles and amphibians, with the terms used to describe their bodies and behaviour, between English and Spanish. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a Spanish translation, and Spanish words from Wiktionary's own Spanish entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Zoology",
+      "English",
+      "Spanish",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-zoology-en-zh",
@@ -949,7 +1709,21 @@
       "Chinese"
     ],
     "sizeBytes": 216801,
-    "coverUrl": "/books/covers/dict-topic-animals.jpg"
+    "coverUrl": "/books/covers/dict-topic-animals.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for the animal kingdom: mammals, birds, fish, insects, reptiles and amphibians, with the terms used to describe their bodies and behaviour, between English and Chinese. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a Chinese translation, and Chinese words from Wiktionary's own Chinese entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Zoology",
+      "English",
+      "Chinese",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-astronomy-en-ar",
@@ -966,7 +1740,21 @@
       "Arabic"
     ],
     "sizeBytes": 53267,
-    "coverUrl": "/books/covers/dict-topic-astronomy.jpg"
+    "coverUrl": "/books/covers/dict-topic-astronomy.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for the sky and space: stars, planets, moons, constellations, galaxies, cosmology and spaceflight, between English and Arabic. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a Arabic translation, and Arabic words from Wiktionary's own Arabic entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Astronomy",
+      "English",
+      "Arabic",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-astronomy-en-de",
@@ -983,7 +1771,21 @@
       "German"
     ],
     "sizeBytes": 91040,
-    "coverUrl": "/books/covers/dict-topic-astronomy.jpg"
+    "coverUrl": "/books/covers/dict-topic-astronomy.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for the sky and space: stars, planets, moons, constellations, galaxies, cosmology and spaceflight, between English and German. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a German translation, and German words from Wiktionary's own German entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Astronomy",
+      "English",
+      "German",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-astronomy-en-fr",
@@ -1000,7 +1802,21 @@
       "French"
     ],
     "sizeBytes": 97822,
-    "coverUrl": "/books/covers/dict-topic-astronomy.jpg"
+    "coverUrl": "/books/covers/dict-topic-astronomy.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for the sky and space: stars, planets, moons, constellations, galaxies, cosmology and spaceflight, between English and French. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a French translation, and French words from Wiktionary's own French entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Astronomy",
+      "English",
+      "French",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-astronomy-en-es",
@@ -1017,7 +1833,21 @@
       "Spanish"
     ],
     "sizeBytes": 79241,
-    "coverUrl": "/books/covers/dict-topic-astronomy.jpg"
+    "coverUrl": "/books/covers/dict-topic-astronomy.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for the sky and space: stars, planets, moons, constellations, galaxies, cosmology and spaceflight, between English and Spanish. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a Spanish translation, and Spanish words from Wiktionary's own Spanish entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Astronomy",
+      "English",
+      "Spanish",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-astronomy-en-zh",
@@ -1034,7 +1864,21 @@
       "Chinese"
     ],
     "sizeBytes": 172645,
-    "coverUrl": "/books/covers/dict-topic-astronomy.jpg"
+    "coverUrl": "/books/covers/dict-topic-astronomy.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for the sky and space: stars, planets, moons, constellations, galaxies, cosmology and spaceflight, between English and Chinese. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a Chinese translation, and Chinese words from Wiktionary's own Chinese entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Astronomy",
+      "English",
+      "Chinese",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-physics-en-ar",
@@ -1051,7 +1895,21 @@
       "Arabic"
     ],
     "sizeBytes": 79258,
-    "coverUrl": "/books/covers/field-physics.jpg"
+    "coverUrl": "/books/covers/field-physics.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for physics vocabulary: mechanics, electricity and magnetism, optics, thermodynamics, quantum and particle physics, between English and Arabic. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a Arabic translation, and Arabic words from Wiktionary's own Arabic entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Physics",
+      "English",
+      "Arabic",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-physics-en-de",
@@ -1068,7 +1926,21 @@
       "German"
     ],
     "sizeBytes": 216475,
-    "coverUrl": "/books/covers/field-physics.jpg"
+    "coverUrl": "/books/covers/field-physics.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for physics vocabulary: mechanics, electricity and magnetism, optics, thermodynamics, quantum and particle physics, between English and German. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a German translation, and German words from Wiktionary's own German entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Physics",
+      "English",
+      "German",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-physics-en-fr",
@@ -1085,7 +1957,21 @@
       "French"
     ],
     "sizeBytes": 188588,
-    "coverUrl": "/books/covers/field-physics.jpg"
+    "coverUrl": "/books/covers/field-physics.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for physics vocabulary: mechanics, electricity and magnetism, optics, thermodynamics, quantum and particle physics, between English and French. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a French translation, and French words from Wiktionary's own French entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Physics",
+      "English",
+      "French",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-physics-en-es",
@@ -1102,7 +1988,21 @@
       "Spanish"
     ],
     "sizeBytes": 157577,
-    "coverUrl": "/books/covers/field-physics.jpg"
+    "coverUrl": "/books/covers/field-physics.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for physics vocabulary: mechanics, electricity and magnetism, optics, thermodynamics, quantum and particle physics, between English and Spanish. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a Spanish translation, and Spanish words from Wiktionary's own Spanish entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Physics",
+      "English",
+      "Spanish",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-physics-en-zh",
@@ -1119,7 +2019,21 @@
       "Chinese"
     ],
     "sizeBytes": 319651,
-    "coverUrl": "/books/covers/field-physics.jpg"
+    "coverUrl": "/books/covers/field-physics.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for physics vocabulary: mechanics, electricity and magnetism, optics, thermodynamics, quantum and particle physics, between English and Chinese. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a Chinese translation, and Chinese words from Wiktionary's own Chinese entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Physics",
+      "English",
+      "Chinese",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-chemistry-en-ar",
@@ -1136,7 +2050,21 @@
       "Arabic"
     ],
     "sizeBytes": 87918,
-    "coverUrl": "/books/covers/field-chemistry.jpg"
+    "coverUrl": "/books/covers/field-chemistry.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for chemistry vocabulary: the elements, compounds and minerals, reactions, and organic and biochemistry, between English and Arabic. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a Arabic translation, and Arabic words from Wiktionary's own Arabic entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Chemistry",
+      "English",
+      "Arabic",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-chemistry-en-de",
@@ -1153,7 +2081,21 @@
       "German"
     ],
     "sizeBytes": 464403,
-    "coverUrl": "/books/covers/field-chemistry.jpg"
+    "coverUrl": "/books/covers/field-chemistry.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for chemistry vocabulary: the elements, compounds and minerals, reactions, and organic and biochemistry, between English and German. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a German translation, and German words from Wiktionary's own German entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Chemistry",
+      "English",
+      "German",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-chemistry-en-fr",
@@ -1170,7 +2112,21 @@
       "French"
     ],
     "sizeBytes": 486147,
-    "coverUrl": "/books/covers/field-chemistry.jpg"
+    "coverUrl": "/books/covers/field-chemistry.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for chemistry vocabulary: the elements, compounds and minerals, reactions, and organic and biochemistry, between English and French. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a French translation, and French words from Wiktionary's own French entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Chemistry",
+      "English",
+      "French",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-chemistry-en-es",
@@ -1187,7 +2143,21 @@
       "Spanish"
     ],
     "sizeBytes": 376050,
-    "coverUrl": "/books/covers/field-chemistry.jpg"
+    "coverUrl": "/books/covers/field-chemistry.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for chemistry vocabulary: the elements, compounds and minerals, reactions, and organic and biochemistry, between English and Spanish. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a Spanish translation, and Spanish words from Wiktionary's own Spanish entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Chemistry",
+      "English",
+      "Spanish",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-chemistry-en-zh",
@@ -1204,7 +2174,21 @@
       "Chinese"
     ],
     "sizeBytes": 596236,
-    "coverUrl": "/books/covers/field-chemistry.jpg"
+    "coverUrl": "/books/covers/field-chemistry.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for chemistry vocabulary: the elements, compounds and minerals, reactions, and organic and biochemistry, between English and Chinese. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a Chinese translation, and Chinese words from Wiktionary's own Chinese entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Chemistry",
+      "English",
+      "Chinese",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-botany-en-ar",
@@ -1221,7 +2205,21 @@
       "Arabic"
     ],
     "sizeBytes": 130248,
-    "coverUrl": "/books/covers/dict-topic-plants.jpg"
+    "coverUrl": "/books/covers/dict-topic-plants.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for plants, trees, flowers and fungi, together with the vocabulary of cells, genetics and ecology, between English and Arabic. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a Arabic translation, and Arabic words from Wiktionary's own Arabic entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Botany and Biology",
+      "English",
+      "Arabic",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-botany-en-de",
@@ -1238,7 +2236,21 @@
       "German"
     ],
     "sizeBytes": 321537,
-    "coverUrl": "/books/covers/dict-topic-plants.jpg"
+    "coverUrl": "/books/covers/dict-topic-plants.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for plants, trees, flowers and fungi, together with the vocabulary of cells, genetics and ecology, between English and German. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a German translation, and German words from Wiktionary's own German entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Botany and Biology",
+      "English",
+      "German",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-botany-en-fr",
@@ -1255,7 +2267,21 @@
       "French"
     ],
     "sizeBytes": 405706,
-    "coverUrl": "/books/covers/dict-topic-plants.jpg"
+    "coverUrl": "/books/covers/dict-topic-plants.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for plants, trees, flowers and fungi, together with the vocabulary of cells, genetics and ecology, between English and French. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a French translation, and French words from Wiktionary's own French entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Botany and Biology",
+      "English",
+      "French",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-botany-en-es",
@@ -1272,7 +2298,21 @@
       "Spanish"
     ],
     "sizeBytes": 398625,
-    "coverUrl": "/books/covers/dict-topic-plants.jpg"
+    "coverUrl": "/books/covers/dict-topic-plants.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for plants, trees, flowers and fungi, together with the vocabulary of cells, genetics and ecology, between English and Spanish. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a Spanish translation, and Spanish words from Wiktionary's own Spanish entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Botany and Biology",
+      "English",
+      "Spanish",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-botany-en-zh",
@@ -1289,7 +2329,21 @@
       "Chinese"
     ],
     "sizeBytes": 432398,
-    "coverUrl": "/books/covers/dict-topic-plants.jpg"
+    "coverUrl": "/books/covers/dict-topic-plants.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for plants, trees, flowers and fungi, together with the vocabulary of cells, genetics and ecology, between English and Chinese. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a Chinese translation, and Chinese words from Wiktionary's own Chinese entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Botany and Biology",
+      "English",
+      "Chinese",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-business-en-ar",
@@ -1306,7 +2360,21 @@
       "Arabic"
     ],
     "sizeBytes": 91283,
-    "coverUrl": "/books/covers/field-business.jpg"
+    "coverUrl": "/books/covers/field-business.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for the language of business and money: economics, banking, accounting, trade, marketing and the stock market, between English and Arabic. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a Arabic translation, and Arabic words from Wiktionary's own Arabic entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Business",
+      "English",
+      "Arabic",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-business-en-de",
@@ -1323,7 +2391,21 @@
       "German"
     ],
     "sizeBytes": 519157,
-    "coverUrl": "/books/covers/field-business.jpg"
+    "coverUrl": "/books/covers/field-business.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for the language of business and money: economics, banking, accounting, trade, marketing and the stock market, between English and German. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a German translation, and German words from Wiktionary's own German entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Business",
+      "English",
+      "German",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-business-en-fr",
@@ -1340,7 +2422,21 @@
       "French"
     ],
     "sizeBytes": 282103,
-    "coverUrl": "/books/covers/field-business.jpg"
+    "coverUrl": "/books/covers/field-business.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for the language of business and money: economics, banking, accounting, trade, marketing and the stock market, between English and French. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a French translation, and French words from Wiktionary's own French entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Business",
+      "English",
+      "French",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-business-en-es",
@@ -1357,7 +2453,21 @@
       "Spanish"
     ],
     "sizeBytes": 213854,
-    "coverUrl": "/books/covers/field-business.jpg"
+    "coverUrl": "/books/covers/field-business.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for the language of business and money: economics, banking, accounting, trade, marketing and the stock market, between English and Spanish. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a Spanish translation, and Spanish words from Wiktionary's own Spanish entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Business",
+      "English",
+      "Spanish",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-business-en-zh",
@@ -1374,7 +2484,21 @@
       "Chinese"
     ],
     "sizeBytes": 610454,
-    "coverUrl": "/books/covers/field-business.jpg"
+    "coverUrl": "/books/covers/field-business.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for the language of business and money: economics, banking, accounting, trade, marketing and the stock market, between English and Chinese. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a Chinese translation, and Chinese words from Wiktionary's own Chinese entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Business",
+      "English",
+      "Chinese",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-law-en-ar",
@@ -1391,7 +2515,21 @@
       "Arabic"
     ],
     "sizeBytes": 160034,
-    "coverUrl": "/books/covers/field-law.jpg"
+    "coverUrl": "/books/covers/field-law.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for legal and civic vocabulary: courts, contracts, crime, legislation and government, between English and Arabic. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a Arabic translation, and Arabic words from Wiktionary's own Arabic entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Law",
+      "English",
+      "Arabic",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-law-en-de",
@@ -1408,7 +2546,21 @@
       "German"
     ],
     "sizeBytes": 578223,
-    "coverUrl": "/books/covers/field-law.jpg"
+    "coverUrl": "/books/covers/field-law.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for legal and civic vocabulary: courts, contracts, crime, legislation and government, between English and German. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a German translation, and German words from Wiktionary's own German entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Law",
+      "English",
+      "German",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-law-en-fr",
@@ -1425,7 +2577,21 @@
       "French"
     ],
     "sizeBytes": 427408,
-    "coverUrl": "/books/covers/field-law.jpg"
+    "coverUrl": "/books/covers/field-law.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for legal and civic vocabulary: courts, contracts, crime, legislation and government, between English and French. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a French translation, and French words from Wiktionary's own French entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Law",
+      "English",
+      "French",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-law-en-es",
@@ -1442,7 +2608,21 @@
       "Spanish"
     ],
     "sizeBytes": 356480,
-    "coverUrl": "/books/covers/field-law.jpg"
+    "coverUrl": "/books/covers/field-law.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for legal and civic vocabulary: courts, contracts, crime, legislation and government, between English and Spanish. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a Spanish translation, and Spanish words from Wiktionary's own Spanish entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Law",
+      "English",
+      "Spanish",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-law-en-zh",
@@ -1459,7 +2639,21 @@
       "Chinese"
     ],
     "sizeBytes": 714697,
-    "coverUrl": "/books/covers/field-law.jpg"
+    "coverUrl": "/books/covers/field-law.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A specialist vocabulary for legal and civic vocabulary: courts, contracts, crime, legislation and government, between English and Chinese. It combines two directions: English words from the English Wiktionary whose sense is tagged with this field and has a Chinese translation, and Chinese words from Wiktionary's own Chinese entries tagged with the field and glossed in English. Wiktionary adds broad parent tags automatically (every computing word is also tagged mathematics), so those only count when no more specific field applies.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Law",
+      "English",
+      "Chinese",
+      "Specialist vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-general-en-ar",
@@ -1476,7 +2670,20 @@
       "Arabic"
     ],
     "sizeBytes": 3723937,
-    "coverUrl": "/books/covers/general-dictionary.jpg"
+    "coverUrl": "/books/covers/general-dictionary.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A general English to Arabic dictionary built from the translation tables of the English Wiktionary. Every English word and sense that has a Arabic translation is ranked by how many languages translate it at all, a good stand-in for how common it is, and the top 25,000 are kept. Proper names are left out, and so are regional dialect forms and obsolete words, so what remains is the standard modern language.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "English",
+      "Arabic",
+      "General vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-general-en-de",
@@ -1493,7 +2700,20 @@
       "German"
     ],
     "sizeBytes": 2706248,
-    "coverUrl": "/books/covers/general-dictionary.jpg"
+    "coverUrl": "/books/covers/general-dictionary.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A general English to German dictionary built from the translation tables of the English Wiktionary. Every English word and sense that has a German translation is ranked by how many languages translate it at all, a good stand-in for how common it is, and the top 25,000 are kept. Proper names are left out, and so are regional dialect forms and obsolete words, so what remains is the standard modern language.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "English",
+      "German",
+      "General vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-general-en-fr",
@@ -1510,7 +2730,20 @@
       "French"
     ],
     "sizeBytes": 2592905,
-    "coverUrl": "/books/covers/general-dictionary.jpg"
+    "coverUrl": "/books/covers/general-dictionary.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A general English to French dictionary built from the translation tables of the English Wiktionary. Every English word and sense that has a French translation is ranked by how many languages translate it at all, a good stand-in for how common it is, and the top 25,000 are kept. Proper names are left out, and so are regional dialect forms and obsolete words, so what remains is the standard modern language.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "English",
+      "French",
+      "General vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-general-en-es",
@@ -1527,7 +2760,20 @@
       "Spanish"
     ],
     "sizeBytes": 2723780,
-    "coverUrl": "/books/covers/general-dictionary.jpg"
+    "coverUrl": "/books/covers/general-dictionary.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A general English to Spanish dictionary built from the translation tables of the English Wiktionary. Every English word and sense that has a Spanish translation is ranked by how many languages translate it at all, a good stand-in for how common it is, and the top 25,000 are kept. Proper names are left out, and so are regional dialect forms and obsolete words, so what remains is the standard modern language.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "English",
+      "Spanish",
+      "General vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-general-en-zh",
@@ -1544,7 +2790,20 @@
       "Chinese"
     ],
     "sizeBytes": 3711910,
-    "coverUrl": "/books/covers/general-dictionary.jpg"
+    "coverUrl": "/books/covers/general-dictionary.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A general English to Chinese dictionary built from the translation tables of the English Wiktionary. Every English word and sense that has a Chinese translation is ranked by how many languages translate it at all, a good stand-in for how common it is, and the top 25,000 are kept. Proper names are left out, and so are regional dialect forms and obsolete words, so what remains is the standard modern language.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "English",
+      "Chinese",
+      "General vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-general-de-ar",
@@ -1561,7 +2820,20 @@
       "Arabic"
     ],
     "sizeBytes": 3554195,
-    "coverUrl": "/books/covers/general-dictionary.jpg"
+    "coverUrl": "/books/covers/general-dictionary.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "German words paired directly with Arabic. When a single English sense lists both a German and an Arabic translation, those two words mean the same thing, so they are paired without going word by word through English, which would mix up words with several meanings. Arabic is Modern Standard Arabic; dialect forms listed in the tables are left out.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "German",
+      "Arabic",
+      "General vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-general-fr-ar",
@@ -1578,7 +2850,20 @@
       "Arabic"
     ],
     "sizeBytes": 3417197,
-    "coverUrl": "/books/covers/general-dictionary.jpg"
+    "coverUrl": "/books/covers/general-dictionary.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "French words paired directly with Arabic. When a single English sense lists both a French and an Arabic translation, those two words mean the same thing, so they are paired without going word by word through English, which would mix up words with several meanings. Arabic is Modern Standard Arabic; dialect forms listed in the tables are left out.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "French",
+      "Arabic",
+      "General vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-general-es-ar",
@@ -1595,7 +2880,20 @@
       "Arabic"
     ],
     "sizeBytes": 3413939,
-    "coverUrl": "/books/covers/general-dictionary.jpg"
+    "coverUrl": "/books/covers/general-dictionary.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "Spanish words paired directly with Arabic. When a single English sense lists both a Spanish and an Arabic translation, those two words mean the same thing, so they are paired without going word by word through English, which would mix up words with several meanings. Arabic is Modern Standard Arabic; dialect forms listed in the tables are left out.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Spanish",
+      "Arabic",
+      "General vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-general-zh-ar",
@@ -1612,7 +2910,20 @@
       "Arabic"
     ],
     "sizeBytes": 3353215,
-    "coverUrl": "/books/covers/general-dictionary.jpg"
+    "coverUrl": "/books/covers/general-dictionary.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "Chinese words paired directly with Arabic. When a single English sense lists both a Chinese and an Arabic translation, those two words mean the same thing, so they are paired without going word by word through English, which would mix up words with several meanings. Arabic is Modern Standard Arabic; dialect forms listed in the tables are left out.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Chinese",
+      "Arabic",
+      "General vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "cedict-zh-en",
@@ -1629,7 +2940,23 @@
       "English"
     ],
     "sizeBytes": 20669408,
-    "coverUrl": "/books/covers/cedict.jpg"
+    "coverUrl": "/books/covers/cedict.jpg",
+    "authors": [
+      "MDBG",
+      "CC-CEDICT contributors",
+      "Paul Denisowski (original CEDICT)"
+    ],
+    "about": "CC-CEDICT is the community-maintained Chinese-English dictionary used by most Chinese learning apps and dictionaries online. It grew out of CEDICT, started by Paul Denisowski in 1997, and has been maintained by MDBG since. Each entry gives the traditional and simplified characters, the Mandarin pronunciation in pinyin, and one or more English glosses.\n\nIn this book you can search by simplified or traditional characters, or by pinyin with tone marks or without them. Entries that are only cross-references (\"variant of\", surnames) are left out.",
+    "tags": [
+      "Chinese",
+      "English",
+      "Mandarin",
+      "Pinyin",
+      "General vocabulary",
+      "Translation"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://www.mdbg.net/chinese/dictionary?page=cedict"
   },
   {
     "id": "wikt-mono-fr",
@@ -1646,7 +2973,20 @@
       "French"
     ],
     "sizeBytes": 4907245,
-    "coverUrl": "/books/covers/mono-fr.jpg"
+    "coverUrl": "/books/covers/mono-fr.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A monolingual French dictionary: French words explained in French, taken from the French (Wiktionnaire) edition of Wiktionary rather than the English one, so the definitions are written by native speakers for native speakers. It keeps up to 25,000 headwords, putting everyday vocabulary first (words that appear in translation tables), and leaves out entries that only point at another form, such as plurals or conjugations. Each entry keeps its first few senses.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "French",
+      "Monolingual",
+      "General vocabulary",
+      "Definitions"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-mono-de",
@@ -1663,7 +3003,20 @@
       "German"
     ],
     "sizeBytes": 3989969,
-    "coverUrl": "/books/covers/mono-de.jpg"
+    "coverUrl": "/books/covers/mono-de.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A monolingual German dictionary: German words explained in German, taken from the German edition of Wiktionary rather than the English one, so the definitions are written by native speakers for native speakers. It keeps up to 25,000 headwords, putting everyday vocabulary first (words that appear in translation tables), and leaves out entries that only point at another form, such as plurals or conjugations. Each entry keeps its first few senses.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "German",
+      "Monolingual",
+      "General vocabulary",
+      "Definitions"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-mono-es",
@@ -1680,7 +3033,20 @@
       "Spanish"
     ],
     "sizeBytes": 4865720,
-    "coverUrl": "/books/covers/mono-es.jpg"
+    "coverUrl": "/books/covers/mono-es.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A monolingual Spanish dictionary: Spanish words explained in Spanish, taken from the Spanish (Wikcionario) edition of Wiktionary rather than the English one, so the definitions are written by native speakers for native speakers. It keeps up to 25,000 headwords, putting everyday vocabulary first (words that appear in translation tables), and leaves out entries that only point at another form, such as plurals or conjugations. Each entry keeps its first few senses.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Spanish",
+      "Monolingual",
+      "General vocabulary",
+      "Definitions"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   },
   {
     "id": "wikt-mono-zh",
@@ -1697,6 +3063,19 @@
       "Chinese"
     ],
     "sizeBytes": 2687412,
-    "coverUrl": "/books/covers/mono-zh.jpg"
+    "coverUrl": "/books/covers/mono-zh.jpg",
+    "authors": [
+      "Wiktionary contributors",
+      "Tatu Ylonen (Wiktextract)"
+    ],
+    "about": "A monolingual Chinese dictionary: Chinese words explained in Chinese, taken from the Chinese (維基詞典) edition of Wiktionary rather than the English one, so the definitions are written by native speakers for native speakers. It keeps up to 25,000 headwords, putting everyday vocabulary first (words that appear in translation tables), and leaves out entries that only point at another form, such as plurals or conjugations. Each entry keeps its first few senses.\n\nWiktionary is the free, collaborative dictionary from the Wikimedia Foundation, written by volunteers in many languages since 2002. Each entry records meanings, usage labels, subject tags and translation tables. Wiktextract, by Tatu Ylonen, parses those pages into structured data, which kaikki.org publishes and which this book was cut from.",
+    "tags": [
+      "Chinese",
+      "Monolingual",
+      "General vocabulary",
+      "Definitions"
+    ],
+    "license": "CC BY-SA 4.0",
+    "homepage": "https://kaikki.org/"
   }
 ]

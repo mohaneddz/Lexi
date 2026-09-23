@@ -27,6 +27,8 @@ from pathlib import Path
 
 import orjson
 
+from book_metadata import annotate
+
 ROOT = Path(__file__).resolve().parents[2]
 CACHE = Path(__file__).resolve().parent / ".cache"
 PACKS = ROOT / "public" / "books" / "packs"
@@ -728,7 +730,7 @@ def write_books(books: list[dict]) -> None:
         pack_path = PACKS / f"{book['id']}.v1.json"
         data = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
         pack_path.write_text(data, encoding="utf8")
-        catalog.append({
+        catalog.append(annotate({
             "id": book["id"],
             "title": book["title"],
             "type": book["type"],
@@ -740,7 +742,7 @@ def write_books(books: list[dict]) -> None:
             "outputLanguages": book["outputLanguages"],
             "sizeBytes": len(data.encode("utf8")),
             "coverUrl": cover_url,
-        })
+        }))
         log(f"  {book['id']}: {len(book['entries']):,} entries, {len(data) // 1024:,} KB")
 
     CATALOG.write_text(json.dumps(catalog, ensure_ascii=False, indent=2) + "\n", encoding="utf8")
