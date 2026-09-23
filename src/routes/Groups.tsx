@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowDown, ArrowUp, FolderTree, Loader2, Pencil, Plus, Search, Trash2, WandSparkles } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, FolderTree, Loader2, Pencil, Plus, Search, Trash2, WandSparkles } from "lucide-react";
 
 import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 import { GroupContentsPanel } from "@/components/GroupContentsPanel";
@@ -257,15 +257,6 @@ export default function Groups() {
             <h2 className="section-title">Groups</h2>
             <p className="subtle-caption mt-2">Organize words and translations into custom buckets with icon labels.</p>
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            className="border-white/15 bg-white/6 hover:bg-white/14"
-            onClick={() => { setSelectedGroupId(null); startCreate(); }}
-          >
-            <Plus className="mr-2 size-4" />
-            New Group
-          </Button>
         </div>
 
         <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto">
@@ -368,9 +359,32 @@ export default function Groups() {
             />
           ) : (
           <div className="space-y-6">
-            <div>
-              <h3 className="detail-title">{editingGroup ? "Edit Group" : "Create Group"}</h3>
-              <p className="subtle-caption mt-2">Groups appear in filters, chips, and action menus across the app.</p>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className="detail-title">{editingGroup ? "Edit Group" : "Create Group"}</h3>
+                <p className="subtle-caption mt-2">Groups appear in filters, chips, and action menus across the app.</p>
+              </div>
+              <div className="flex shrink-0 gap-2">
+                {editingGroup ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="border-white/15 bg-white/6 hover:bg-white/14"
+                    onClick={startCreate}
+                  >
+                    Cancel
+                  </Button>
+                ) : null}
+                <Button
+                  type="button"
+                  className="lexi-btn-primary"
+                  disabled={submitting || !draftName.trim()}
+                  onClick={() => void handleSubmit()}
+                >
+                  {editingGroup ? <Check className="mr-1.5 size-4" /> : <Plus className="mr-1.5 size-4" />}
+                  {editingGroup ? "Save" : "Create"}
+                </Button>
+              </div>
             </div>
 
             <div className="frost-panel-soft flex items-center gap-3 p-4">
@@ -388,6 +402,12 @@ export default function Groups() {
               <input
                 value={draftName}
                 onChange={(event) => setDraftName(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && draftName.trim() && !submitting) {
+                    event.preventDefault();
+                    void handleSubmit();
+                  }
+                }}
                 className="frost-input"
                 placeholder="e.g. Reading, Work, Travel"
               />
@@ -462,26 +482,6 @@ export default function Groups() {
               <p className={cn("subtle-caption", GROUP_ICON_LOAD_ERROR ? "text-amber-300/90" : undefined)}>
                 {GROUP_ICON_LOAD_ERROR ?? `Loaded ${GROUP_ICON_NAMES.length} icons (${GROUP_ICON_SOURCE}).`}
               </p>
-            </div>
-
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                disabled={submitting || !draftName.trim()}
-                onClick={() => void handleSubmit()}
-              >
-                {editingGroup ? "Save Group" : "Create Group"}
-              </Button>
-              {editingGroup ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="border-white/15 bg-white/6 hover:bg-white/14"
-                  onClick={startCreate}
-                >
-                  Cancel Edit
-                </Button>
-              ) : null}
             </div>
 
             {formError ? <p className="subtle-caption text-destructive">{formError}</p> : null}
