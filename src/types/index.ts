@@ -100,6 +100,8 @@ export interface LexiGroup {
   iconName?: string;
   description?: string;
   dateAdded: number; // timestamp
+  /** The built-in catch-all group, managed by the "Others" setting rather than by hand. */
+  isOthers?: boolean;
 }
 
 export type ViewMode = "list" | "grid" | "tiles";
@@ -166,6 +168,7 @@ export interface AppSettings {
   dailyReviewGoal: number;
   defaultRevisionMode: RevisionMode;
   groupTabsIconOnly: boolean;
-  autoAssignOthersGroup: boolean;
+  /** Keeps the built-in Others group: shown in tabs and Home, and used when auto-assign finds no match. */
+  othersGroupEnabled: boolean;
   surfaceViews: Partial<Record<SurfaceKey, SurfaceViewPreference>>;
 }

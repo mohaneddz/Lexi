@@ -39,7 +39,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   dailyReviewGoal: 20,
   defaultRevisionMode: 'flashcard',
   groupTabsIconOnly: false,
-  autoAssignOthersGroup: true,
+  othersGroupEnabled: true,
   surfaceViews: {
     definitions: { mode: "list", zoom: 100, detailPanelOpen: true },
     translations: { mode: "list", zoom: 100, detailPanelOpen: true },
@@ -203,6 +203,30 @@ export async function addGroup(group: LexiGroup): Promise<void> {
   await saveGroups(groups);
 }
 
+let ensuringOthers: Promise<void> | null = null;
+
+/**
+ * Makes sure the built-in Others group exists, adopting a hand-made group
+ * named "Others" if there is one so its words aren't split across two.
+ */
+export function ensureOthersGroup(): Promise<void> {
+  ensuringOthers ??= (async () => {
+    const groups = await getGroups();
+    if (groups.some((group) => group.isOthers)) return;
+
+    const byName = groups.find((group) => group.name.trim().toLowerCase() === 'others');
+    if (byName) {
+      byName.isOthers = true;
+    } else {
+      groups.push({ id: crypto.randomUUID(), name: 'Others', iconName: 'Inbox', dateAdded: Date.now(), isOthers: true });
+    }
+    await saveGroups(groups);
+  })().finally(() => {
+    ensuringOthers = null;
+  });
+  return ensuringOthers;
+}
+
 export async function updateGroup(id: string, updates: Partial<LexiGroup>): Promise<void> {
   const groups = await getGroups();
   const index = groups.findIndex((group) => group.id === id);
@@ -240,6 +264,10 @@ export async function getSettings(): Promise<AppSettings> {
   return {
     ...merged,
     groupTabsIconOnly: Boolean(settings?.groupTabsIconOnly),
+    // Older builds stored this as the Others auto-assign fallback toggle.
+    othersGroupEnabled: typeof settings?.othersGroupEnabled === 'boolean'
+      ? settings.othersGroupEnabled
+      : (settings as { autoAssignOthersGroup?: boolean } | undefined)?.autoAssignOthersGroup ?? true,
     surfaceViews: normalizeSurfaceViews(settings?.surfaceViews),
     defaultDefinitionLanguage:
       settings?.defaultDefinitionLanguage?.trim() || merged.defaultLanguage || 'English',

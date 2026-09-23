@@ -112,7 +112,7 @@ export default function Translations() {
   const [targetExampleVersion, setTargetExampleVersion] = useState(0);
   const [generatingExamples, setGeneratingExamples] = useState(false);
   const [copiedExample, setCopiedExample] = useState(false);
-  const [autoAssignOthersGroup, setAutoAssignOthersGroup] = useState(true);
+  const [othersGroupEnabled, setOthersGroupEnabled] = useState(true);
   const [autoGroupingId, setAutoGroupingId] = useState<string | null>(null);
   const [autoGroupError, setAutoGroupError] = useState<string | null>(null);
 
@@ -195,15 +195,15 @@ export default function Translations() {
   useEffect(() => {
     void getSettings().then((settings) => {
       setShowDeleteConfirmation(settings.showDeleteConfirmation);
-      setAutoAssignOthersGroup(settings.autoAssignOthersGroup);
+      setOthersGroupEnabled(settings.othersGroupEnabled);
     });
     const onSettingsUpdated = (event: Event) => {
-      const custom = event as CustomEvent<{ showDeleteConfirmation?: boolean; autoAssignOthersGroup?: boolean }>;
+      const custom = event as CustomEvent<{ showDeleteConfirmation?: boolean; othersGroupEnabled?: boolean }>;
       if (typeof custom.detail?.showDeleteConfirmation === "boolean") {
         setShowDeleteConfirmation(custom.detail.showDeleteConfirmation);
       }
-      if (typeof custom.detail?.autoAssignOthersGroup === "boolean") {
-        setAutoAssignOthersGroup(custom.detail.autoAssignOthersGroup);
+      if (typeof custom.detail?.othersGroupEnabled === "boolean") {
+        setOthersGroupEnabled(custom.detail.othersGroupEnabled);
       }
     };
     window.addEventListener("lexi:settings-updated", onSettingsUpdated);
@@ -341,7 +341,7 @@ export default function Translations() {
     try {
       const label = `${translation.sourceWord} -> ${translation.targetWord}`;
       const definition = translation.context?.trim() || `Translation from ${translation.sourceLanguage} to ${translation.targetLanguage}.`;
-      const groupId = await resolveGroupAssignment(label, definition, groups, suggestGroup, autoAssignOthersGroup);
+      const groupId = await resolveGroupAssignment(label, definition, groups, suggestGroup, othersGroupEnabled);
 
       if (!groupId) {
         setAutoGroupError("No matching group found.");

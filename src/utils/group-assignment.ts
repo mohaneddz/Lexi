@@ -3,7 +3,7 @@
 
 const NO_MATCH_OPTION_ID = "__lexi_no_group_match__";
 
-type GroupOption = { id: string; name: string; description?: string };
+type GroupOption = { id: string; name: string; description?: string; isOthers?: boolean };
 
 type SuggestGroupResult = {
   success: boolean;
@@ -18,8 +18,7 @@ type SuggestGroupFn = (
 ) => Promise<SuggestGroupResult>;
 
 export function findOthersGroupId(groups: GroupOption[]): string | null {
-  const match = groups.find((group) => group.name.trim().toLowerCase() === "others");
-  return match ? match.id : null;
+  return groups.find((group) => group.isOthers)?.id ?? null;
 }
 
 /**
@@ -34,12 +33,16 @@ export async function resolveGroupAssignment(
   suggestGroup: SuggestGroupFn,
   useOthersFallback: boolean,
 ): Promise<string | null> {
-  if (groups.length === 0) {
-    return null;
+  // Others is the fallback, never a candidate, or the AI would reach for it
+  // whenever a match is only slightly unclear.
+  const candidates = groups.filter((group) => !group.isOthers);
+  const othersId = useOthersFallback ? findOthersGroupId(groups) : null;
+  if (candidates.length === 0) {
+    return othersId;
   }
 
   const options: GroupOption[] = [
-    ...groups.map((group) => ({ id: group.id, name: group.name, description: group.description })),
+    ...candidates.map((group) => ({ id: group.id, name: group.name, description: group.description })),
     {
       id: NO_MATCH_OPTION_ID,
       name: "None of the above",
@@ -48,11 +51,7 @@ export async function resolveGroupAssignment(
   ];
 
   const result = await suggestGroup(word, definition, options);
-  const matchedRealGroup = result.success && groups.some((group) => group.id === result.data);
+  const matchedRealGroup = result.success && candidates.some((group) => group.id === result.data);
 
-  if (matchedRealGroup) {
-    return result.data;
-  }
-
-  return useOthersFallback ? findOthersGroupId(groups) : null;
+  return matchedRealGroup ? result.data : othersId;
 }

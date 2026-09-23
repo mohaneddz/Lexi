@@ -186,7 +186,7 @@ export default function Groups() {
     let done = 0;
 
     for (const word of pendingWords) {
-      const groupId = await resolveGroupAssignment(word.word, word.definition, groups, suggestGroup, settings.autoAssignOthersGroup);
+      const groupId = await resolveGroupAssignment(word.word, word.definition, groups, suggestGroup, settings.othersGroupEnabled);
       if (groupId) {
         await updateWord(word.id, { groupIds: [groupId] });
         assigned += 1;
@@ -198,7 +198,7 @@ export default function Groups() {
     for (const translation of pendingTranslations) {
       const label = `${translation.sourceWord} -> ${translation.targetWord}`;
       const definition = translation.context?.trim() || `Translation from ${translation.sourceLanguage} to ${translation.targetLanguage}.`;
-      const groupId = await resolveGroupAssignment(label, definition, groups, suggestGroup, settings.autoAssignOthersGroup);
+      const groupId = await resolveGroupAssignment(label, definition, groups, suggestGroup, settings.othersGroupEnabled);
       if (groupId) {
         await updateTranslation(translation.id, { groupIds: [groupId] });
         assigned += 1;
@@ -266,7 +266,7 @@ export default function Groups() {
                     <button
                       type="button"
                       className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-white/10 disabled:opacity-35"
-                      disabled={groups.findIndex((entry) => entry.id === group.id) === 0}
+                      disabled={group.isOthers || groups.findIndex((entry) => entry.id === group.id) === 0}
                       onClick={(event) => {
                         event.stopPropagation();
                         void moveGroup(group.id, "up");
@@ -277,7 +277,7 @@ export default function Groups() {
                     <button
                       type="button"
                       className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-white/10 disabled:opacity-35"
-                      disabled={groups.findIndex((entry) => entry.id === group.id) === groups.length - 1}
+                      disabled={group.isOthers || groups[groups.findIndex((entry) => entry.id === group.id) + 1]?.isOthers !== false}
                       onClick={(event) => {
                         event.stopPropagation();
                         void moveGroup(group.id, "down");
@@ -297,7 +297,9 @@ export default function Groups() {
                     </button>
                     <button
                       type="button"
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-white/10"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-white/10 disabled:opacity-35"
+                      disabled={group.isOthers}
+                      title={group.isOthers ? "Built in. Turn Others off in Settings to hide it." : `Delete ${group.name}`}
                       onClick={(event) => {
                         event.stopPropagation();
                         void handleDelete(group);

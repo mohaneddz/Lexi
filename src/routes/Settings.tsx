@@ -371,15 +371,15 @@ export default function Settings() {
 
             <div className="flex cursor-pointer items-center justify-between gap-3">
               <div>
-                <p className="font-medium">Fall Back To "Others" Group</p>
-                <p className="subtle-caption mt-1">When AI auto-assign can't find a good match, drop the item in a group named "Others" if one exists. Otherwise it's left unassigned.</p>
+                <p className="font-medium">"Others" Group</p>
+                <p className="subtle-caption mt-1">A built-in group for anything that doesn't fit elsewhere. Auto-assign falls back to it, and it gets its own section on Home. Turning it off hides it everywhere without deleting what's in it.</p>
               </div>
               <input
                 type="checkbox"
-                checked={settings.autoAssignOthersGroup}
-                onChange={(event) => patchSettings({ autoAssignOthersGroup: event.target.checked })}
+                checked={settings.othersGroupEnabled}
+                onChange={(event) => patchSettings({ othersGroupEnabled: event.target.checked })}
                 className="size-4 accent-white"
-                disabled={saving || !settings.aiEnabled}
+                disabled={saving}
               />
             </div>
           </div>
