@@ -5,6 +5,7 @@ import type { Word } from '@/types';
 import * as storage from '@/utils/storage';
 import { capitalizeTerm } from '@/utils/formatters';
 import { announceDataChanged, onDataChanged } from '@/utils/dataEvents';
+import { enrichNewEntry } from '@/utils/entryEnrichment';
 
 export function useWords() {
   const [words, setWords] = useState<Word[]>([]);
@@ -47,6 +48,8 @@ export function useWords() {
             };
       await storage.addWord(newWord);
       announceDataChanged('words');
+      // Fills in tags and a group in the background if it was saved without them.
+      void enrichNewEntry({ kind: 'word', entry: newWord });
       setWords(prev => [...prev, newWord]);
       return newWord;
     } catch (err) {

@@ -5,6 +5,7 @@ import type { Translation } from '@/types';
 import * as storage from '@/utils/storage';
 import { capitalizeTerm } from '@/utils/formatters';
 import { announceDataChanged, onDataChanged } from '@/utils/dataEvents';
+import { enrichNewEntry } from '@/utils/entryEnrichment';
 
 export function useTranslations() {
     const [translations, setTranslations] = useState<Translation[]>([]);
@@ -50,6 +51,8 @@ export function useTranslations() {
             };
             await storage.addTranslation(newTranslation);
             announceDataChanged('translations');
+            // Fills in tags and a group in the background if it was saved without them.
+            void enrichNewEntry({ kind: 'translation', entry: newTranslation });
             setTranslations(prev => [...prev, newTranslation]);
             return newTranslation;
         } catch (err) {

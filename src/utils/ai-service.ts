@@ -71,6 +71,14 @@ const ANSWER_GRADE_SCHEMA = z.object({
   feedback: z.string(),
 });
 
+const ENTRY_CLASSIFICATION_SCHEMA = z.object({
+  items: z.array(z.object({
+    item: z.number().int(),
+    tags: z.array(z.string()),
+    group: z.string(),
+  })),
+});
+
 const CAPTURE_META_SCHEMA = z.object({
   output: z.string(),
   context: z.string(),
@@ -641,6 +649,62 @@ export async function suggestTagsBatch(
       data: [],
       error: toErrorMessage("Batch tag suggestion failed", error),
     };
+  }
+}
+
+export type EntryClassification = { tags: string[]; groupId: string | null };
+
+/**
+ * Tags entries and picks each one's group in a single request, for entries
+ * saved without either (added from a suggestion, a book, or typed by hand).
+ * Pass no groups to only tag. Returns one result per item, in order.
+ */
+export async function classifyEntries(
+  items: TagBatchItem[],
+  groups: Array<{ id: string; name: string; description?: string }>,
+  knownTags: string[],
+): Promise<AIResponse<EntryClassification[]>> {
+  if (items.length === 0) {
+    return { success: true, data: [] };
+  }
+
+  try {
+    const labelToId = new Map(groups.map((group, index) => [`G${index + 1}`, group.id]));
+    const groupsList = groups
+      .map((group, index) => `G${index + 1}: ${group.name}${group.description ? ` (${group.description})` : ""}`)
+      .join("\n");
+    const itemsList = items
+      .map((item, index) => `${index + 1}. ${item.label.trim()} :: ${item.definition.trim().slice(0, 200)}`)
+      .join("\n");
+
+    const object = await runStructuredPrompt({
+      schema: ENTRY_CLASSIFICATION_SCHEMA,
+      system: "You organize entries in a vocabulary learning app. Return JSON only.",
+      prompt: [
+        "Items (number. entry :: meaning):",
+        itemsList,
+        "",
+        `For each of the ${items.length} items, return its number and 1 to 3 short lowercase tags (topic, register or part of speech, no punctuation).`,
+        describeTagVocabulary(knownTags),
+        groups.length > 0
+          ? `Also put the label of its best fitting group (such as G1) in group, or NONE if nothing clearly fits. Groups:\n${groupsList}`
+          : "Put NONE in group.",
+      ].filter(Boolean).join("\n"),
+      temperature: 0.2,
+    });
+
+    const result: EntryClassification[] = items.map(() => ({ tags: [], groupId: null }));
+    for (const entry of object.items) {
+      const index = entry.item - 1;
+      if (index < 0 || index >= items.length) continue;
+      result[index] = {
+        tags: cleanTags(entry.tags, 3),
+        groupId: labelToId.get(entry.group.trim().toUpperCase()) ?? null,
+      };
+    }
+    return { success: true, data: result };
+  } catch (error) {
+    return { success: false, data: [], error: toErrorMessage("Classifying entries failed", error) };
   }
 }
 
