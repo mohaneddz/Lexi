@@ -5,6 +5,16 @@ import { listen } from "@tauri-apps/api/event";
 import { Minus, X, Square } from "lucide-react";
 import { getSettings } from "@/utils/storage";
 
+/** Two overlapping squares: the "restore down" glyph Windows shows on a maximized window. */
+function RestoreIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" className={className} aria-hidden="true">
+      <rect x="2.5" y="5" width="8.5" height="8.5" rx="1" />
+      <path d="M5 5V3.5a1 1 0 0 1 1-1h6.5a1 1 0 0 1 1 1V10a1 1 0 0 1-1 1H11" />
+    </svg>
+  );
+}
+
 export default function Titlebar() {
   const appWindow = getCurrentWindow();
 
@@ -92,21 +102,23 @@ export default function Titlebar() {
   }, []);
 
   const btnBase =
-    "inline-flex h-[30px] w-[30px] items-center justify-center select-none z-[1000] text-white group";
+    "inline-flex h-[30px] w-[30px] items-center justify-center select-none text-foreground group";
 
   const btnHover = "hover:bg-gray-300";
 
   return (
     <div
       data-tauri-drag-region
-      className={`fixed left-0 right-0 top-0 z-[1000] flex h-[30px] select-none justify-end border-b ${isFullscreen ? "pointer-events-none opacity-0" : ""}`}
+      className={`fixed left-0 right-0 top-0 z-[45] flex h-[30px] select-none justify-end border-b ${isFullscreen ? "pointer-events-none opacity-0" : ""}`}
     >
       {!isFullscreen && (
         <>
           <button
             onClick={() => appWindow.minimize()}
-            className={`${btnBase} ${btnHover} z-[9999]`}
+            className={`${btnBase} ${btnHover}`}
             id="titlebar-minimize"
+            aria-label="Minimize"
+            title="Minimize"
             type="button"
           >
             <Minus className="h-4 w-4 pointer-events-none group-hover:text-black" aria-hidden="true" />
@@ -117,14 +129,16 @@ export default function Titlebar() {
               await appWindow.toggleMaximize();
               setIsMaximized(await appWindow.isMaximized());
             }}
-            className={`${btnBase} ${btnHover} z-[9999]`}
+            className={`${btnBase} ${btnHover}`}
             id="titlebar-maximize"
             type="button"
+            aria-label={isMaximized ? "Restore down" : "Maximize"}
+            title={isMaximized ? "Restore down" : "Maximize"}
           >
-            {!isMaximized ? (
-              <Square className="h-4 w-4 pointer-events-none group-hover:text-black" aria-hidden="true" />
+            {isMaximized ? (
+              <RestoreIcon className="h-4 w-4 pointer-events-none group-hover:text-black" />
             ) : (
-              <Square className="h-4 w-4 pointer-events-none group-hover:text-black" aria-hidden="true" />
+              <Square className="h-3.5 w-3.5 pointer-events-none group-hover:text-black" aria-hidden="true" />
             )}
           </button>
 
@@ -136,11 +150,13 @@ export default function Titlebar() {
               }
               void appWindow.close();
             }}
-            className={`${btnBase} ${btnHover} z-[9999]`}
+            className={`${btnBase} hover:bg-red-600`}
             id="titlebar-close"
+            aria-label="Close"
+            title="Close"
             type="button"
           >
-            <X className="h-4 w-4 pointer-events-none group-hover:text-black" aria-hidden="true" />
+            <X className="h-4 w-4 pointer-events-none group-hover:text-white" aria-hidden="true" />
           </button>
         </>
       )}

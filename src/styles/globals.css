@@ -557,6 +557,31 @@ textarea {
 select.frost-input,
 select.frost-select {
   padding-right: 2.2rem;
+  /* A select's text box is its content height, so the input's vertical
+     padding squeezed it below the line height and clipped descenders. */
+  padding-top: 0;
+  padding-bottom: 0;
+  line-height: normal;
+}
+
+/* Behind every dialog: dims and blurs the whole window, title bar included. */
+.lexi-dialog-overlay {
+  background: oklch(0.1 0.02 255 / 0.55);
+  backdrop-filter: blur(6px);
+}
+
+/* A dark wash turns a light UI muddy grey, so light mode only veils it. */
+.light .lexi-dialog-overlay {
+  background: oklch(0.4 0.02 253 / 0.16);
+}
+
+/* Light panels are translucent white; inside a dialog they sit on the
+   overlay rather than the page, so they need to be solid to read as white. */
+.light [role="dialog"] .frost-panel,
+.light [role="alertdialog"].glass-strong,
+.light [role="dialog"].glass-strong {
+  background: var(--panel-strong);
+  border-color: oklch(0.2 0.02 253 / 0.1);
 }
 
 .frost-input::placeholder {
