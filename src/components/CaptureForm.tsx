@@ -6,10 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAI } from "@/hooks/useAI";
 import { useBooks } from "@/hooks/useBooks";
+import { useGroups } from "@/hooks/useGroups";
 import { useTranslations } from "@/hooks/useTranslations";
 import { useWords } from "@/hooks/useWords";
 import { getSettings, updateSettings } from "@/utils/storage";
+import { parseTagInput, tagVocabulary } from "@/utils/tags";
 import { sanitizeInput, validateDefinition, validateWord } from "@/utils/validators";
+
+const NO_GROUP = "none";
 
 export type CaptureMode = "define" | "translate";
 
@@ -42,9 +46,10 @@ interface CaptureFormProps {
 }
 
 export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragRegion, group }: CaptureFormProps) {
-  const { defineWord, translate, loading: aiLoading } = useAI();
-  const { addWord } = useWords();
-  const { addTranslation } = useTranslations();
+  const { defineWord, translate, captureWithMeta, loading: aiLoading } = useAI();
+  const { words, addWord } = useWords();
+  const { translations, addTranslation } = useTranslations();
+  const { groups } = useGroups();
   const { lookup, enabledBookIds, loading: booksLoading } = useBooks();
 
   // The Input wrapper is a plain function component, so it can't take a ref
@@ -62,6 +67,12 @@ export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragReg
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ sourceText?: string; outputText?: string }>({});
+  const [tagsText, setTagsText] = useState("");
+  const [groupId, setGroupId] = useState(group?.id ?? NO_GROUP);
+  // The AI only fills tags or the group while you haven't set them yourself,
+  // and a group handed in by the Groups page counts as already chosen.
+  const [tagsTouched, setTagsTouched] = useState(false);
+  const [groupTouched, setGroupTouched] = useState(Boolean(group));
 
   useEffect(() => {
     void getSettings().then((settings) => {
@@ -86,6 +97,28 @@ export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragReg
 
     setMessage(null);
     setErrors((current) => ({ ...current, sourceText: undefined }));
+
+    // One request fills the definition or translation, the tags and the
+    // group together; the plain define/translate call is only a fallback.
+    const withMeta = await captureWithMeta({
+      text: trimmed,
+      language: mode === "define" ? definitionLanguage || defaultLanguage : sourceLanguage,
+      targetLanguage: mode === "define" ? undefined : targetLanguage,
+      groups: groups.filter((entry) => !entry.isOthers).map(({ id, name, description }) => ({ id, name, description })),
+      knownTags: tagVocabulary([...words, ...translations]),
+    });
+
+    if (withMeta.success) {
+      setOutputText(withMeta.data.output);
+      setAiGenerated(true);
+      setErrors((current) => ({ ...current, outputText: undefined }));
+      if (!tagsTouched && withMeta.data.tags.length > 0) setTagsText(withMeta.data.tags.join(", "));
+      if (!groupTouched) {
+        const fallbackId = groups.find((entry) => entry.isOthers)?.id;
+        setGroupId(withMeta.data.groupId ?? fallbackId ?? NO_GROUP);
+      }
+      return;
+    }
 
     if (mode === "define") {
       const result = await defineWord(trimmed, definitionLanguage || defaultLanguage);
@@ -152,7 +185,13 @@ export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragReg
     setAiGenerated(false);
     setMessage(null);
     setErrors({});
+    setTagsText("");
+    setTagsTouched(false);
+    setGroupId(group?.id ?? NO_GROUP);
+    setGroupTouched(Boolean(group));
   };
+
+  const selectedGroupIds = groupId !== NO_GROUP && groups.some((entry) => entry.id === groupId) ? [groupId] : [];
 
   const handleSave = async () => {
     setSaving(true);
@@ -171,9 +210,9 @@ export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragReg
           word: sanitizeInput(sourceText),
           definition: sanitizeInput(outputText),
           language,
-          tags: [],
+          tags: parseTagInput(tagsText),
           aiGenerated,
-          groupIds: group ? [group.id] : [],
+          groupIds: selectedGroupIds,
         });
         await updateSettings({ defaultDefinitionLanguage: language });
       } else {
@@ -192,7 +231,8 @@ export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragReg
           targetLanguage,
           aiGenerated,
           context: context.trim() ? sanitizeInput(context) : undefined,
-          groupIds: group ? [group.id] : [],
+          tags: parseTagInput(tagsText),
+          groupIds: selectedGroupIds,
         });
         await updateSettings({
           defaultTranslationSourceLanguage: sourceLanguage,
@@ -233,7 +273,6 @@ export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragReg
               {mode === "define"
                 ? "Capture a word and what it means."
                 : "Capture a word and its translation."}
-              {group ? ` Saved to ${group.name}.` : null}
             </p>
           </div>
 
@@ -433,6 +472,35 @@ export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragReg
             />
           </div>
         ) : null}
+
+        <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_11rem]">
+          <div className="space-y-2">
+            <div className="text-sm font-medium">Tags</div>
+            <Input
+              className="frost-input"
+              value={tagsText}
+              onChange={(event) => {
+                setTagsText(event.target.value);
+                setTagsTouched(true);
+              }}
+              placeholder="e.g. travel, formal, verb"
+            />
+          </div>
+          <div className="space-y-2">
+            <div className="text-sm font-medium">Group</div>
+            <Select value={groupId} onValueChange={(value) => { setGroupId(value); setGroupTouched(true); }}>
+              <SelectTrigger className="frost-select form-select w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="glass-strong">
+                <SelectItem value={NO_GROUP}>No group</SelectItem>
+                {groups.map((entry) => (
+                  <SelectItem key={entry.id} value={entry.id}>{entry.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
         {message ? <p className="subtle-caption">{message}</p> : null}
       </div>
