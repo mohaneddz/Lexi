@@ -28,6 +28,7 @@ import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog"
 import { EditTranslationDialog } from "@/components/EditTranslationDialog";
 import { TextPromptDialog } from "@/components/TextPromptDialog";
 import { GroupBadge } from "@/components/lexi/GroupBadge";
+import { TagList } from "@/components/lexi/TagList";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -773,7 +774,13 @@ export default function Translations() {
                   </div>
                   <div className="ghost-divider" />
                   <div className="space-y-2"><p className="detail-text">{selectedTranslation.targetWord}</p><p className="subtle-caption">Primary translation target</p></div>
-                  {selectedTranslation.context ? <div className="frost-panel-soft space-y-2 p-4"><p className="subtle-caption">Context</p><p className="word-sub">{selectedTranslation.context}</p></div> : null}
+                  <TagList tags={selectedTranslation.tags} />
+                  {selectedTranslation.context ? (
+                    <div className="frost-panel-soft space-y-3 p-4">
+                      <p className="font-medium">Context</p>
+                      <p className="serif-display text-2xl italic text-muted-foreground">{selectedTranslation.context}</p>
+                    </div>
+                  ) : null}
                   <div className="ghost-divider" />
                   <div className="frost-panel-soft space-y-3 p-4">
                     <div className="flex items-center justify-between gap-2">
@@ -787,22 +794,21 @@ export default function Translations() {
                           <RefreshCcw className="mr-1.5 size-3.5" />
                           Rotate
                         </Button>
+                        <Button type="button" size="sm" variant="outline" className="border-white/15 bg-white/6 hover:bg-white/14" disabled={!selectedSourceExample && !selectedTargetExample} onClick={() => void copyExamples()} title="Copy both examples" aria-label="Copy both examples">
+                          <Copy className="size-3.5" />
+                          {copiedExample ? "Copied" : null}
+                        </Button>
                       </div>
                     </div>
                     {selectedSourceExample || selectedTargetExample ? (
-                      <div className="space-y-2">
-                        {selectedSourceExample ? <div><p className="subtle-caption">{selectedTranslation.sourceLanguage}</p><p className="serif-display text-xl italic text-muted-foreground">{selectedSourceExample}</p></div> : null}
-                        {selectedTargetExample ? <div><p className="subtle-caption">{selectedTranslation.targetLanguage}</p><p className="serif-display text-xl italic text-muted-foreground">{selectedTargetExample}</p></div> : null}
+                      <div className="space-y-3">
+                        {selectedSourceExample ? <p className="serif-display text-2xl italic text-muted-foreground">{selectedSourceExample}</p> : null}
+                        {selectedSourceExample && selectedTargetExample ? <div className="ghost-divider" /> : null}
+                        {selectedTargetExample ? <p className="serif-display text-2xl italic text-muted-foreground">{selectedTargetExample}</p> : null}
                       </div>
                     ) : (
                       <p className="subtle-caption">No examples yet. Click Generate to see this pair used in both languages.</p>
                     )}
-                    <div className="flex justify-end">
-                      <Button type="button" size="sm" variant="outline" className="border-white/15 bg-white/6 hover:bg-white/14" disabled={!selectedSourceExample && !selectedTargetExample} onClick={() => void copyExamples()}>
-                        <Copy className="mr-1.5 size-3.5" />
-                        {copiedExample ? "Copied" : "Copy Examples"}
-                      </Button>
-                    </div>
                   </div>
                   <div className="ghost-divider" />
                   <div className="space-y-3">

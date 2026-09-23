@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Copy, Grid2x2, LayoutGrid, List, Loader2, Minus, PanelRightClose, PanelRightOpen, Plus, RefreshCcw, Search, Sparkles, WandSparkles, ZoomIn } from "lucide-react";
 
+import { TagList } from "@/components/lexi/TagList";
 import { Button } from "@/components/ui/button";
 import { useAI } from "@/hooks/useAI";
 import { useSurfaceViewPreference } from "@/hooks/useSurfaceViewPreference";
@@ -336,6 +337,7 @@ export default function Definitions() {
                   <div><h2 className="detail-title">{selectedWord.word}</h2><p className="subtle-caption mt-2">Definition Workspace</p></div>
                   <div className="ghost-divider" />
                   <p className="detail-text">{selectedWord.definition}</p>
+                  <TagList tags={selectedWord.tags} />
                   <div className="frost-panel-soft space-y-3 p-4">
                     <div className="flex items-center justify-between gap-2">
                       <p className="font-medium">Usage Example</p>
