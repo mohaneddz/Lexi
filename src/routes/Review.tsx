@@ -331,14 +331,19 @@ export default function Review() {
         return;
       }
 
-      if (mode === "flashcard") {
-        if (event.code === "Space" && !isTypingTarget(event.target)) {
-          event.preventDefault();
-          if (!showAnswer) {
+      // Space reveals; once revealed, 1 is Again and 2 (or Space) is I Knew It.
+      if (mode === "flashcard" && !isTypingTarget(event.target) && !isSaving) {
+        if (!showAnswer) {
+          if (event.code === "Space") {
+            event.preventDefault();
             setShowAnswer(true);
-          } else {
-            void handleFlashcardKnown(true);
           }
+        } else if (event.key === "1") {
+          event.preventDefault();
+          void handleFlashcardKnown(false);
+        } else if (event.key === "2" || event.code === "Space") {
+          event.preventDefault();
+          void handleFlashcardKnown(true);
         }
       }
 
@@ -358,7 +363,7 @@ export default function Review() {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [mode, options, queue.length, selectedWord, showAnswer, typedAnswer]);
+  }, [isSaving, mode, options, queue.length, selectedWord, showAnswer, typedAnswer]);
 
   return (
     <div className="grid min-h-full grid-cols-1 gap-3 xl:h-full xl:grid-cols-[1.04fr_1fr]">
@@ -442,9 +447,27 @@ export default function Review() {
             Streak {streak} (Best {bestStreak})
           </span>
           <span className="subtle-caption inline-flex items-center gap-1.5">
-            <kbd className="key-cap">Space</kbd> reveal
+            {mode === "flashcard" ? (
+              showAnswer ? (
+                <>
+                  <kbd className="key-cap">1</kbd> again
+                  <kbd className="key-cap ml-1.5">2</kbd> knew it
+                </>
+              ) : (
+                <>
+                  <kbd className="key-cap">Space</kbd> reveal
+                </>
+              )
+            ) : mode === "multiple-choice" ? (
+              <>
+                <kbd className="key-cap">1</kbd>-<kbd className="key-cap">4</kbd> choose
+              </>
+            ) : (
+              <>
+                <kbd className="key-cap">Enter</kbd> submit
+              </>
+            )}
             <kbd className="key-cap ml-1.5">N</kbd> skip
-            <kbd className="key-cap ml-1.5">1</kbd>-<kbd className="key-cap">4</kbd> choose
           </span>
         </div>
       </section>
@@ -518,7 +541,7 @@ export default function Review() {
                       )}
                     </>
                   ) : (
-                    <p className="serif-display text-3xl text-muted-foreground">Press Space or Reveal to show definition.</p>
+                    <p className="serif-display text-3xl text-muted-foreground">Recall the meaning, then reveal it.</p>
                   )}
 
                   <div className="flex flex-wrap gap-2">
@@ -530,6 +553,7 @@ export default function Review() {
                         onClick={() => setShowAnswer(true)}
                       >
                         Reveal
+                        <kbd className="key-cap ml-2">Space</kbd>
                       </Button>
                     ) : (
                       <>
@@ -541,6 +565,7 @@ export default function Review() {
                           onClick={() => void handleFlashcardKnown(false)}
                         >
                           Again
+                          <kbd className="key-cap ml-2">1</kbd>
                         </Button>
                         <Button
                           type="button"
@@ -550,6 +575,7 @@ export default function Review() {
                         >
                           <Check className="mr-2 size-4" />
                           I Knew It
+                          <kbd className="key-cap ml-2">2</kbd>
                         </Button>
                       </>
                     )}

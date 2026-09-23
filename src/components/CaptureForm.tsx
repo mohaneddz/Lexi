@@ -1,6 +1,4 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-
-import { cn } from "@/lib/utils";
 import { BookOpen, Check, Loader2, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -12,6 +10,7 @@ import { useBooks } from "@/hooks/useBooks";
 import { useGroups } from "@/hooks/useGroups";
 import { useTranslations } from "@/hooks/useTranslations";
 import { useWords } from "@/hooks/useWords";
+import { cn } from "@/lib/utils";
 import { getSettings, updateSettings } from "@/utils/storage";
 import { parseTagInput, tagVocabulary } from "@/utils/tags";
 import { sanitizeInput, validateDefinition, validateWord } from "@/utils/validators";
