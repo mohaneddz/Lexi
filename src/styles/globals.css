@@ -792,27 +792,36 @@ select.frost-select {
   box-shadow: 0 0 0 3px oklch(0.78 0.03 250 / 0.3);
 }
 
+/* Selected reads as a soft tint, the same language as the active list row,
+   rather than a solid fill that outshines everything around it. */
 .lexi-toggle[aria-pressed="true"] {
-  background: oklch(0.95 0.01 255);
-  border-color: transparent;
-  color: oklch(0.18 0.02 253);
+  background: oklch(0.8 0.03 250 / 0.16);
+  border-color: oklch(0.82 0.03 250 / 0.42);
+  color: var(--foreground);
   font-weight: 600;
-  box-shadow: 0 1px 4px oklch(0 0 0 / 0.45), inset 0 1px 0 oklch(1 0 0 / 0.55);
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.06);
 }
 
-/* The pressed state is a light fill, so it has to re-assert dark text: the
-   generic hover rule above turns the label light for the unpressed state. */
 .lexi-toggle[aria-pressed="true"]:hover:not(:disabled) {
-  background: oklch(1 0 0);
-  color: oklch(0.14 0.02 253);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 7px oklch(0 0 0 / 0.5), inset 0 1px 0 oklch(1 0 0 / 0.65);
+  background: oklch(0.8 0.03 250 / 0.22);
+  border-color: oklch(0.82 0.03 250 / 0.55);
+  color: var(--foreground);
 }
 
 .lexi-toggle[aria-pressed="true"]:active:not(:disabled) {
-  background: oklch(0.88 0.012 255);
-  color: oklch(0.14 0.02 253);
+  background: oklch(0.8 0.03 250 / 0.14);
   transform: translateY(0) scale(0.97);
+}
+
+.light .lexi-toggle[aria-pressed="true"] {
+  background: oklch(0.5 0.04 248 / 0.12);
+  border-color: oklch(0.5 0.04 248 / 0.34);
+  box-shadow: none;
+}
+
+.light .lexi-toggle[aria-pressed="true"]:hover:not(:disabled) {
+  background: oklch(0.5 0.04 248 / 0.18);
+  border-color: oklch(0.5 0.04 248 / 0.45);
 }
 
 .lexi-toggle:disabled {
@@ -877,16 +886,29 @@ select.frost-select {
   box-shadow: var(--elevation-soft);
 }
 
+/* The main action on a surface: a little more color than the selected
+   toggle so it's still findable, but tinted glass rather than a solid block. */
 .lexi-btn-primary {
-  border: 1px solid oklch(0.58 0.11 250 / 0.6);
-  background: oklch(0.46 0.1 250);
-  color: oklch(0.98 0.006 255);
+  border: 1px solid oklch(0.72 0.06 250 / 0.45);
+  background: oklch(0.62 0.07 250 / 0.24);
+  color: var(--foreground);
   box-shadow: var(--elevation-soft);
 }
 
 .lexi-btn-primary:hover:not(:disabled) {
-  background: oklch(0.52 0.11 250);
-  border-color: oklch(0.64 0.12 250 / 0.7);
+  background: oklch(0.62 0.07 250 / 0.34);
+  border-color: oklch(0.74 0.07 250 / 0.6);
+}
+
+.light .lexi-btn-primary {
+  border-color: oklch(0.5 0.07 250 / 0.4);
+  background: oklch(0.55 0.08 250 / 0.14);
+  color: oklch(0.3 0.06 252);
+}
+
+.light .lexi-btn-primary:hover:not(:disabled) {
+  background: oklch(0.55 0.08 250 / 0.22);
+  border-color: oklch(0.5 0.07 250 / 0.55);
 }
 
 .lexi-browser-card {
