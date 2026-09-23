@@ -1074,8 +1074,10 @@ select.frost-select {
   background: radial-gradient(circle, oklch(0.83 0.03 232 / 0.28) 0%, transparent 72%);
 }
 
+/* White dots vanish on a light background, so light mode uses dark ones. */
 .light .lexi-window::before {
-  opacity: 0.04;
+  opacity: 0.14;
+  background-image: radial-gradient(oklch(0.2 0.02 253 / 0.45) 0.7px, transparent 0.7px);
 }
 
 .light .lexi-brand-icon {
