@@ -1018,6 +1018,23 @@ select.frost-select {
   grid-template-columns: 108px minmax(0, 1fr);
   gap: 1rem;
   padding: 1rem;
+  cursor: pointer;
+  transition: border-color 140ms ease, background-color 140ms ease;
+}
+
+.book-card:hover {
+  border-color: oklch(1 0 0 / 0.16);
+}
+
+/* The book open in the sidebar, marked the same way as a selected card elsewhere. */
+.book-card.active {
+  border-color: oklch(0.8 0.03 250 / 0.88);
+  background: linear-gradient(180deg, oklch(0.38 0.03 250 / 0.2), oklch(1 0 0 / 0.05));
+}
+
+.light .book-card.active {
+  border-color: oklch(0.5 0.04 248 / 0.6);
+  background: linear-gradient(180deg, oklch(0.78 0.02 250 / 0.35), transparent);
 }
 
 .book-cover-frame {

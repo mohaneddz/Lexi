@@ -1,6 +1,8 @@
 import { useDeferredValue, useMemo, useState } from "react";
 import { BookOpen, Check, Circle, CircleDot, Copy, Languages, Loader2, Minus, Search, Sparkles, Trash2 } from "lucide-react";
 
+import { BookDetailPanel } from "@/components/BookDetailPanel";
+import { BookCover } from "@/components/lexi/BookCover";
 import { BookCardsSkeleton } from "@/components/lexi/Skeletons";
 import { Button } from "@/components/ui/button";
 import {
@@ -75,31 +77,6 @@ function formatSizeBytes(bytes: number): string {
   return `${bytes}B`;
 }
 
-function BookCover({ title, coverUrl }: { title: string; coverUrl?: string }) {
-  // Remember which url failed rather than that one did, so a card that fell
-  // back once still retries when the catalog points somewhere new.
-  const [failedUrl, setFailedUrl] = useState<string | null>(null);
-
-  if (!coverUrl || failedUrl === coverUrl) {
-    return (
-      <div className="book-cover-fallback">
-        <BookOpen className="size-8" />
-        <span>{title}</span>
-      </div>
-    );
-  }
-
-  return (
-    <img
-      src={coverUrl}
-      alt={`${title} cover`}
-      className="book-cover-image"
-      loading="lazy"
-      onError={() => setFailedUrl(coverUrl)}
-    />
-  );
-}
-
 export default function Books() {
   const {
     catalog,
@@ -127,6 +104,9 @@ export default function Books() {
   const [outputLanguage, setOutputLanguage] = useState("all");
   // "all" searches every enabled book; anything else is a single book id.
   const [searchScope, setSearchScope] = useState("all");
+  // The book whose details fill the sidebar, and its sibling language
+  // editions when it was opened from a grouped card.
+  const [selectedBook, setSelectedBook] = useState<{ book: BookCatalogItem; editions: BookCatalogItem[] } | null>(null);
 
   const filteredCatalog = useMemo(() => {
     const normalized = catalogQuery.trim().toLowerCase();
@@ -151,7 +131,9 @@ export default function Books() {
         book.title.toLowerCase().includes(normalized) ||
         book.description.toLowerCase().includes(normalized) ||
         book.inputLanguages.some((language) => language.toLowerCase().includes(normalized)) ||
-        book.outputLanguages.some((language) => language.toLowerCase().includes(normalized))
+        book.outputLanguages.some((language) => language.toLowerCase().includes(normalized)) ||
+        (book.authors ?? []).some((author) => author.toLowerCase().includes(normalized)) ||
+        (book.tags ?? []).some((tag) => tag.toLowerCase().includes(normalized))
       );
     });
   }, [catalog, catalogLanguage, catalogQuery, catalogStatus, catalogTypeFilter, enabledBookIds]);
@@ -348,7 +330,7 @@ export default function Books() {
         </div>
       </section>
 
-      {renderSearchPanel()}
+      {selectedBook ? renderBookDetail(selectedBook.book, selectedBook.editions) : renderSearchPanel()}
     </div>
   );
 
@@ -359,7 +341,13 @@ export default function Books() {
     const title = displayTitle(book);
 
     return (
-      <article key={book.id} className="book-card frost-panel-soft">
+      <article
+        key={book.id}
+        className={cn("book-card frost-panel-soft", selectedBook?.book.id === book.id && "active")}
+        role="button"
+        tabIndex={0}
+        onClick={() => setSelectedBook({ book, editions: [book] })}
+      >
         <div className="book-cover-frame">
           <BookCover title={title} coverUrl={book.coverUrl} />
         </div>
@@ -375,7 +363,7 @@ export default function Books() {
                     type="button"
                     className="lexi-toggle"
                     aria-pressed={inputLanguage === language}
-                    onClick={() => applyInputLanguageFilter(language)}
+                    onClick={(event) => { event.stopPropagation(); applyInputLanguageFilter(language); }}
                     title={`Filter input: ${language}`}
                   >
                     {book.type === "dictionary" ? `Language: ${language}` : `From: ${language}`}
@@ -388,7 +376,7 @@ export default function Books() {
                       type="button"
                       className="lexi-toggle"
                       aria-pressed={outputLanguage === language}
-                      onClick={() => applyOutputLanguageFilter(language)}
+                      onClick={(event) => { event.stopPropagation(); applyOutputLanguageFilter(language); }}
                       title={`Filter output: ${language}`}
                     >
                       {`To: ${language}`}
@@ -410,7 +398,7 @@ export default function Books() {
               className="lexi-toggle"
               aria-pressed={isEnabled}
               disabled={isToggling}
-              onClick={() => void toggleBookEnabled(book.id)}
+              onClick={(event) => { event.stopPropagation(); void toggleBookEnabled(book.id); }}
               title={isEnabled
                 ? "This book is included in search. Click to disable it."
                 : "This book is excluded from search. Click to enable it."}
@@ -425,7 +413,7 @@ export default function Books() {
               <button
                 type="button"
                 className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-red-900/25 hover:text-red-200"
-                onClick={() => void removeCustomSource(book.id)}
+                onClick={(event) => { event.stopPropagation(); void removeCustomSource(book.id); }}
                 title={`Remove this imported book (${formatSizeBytes(book.sizeBytes)})`}
                 aria-label={`Remove ${book.title}`}
               >
@@ -448,8 +436,16 @@ export default function Books() {
     const sharedInputLanguages = Array.from(new Set(variants.flatMap((variant) => variant.inputLanguages)));
     const variantSummary = variants.map((variant) => variantLabel(variant, variants)).join(", ");
 
+    const isOpen = variants.some((variant) => variant.id === selectedBook?.book.id);
+
     return (
-      <article key={`group:${type}:${baseTitle}`} className="book-card frost-panel-soft">
+      <article
+        key={`group:${type}:${baseTitle}`}
+        className={cn("book-card frost-panel-soft", isOpen && "active")}
+        role="button"
+        tabIndex={0}
+        onClick={() => setSelectedBook({ book: primary, editions: variants })}
+      >
         <div className="book-cover-frame">
           <BookCover title={baseTitle} coverUrl={primary.coverUrl} />
         </div>
@@ -465,7 +461,7 @@ export default function Books() {
                     type="button"
                     className="lexi-toggle"
                     aria-pressed={inputLanguage === language}
-                    onClick={() => applyInputLanguageFilter(language)}
+                    onClick={(event) => { event.stopPropagation(); applyInputLanguageFilter(language); }}
                     title={`Filter input: ${language}`}
                   >
                     {type === "dictionary" ? `Language: ${language}` : `From: ${language}`}
@@ -485,7 +481,7 @@ export default function Books() {
               className="lexi-toggle"
               aria-pressed={isAllEnabled}
               disabled={isToggling}
-              onClick={() => void setBooksEnabled(variants.map((variant) => variant.id), !isAllEnabled)}
+              onClick={(event) => { event.stopPropagation(); void setBooksEnabled(variants.map((variant) => variant.id), !isAllEnabled); }}
               title={isAllEnabled
                 ? "All language variants are included in search. Click to disable them all."
                 : isAnyEnabled
@@ -503,13 +499,14 @@ export default function Books() {
                 <button
                   type="button"
                   className="lexi-toggle"
+                  onClick={(event) => event.stopPropagation()}
                   title="Choose which language variants to enable individually"
                 >
                   <Languages className="size-3.5" />
                   {variants.length} languages
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuContent align="end" className="w-56" onClick={(event) => event.stopPropagation()}>
                 <DropdownMenudiv>Language variants</DropdownMenudiv>
                 {variants.map((variant) => {
                   const variantEnabled = enabledBookIds.includes(variant.id);
@@ -533,6 +530,34 @@ export default function Books() {
           </div>
         </div>
       </article>
+    );
+  }
+
+  function renderBookDetail(book: BookCatalogItem, editions: BookCatalogItem[]) {
+    return (
+      <section className="frost-panel flex min-h-[22rem] xl:min-h-0 flex-col overflow-hidden animate-slide-in-up">
+        <BookDetailPanel
+          book={book}
+          editions={editions}
+          title={editions.length > 1 ? displayTitle(book) : book.title}
+          editionLabel={(edition) => (edition.type === "translation" ? variantLabel(edition, editions) : edition.title)}
+          isEnabled={enabledBookIds.includes(book.id)}
+          isToggling={loadingBookIds.includes(book.id)}
+          isImported={importedById.has(book.id)}
+          formatSize={formatSizeBytes}
+          onToggle={() => void toggleBookEnabled(book.id)}
+          onSelectEdition={(edition) => setSelectedBook({ book: edition, editions })}
+          onSearchThisBook={() => {
+            setSearchScope(book.id);
+            setSelectedBook(null);
+          }}
+          onRemove={() => {
+            setSelectedBook(null);
+            void removeCustomSource(book.id);
+          }}
+          onClose={() => setSelectedBook(null)}
+        />
+      </section>
     );
   }
 
