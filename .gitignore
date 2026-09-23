@@ -30,3 +30,4 @@ dist-ssr
 
 # Book build inputs (large dictionary dumps)
 scripts/books/.cache
+__pycache__/
