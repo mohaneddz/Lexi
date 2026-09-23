@@ -284,16 +284,31 @@ def extract_english_concepts() -> list[dict]:
         senses = entry.get("senses") or []
         sense_fields = [fields_for(*sense_labels(sense, "en:")) for sense in senses]
 
+        # Translations sit either on the sense they translate, or on the
+        # entry with a `sense` label and _dis1 scores pointing at a sense.
+        tables = [(translation, index) for index, sense in enumerate(senses) for translation in sense.get("translations") or []]
+        tables += [(translation, None) for translation in entry.get("translations") or []]
+
         groups: dict[str, dict] = {}
         popularity: Counter = Counter()
-        for translation in entry.get("translations") or []:
-            key = translation.get("sense") or ""
+        for translation, sense_index in tables:
+            key = translation.get("sense") or (f"#{sense_index}" if sense_index is not None else "")
             popularity[key] += 1
             lang = wanted.get(translation.get("code") or translation.get("lang_code") or "")
             target = plain(translation.get("word") or "")
             if not lang or not target or len(target) > 60:
                 continue
             if lang == "zh" and not CJK.search(target):
+                continue
+            # Tables list dialects alongside the standard language (Egyptian
+            # or Gulf Arabic, Hokkien or Dungan Chinese); the books stick to
+            # Modern Standard Arabic and Mandarin, and to words still in use.
+            tags = translation.get("tags") or []
+            if lang == "ar" and any(tag.endswith("-Arabic") for tag in tags):
+                continue
+            if lang == "zh" and translation.get("lang") not in ("Chinese Mandarin", "Mandarin"):
+                continue
+            if "obsolete" in tags or "archaic" in tags:
                 continue
 
             group = groups.get(key)
@@ -302,7 +317,9 @@ def extract_english_concepts() -> list[dict]:
                 # sense; the best fit decides which fields it belongs to.
                 fields: list[str] = []
                 scores = [int(x) for x in (translation.get("_dis1") or "").split() if x.isdigit()]
-                if scores and len(scores) == len(senses):
+                if sense_index is not None:
+                    fields = sense_fields[sense_index]
+                elif scores and len(scores) == len(senses):
                     fields = sense_fields[scores.index(max(scores))]
                 elif len(senses) == 1:
                     fields = sense_fields[0]
@@ -486,9 +503,25 @@ def dedupe(entries: list[dict], key_fields: tuple[str, ...]) -> list[dict]:
     return unique
 
 
+def split_chinese(word: str) -> tuple[str, str]:
+    """Wiktionary writes Mandarin translations as "統計學家 /统计学家": returns (simplified, traditional)."""
+    if " /" in word:
+        traditional, simplified = (part.strip() for part in word.split(" /", 1))
+        return simplified, traditional
+    return word, ""
+
+
 def translation_entry(source: str, source_lang: str, targets: list[list[str]], target_lang: str) -> dict:
-    words = [target for target, _ in targets[:MAX_TARGETS_PER_ENTRY]]
-    aliases = [roman for _, roman in targets[:MAX_TARGETS_PER_ENTRY] if roman]
+    words = []
+    aliases = []
+    for target, roman in targets[:MAX_TARGETS_PER_ENTRY]:
+        if target_lang == "zh":
+            target, traditional = split_chinese(target)
+            if traditional:
+                aliases.append(traditional)
+        words.append(target)
+        if roman:
+            aliases.append(roman)
     if target_lang == "ar":
         aliases += [ARABIC_DIACRITICS.sub("", word) for word in words if ARABIC_DIACRITICS.search(word)]
     entry = {
@@ -553,7 +586,8 @@ def build_field_books(concepts: list[dict], terms_by_lang: dict[str, list[dict]]
 
 def build_general_books(concepts: list[dict]) -> list[dict]:
     books = []
-    ranked = sorted(concepts, key=lambda c: -c["pop"])
+    # Proper names are widely translated but aren't vocabulary.
+    ranked = sorted((c for c in concepts if c["pos"] != "name"), key=lambda c: -c["pop"])
     for lang, name in LANGUAGES.items():
         entries = [translation_entry(c["en"], "English", c["tr"][lang], lang) for c in ranked if c["tr"].get(lang)]
         entries = dedupe(entries, ("source", "target"))[:MAX_GENERAL_ENTRIES]
@@ -582,8 +616,10 @@ def build_general_books(concepts: list[dict]) -> list[dict]:
             targets = concept["tr"].get("ar")
             if not sources or not targets:
                 continue
-            entry = translation_entry(sources[0][0], name, targets, "ar")
-            extra = [word for word, _ in sources[1:3]] + ([sources[0][1]] if sources[0][1] else [])
+            source_word, source_traditional = split_chinese(sources[0][0]) if lang == "zh" else (sources[0][0], "")
+            entry = translation_entry(source_word, name, targets, "ar")
+            extra = [split_chinese(word)[0] if lang == "zh" else word for word, _ in sources[1:3]]
+            extra += [alias for alias in (source_traditional, sources[0][1]) if alias]
             if extra:
                 entry["aliases"] = list(dict.fromkeys(extra + entry.get("aliases", [])))
             entries.append(entry)
