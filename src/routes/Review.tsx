@@ -5,18 +5,32 @@ import {
   CircleDot,
   Flame,
   Gamepad2,
-  Keyboard,
+  Loader2,
+  MessageSquareText,
   Search,
+  SlidersHorizontal,
   Timer,
 } from "lucide-react";
 
 import { ChoicesSkeleton, ListRowsSkeleton } from "@/components/lexi/Skeletons";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenudiv,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useAI } from "@/hooks/useAI";
 import { useTranslations } from "@/hooks/useTranslations";
 import { useWords } from "@/hooks/useWords";
 import { cn } from "@/lib/utils";
 import type { ReviewState, RevisionMode, Translation, Word } from "@/types";
+import type { AnswerGrade } from "@/utils/ai-service";
 import {
   buildExample,
   describeDueIn,
@@ -30,6 +44,16 @@ import {
 import { getSettings, readAiCacheEntry, writeAiCache } from "@/utils/storage";
 
 type KindFilter = "all" | "word" | "translation";
+type StatusFilter = "All" | ReviewStatus;
+type SortMode = "priority" | "overdue" | "newest" | "oldest" | "alpha";
+
+const SORT_OPTIONS: Array<{ value: SortMode; label: string }> = [
+  { value: "priority", label: "Least known first" },
+  { value: "overdue", label: "Most overdue" },
+  { value: "newest", label: "Newest added" },
+  { value: "oldest", label: "Oldest added" },
+  { value: "alpha", label: "A to Z" },
+];
 
 /** A word or translation pair, seen the same way by every review mode. */
 type ReviewItem = {
@@ -59,7 +83,7 @@ const KIND_FILTERS: Array<{ value: KindFilter; label: string }> = [
 const MODES: Array<{ value: RevisionMode; label: string; icon: ComponentType<{ className?: string }> }> = [
   { value: "flashcard", label: "Flashcards", icon: Gamepad2 },
   { value: "multiple-choice", label: "Multiple Choice", icon: Check },
-  { value: "typing", label: "Typing", icon: Keyboard },
+  { value: "typing", label: "Explain", icon: MessageSquareText },
 ];
 
 function statusClass(status: ReviewStatus): string {
@@ -157,10 +181,17 @@ function writeDailyProgress(progress: DailyProgress): void {
 export default function Review() {
   const { words, updateWord, loading: wordsLoading } = useWords();
   const { translations, updateTranslation, loading: translationsLoading } = useTranslations();
-  const { suggestDistractorDefinitions } = useAI();
+  const { suggestDistractorDefinitions, gradeAnswer } = useAI();
 
   const [query, setQuery] = useState("");
   const [kindFilter, setKindFilter] = useState<KindFilter>("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("All");
+  const [sortMode, setSortMode] = useState<SortMode>("priority");
+  const [grading, setGrading] = useState(false);
+  // The verdict on an Explain answer, held on screen until you move on.
+  // `null` feedback with `selfGrade` means the AI couldn't grade it (or you
+  // asked to see the answer), so you mark it yourself.
+  const [grade, setGrade] = useState<(AnswerGrade & { selfGrade?: boolean }) | null>(null);
   const [groupFilterId, setGroupFilterId] = useState("none");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -204,24 +235,38 @@ export default function Review() {
     const normalizedQuery = query.trim().toLowerCase();
     return allItems
       .filter((item) => kindFilter === "all" || item.kind === kindFilter)
+      .filter((item) => statusFilter === "All" || getReviewStatus(item) === statusFilter)
       .filter((item) => groupFilterId === "none" || item.groupIds.includes(groupFilterId))
       .filter((item) => !normalizedQuery
         || item.prompt.toLowerCase().includes(normalizedQuery)
         || item.answer.toLowerCase().includes(normalizedQuery));
-  }, [allItems, groupFilterId, kindFilter, query]);
+  }, [allItems, groupFilterId, kindFilter, query, statusFilter]);
 
-  // Reviews that are due come first, most overdue at the top; entries never
-  // reviewed follow, oldest first.
-  const queue = useMemo(
-    () => filteredItems
-      .filter((item) => isDue(item, now))
-      .sort((a, b) => {
-        const aNew = a.review.stage === 0 ? 1 : 0;
-        const bNew = b.review.stage === 0 ? 1 : 0;
-        return aNew - bNew || a.review.dueAt - b.review.dueAt || a.dateAdded - b.dateAdded;
-      }),
-    [filteredItems, now],
-  );
+  // By default the least-known entries come first (new, then the lowest
+  // stages), newest first within each, so fresh words get attention before
+  // ones that are nearly mastered.
+  const queue = useMemo(() => {
+    const due = filteredItems.filter((item) => isDue(item, now));
+    switch (sortMode) {
+      case "overdue":
+        return due.sort((a, b) => a.review.dueAt - b.review.dueAt || b.dateAdded - a.dateAdded);
+      case "newest":
+        return due.sort((a, b) => b.dateAdded - a.dateAdded);
+      case "oldest":
+        return due.sort((a, b) => a.dateAdded - b.dateAdded);
+      case "alpha":
+        return due.sort((a, b) => a.prompt.localeCompare(b.prompt));
+      default:
+        return due.sort((a, b) => a.review.stage - b.review.stage || b.dateAdded - a.dateAdded);
+    }
+  }, [filteredItems, now, sortMode]);
+
+  const clearAllFilters = () => {
+    setQuery("");
+    setKindFilter("all");
+    setStatusFilter("All");
+    setSortMode("priority");
+  };
 
   const nextUpcoming = useMemo(() => {
     const upcoming = filteredItems.filter((item) => !isDue(item, now)).map((item) => item.review.dueAt);
@@ -238,6 +283,7 @@ export default function Review() {
       setSelectedId(queue[0].id);
       setShowAnswer(false);
       setTypedAnswer("");
+      setGrade(null);
     }
   }, [queue, selectedId]);
 
@@ -349,6 +395,7 @@ export default function Review() {
     setSelectedId(id);
     setShowAnswer(false);
     setTypedAnswer("");
+    setGrade(null);
   }, []);
 
   const moveToNext = useCallback(() => {
@@ -398,11 +445,44 @@ export default function Review() {
     void recordResult(choice === selected.answer);
   };
 
-  const handleTypingSubmit = () => {
-    if (!selected) return;
-    // Words show the definition and ask for the word; pairs show the source and ask for the translation.
-    const expected = selected.kind === "word" ? selected.prompt : selected.answer;
-    void recordResult(normalizeAnswer(typedAnswer) === normalizeAnswer(expected));
+  /**
+   * Explain mode: the AI judges your own-words answer, leniently. An exact
+   * match skips the call. If grading fails you see the saved answer and
+   * mark yourself, so a flaky connection never blocks a review.
+   */
+  const handleExplainSubmit = async () => {
+    if (!selected || grading || grade) return;
+    if (normalizeAnswer(typedAnswer) === normalizeAnswer(selected.answer)) {
+      setGrade({ correct: true, feedback: "Spot on." });
+      return;
+    }
+
+    setGrading(true);
+    try {
+      const result = await gradeAnswer({
+        kind: selected.kind === "word" ? "definition" : "translation",
+        prompt: selected.prompt,
+        expected: selected.answer,
+        answer: typedAnswer,
+        promptLanguage: selected.promptLanguage,
+        answerLanguage: selected.answerLanguage,
+      });
+      setGrade(result.success
+        ? result.data
+        : { correct: false, feedback: "Couldn't reach the AI to grade this, so compare it yourself.", selfGrade: true });
+    } finally {
+      setGrading(false);
+    }
+  };
+
+  const revealExplainAnswer = () => {
+    if (!selected || grade) return;
+    setGrade({ correct: false, feedback: "", selfGrade: true });
+  };
+
+  /** Moves on from a shown verdict, recording it (or your own call, when self-grading). */
+  const finishExplain = (correct: boolean) => {
+    void recordResult(correct);
   };
 
   useEffect(() => {
@@ -441,9 +521,23 @@ export default function Review() {
         }
       }
 
-      if (mode === "typing" && event.key === "Enter" && isTypingTarget(event.target)) {
-        event.preventDefault();
-        handleTypingSubmit();
+      if (mode === "typing" && event.key === "Enter" && !event.shiftKey) {
+        if (grade && !grade.selfGrade) {
+          event.preventDefault();
+          finishExplain(grade.correct);
+        } else if (!grade && isTypingTarget(event.target)) {
+          event.preventDefault();
+          void handleExplainSubmit();
+        }
+      }
+      if (mode === "typing" && grade?.selfGrade && !isTypingTarget(event.target)) {
+        if (event.key === "1") {
+          event.preventDefault();
+          finishExplain(false);
+        } else if (event.key === "2") {
+          event.preventDefault();
+          finishExplain(true);
+        }
       }
     };
 
@@ -483,19 +577,29 @@ export default function Review() {
                 placeholder="Filter revision items"
               />
             </div>
-            <div className="flex gap-1.5">
-              {KIND_FILTERS.map((entry) => (
-                <button
-                  key={entry.value}
-                  type="button"
-                  className="lexi-toggle"
-                  aria-pressed={kindFilter === entry.value}
-                  onClick={() => setKindFilter(entry.value)}
-                >
-                  {entry.label}
-                </button>
-              ))}
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button type="button" variant="outline" size="icon" className="border-white/15 bg-white/6 hover:bg-white/14" aria-label="Filters" title="Filters"><SlidersHorizontal className="size-4" /></Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="custom-scrollbar max-h-[70vh] w-60 overflow-y-auto">
+                <DropdownMenudiv>Sort</DropdownMenudiv>
+                <DropdownMenuRadioGroup value={sortMode} onValueChange={(value) => setSortMode(value as SortMode)}>
+                  {SORT_OPTIONS.map((entry) => <DropdownMenuRadioItem key={entry.value} value={entry.value}>{entry.label}</DropdownMenuRadioItem>)}
+                </DropdownMenuRadioGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenudiv>Show</DropdownMenudiv>
+                <DropdownMenuRadioGroup value={kindFilter} onValueChange={(value) => setKindFilter(value as KindFilter)}>
+                  {KIND_FILTERS.map((entry) => <DropdownMenuRadioItem key={entry.value} value={entry.value}>{entry.label}</DropdownMenuRadioItem>)}
+                </DropdownMenuRadioGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenudiv>Status</DropdownMenudiv>
+                <DropdownMenuRadioGroup value={statusFilter} onValueChange={(value) => setStatusFilter(value as StatusFilter)}>
+                  {(["All", "New", "Learning", "Mastered"] as StatusFilter[]).map((entry) => <DropdownMenuRadioItem key={entry} value={entry}>{entry}</DropdownMenuRadioItem>)}
+                </DropdownMenuRadioGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={clearAllFilters}>Clear filters</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
@@ -571,7 +675,7 @@ export default function Review() {
               </>
             ) : (
               <>
-                <kbd className="key-cap">Enter</kbd> submit
+                <kbd className="key-cap">Enter</kbd> {grade ? "next" : "check"}
               </>
             )}
             <kbd className="key-cap ml-1.5">N</kbd> skip
@@ -597,6 +701,7 @@ export default function Review() {
                           setMode(entry.value);
                           setShowAnswer(false);
                           setTypedAnswer("");
+                          setGrade(null);
                         }}
                       >
                         <Icon className="size-3.5" />
@@ -729,34 +834,96 @@ export default function Review() {
 
               {mode === "typing" ? (
                 <div className="space-y-6">
-                  <h2 className="detail-title">{selected.kind === "word" ? "Type The Word" : `Type It In ${selected.answerLanguage}`}</h2>
-                  <p className="serif-display text-3xl text-muted-foreground">
-                    {selected.kind === "word" ? selected.answer : selected.prompt}
+                  <h2 className="detail-title">{selected.prompt}</h2>
+                  <p className="subtle-caption">
+                    {selected.kind === "word"
+                      ? "Explain what it means in your own words. The gist is enough."
+                      : `Translate it into ${selected.answerLanguage}. Close variants count.`}
                   </p>
 
-                  <input
-                    className="frost-input"
-                    value={typedAnswer}
-                    onChange={(event) => setTypedAnswer(event.target.value)}
-                    placeholder={selected.kind === "word" ? "Type the matching word" : `Type the ${selected.answerLanguage} translation`}
-                  />
+                  {selected.kind === "word" ? (
+                    <textarea
+                      className="frost-input form-textarea"
+                      value={typedAnswer}
+                      onChange={(event) => setTypedAnswer(event.target.value)}
+                      placeholder="It means..."
+                      rows={3}
+                      disabled={grading || grade !== null}
+                      autoFocus
+                    />
+                  ) : (
+                    <input
+                      className="frost-input"
+                      value={typedAnswer}
+                      onChange={(event) => setTypedAnswer(event.target.value)}
+                      placeholder={`The ${selected.answerLanguage} translation`}
+                      disabled={grading || grade !== null}
+                      autoFocus
+                    />
+                  )}
+
+                  {grading ? (
+                    <div className="frost-panel-soft space-y-2.5 p-4" aria-busy>
+                      <Skeleton className="h-5 w-24 rounded-full bg-white/8" />
+                      <Skeleton className="h-4 w-full bg-white/8" />
+                      <Skeleton className="h-4 w-2/3 bg-white/8" />
+                    </div>
+                  ) : grade ? (
+                    <div className="frost-panel-soft space-y-3 p-4">
+                      {grade.selfGrade ? null : (
+                        <span className={cn("status-pill w-fit", grade.correct ? "status-mastered" : "status-new")}>
+                          {grade.correct ? "Got it" : "Not quite"}
+                        </span>
+                      )}
+                      {grade.feedback ? <p className="word-sub">{grade.feedback}</p> : null}
+                      <div className="space-y-1">
+                        <p className="subtle-caption">Saved answer</p>
+                        <p className="serif-display text-2xl italic text-muted-foreground">{selected.answer}</p>
+                      </div>
+                    </div>
+                  ) : null}
 
                   <div className="flex flex-wrap gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="border-white/15 bg-white/6 hover:bg-white/14"
-                      onClick={() => setTypedAnswer(selected.kind === "word" ? selected.prompt : selected.answer)}
-                    >
-                      Show answer
-                    </Button>
-                    <Button
-                      type="button"
-                      className="lexi-btn-primary"
-                      onClick={handleTypingSubmit}
-                    >
-                      Submit
-                    </Button>
+                    {grade?.selfGrade ? (
+                      <>
+                        <Button type="button" variant="outline" className="border-white/15 bg-white/6 hover:bg-white/14" onClick={() => finishExplain(false)}>
+                          I missed it
+                          <kbd className="key-cap ml-2">1</kbd>
+                        </Button>
+                        <Button type="button" className="lexi-btn-primary" onClick={() => finishExplain(true)}>
+                          <Check className="mr-2 size-4" />
+                          I had it
+                          <kbd className="key-cap ml-2">2</kbd>
+                        </Button>
+                      </>
+                    ) : grade ? (
+                      <Button type="button" className="lexi-btn-primary" onClick={() => finishExplain(grade.correct)}>
+                        Next
+                        <kbd className="key-cap ml-2">Enter</kbd>
+                      </Button>
+                    ) : (
+                      <>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="border-white/15 bg-white/6 hover:bg-white/14"
+                          disabled={grading}
+                          onClick={revealExplainAnswer}
+                        >
+                          Show answer
+                        </Button>
+                        <Button
+                          type="button"
+                          className="lexi-btn-primary"
+                          disabled={grading || !typedAnswer.trim()}
+                          onClick={() => void handleExplainSubmit()}
+                        >
+                          {grading ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
+                          Check
+                          <kbd className="key-cap ml-2">Enter</kbd>
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
               ) : null}

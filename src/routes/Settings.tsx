@@ -50,7 +50,7 @@ const THEMES: Array<{ div: string; value: Theme; icon: ComponentType<{ className
 const REVISION_MODES: Array<{ div: string; value: RevisionMode }> = [
   { div: "Flashcards", value: "flashcard" },
   { div: "Multiple Choice", value: "multiple-choice" },
-  { div: "Typing", value: "typing" },
+  { div: "Explain", value: "typing" },
 ];
 
 const SUGGESTION_COUNT_FIELDS: Array<{ key: "homeSuggestionCount" | "definitionSuggestionCount" | "translationSuggestionCount"; label: string }> = [
