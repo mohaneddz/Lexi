@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Translation } from '@/types';
 import * as storage from '@/utils/storage';
+import { announceDataChanged, onDataChanged } from '@/utils/dataEvents';
 
 function capitalizeLeadingCharacter(value: string): string {
     return value.replace(/^(\s*)(\S)/, (_match, ws: string, first: string) => `${ws}${first.toUpperCase()}`);
@@ -14,9 +15,9 @@ export function useTranslations() {
     const [error, setError] = useState<string | null>(null);
 
     // Load translations from storage
-    const loadTranslations = useCallback(async () => {
+    const loadTranslations = useCallback(async ({ silent = false }: { silent?: boolean } = {}) => {
         try {
-            setLoading(true);
+            if (!silent) setLoading(true);
             const loadedTranslations = await storage.getTranslations();
             setTranslations(loadedTranslations);
             setError(null);
@@ -33,6 +34,9 @@ export function useTranslations() {
         loadTranslations();
     }, [loadTranslations]);
 
+    // Another page or the quick-capture window changed the store.
+    useEffect(() => onDataChanged('translations', () => { void loadTranslations({ silent: true }); }), [loadTranslations]);
+
     // Add a new translation
     const addTranslation = useCallback(async (
         translation: Omit<Translation, 'id' | 'dateAdded'>
@@ -48,6 +52,7 @@ export function useTranslations() {
                 groupIds: translation.groupIds || [],
             };
             await storage.addTranslation(newTranslation);
+            announceDataChanged('translations');
             setTranslations(prev => [...prev, newTranslation]);
             return newTranslation;
         } catch (err) {
@@ -64,6 +69,7 @@ export function useTranslations() {
     ) => {
         try {
             await storage.updateTranslation(id, updates);
+            announceDataChanged('translations');
             setTranslations(prev =>
                 prev.map(t => (
                     t.id === id
@@ -87,6 +93,7 @@ export function useTranslations() {
     const deleteTranslation = useCallback(async (id: string) => {
         try {
             await storage.deleteTranslation(id);
+            announceDataChanged('translations');
             setTranslations(prev => prev.filter(t => t.id !== id));
         } catch (err) {
             setError('Failed to delete translation');

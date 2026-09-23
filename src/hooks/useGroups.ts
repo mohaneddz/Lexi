@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import type { LexiGroup } from "@/types";
+import { announceDataChanged } from "@/utils/dataEvents";
 import * as storage from "@/utils/storage";
 
 const GROUPS_UPDATED_EVENT = "lexi:groups-updated";
@@ -81,6 +82,9 @@ export function useGroups() {
     await storage.deleteGroup(id);
     setGroups((prev) => prev.filter((group) => group.id !== id));
     emitGroupsUpdated();
+    // Deleting a group also strips it from every word and translation.
+    announceDataChanged("words");
+    announceDataChanged("translations");
   }, []);
 
   const moveGroup = useCallback(async (id: string, direction: "up" | "down") => {

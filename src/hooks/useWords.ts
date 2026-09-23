@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Word } from '@/types';
 import * as storage from '@/utils/storage';
+import { announceDataChanged, onDataChanged } from '@/utils/dataEvents';
 
 function capitalizeLeadingCharacter(value: string): string {
   return value.replace(/^(\s*)(\S)/, (_match, ws: string, first: string) => `${ws}${first.toUpperCase()}`);
@@ -14,9 +15,9 @@ export function useWords() {
   const [error, setError] = useState<string | null>(null);
 
   // Load words from storage
-  const loadWords = useCallback(async () => {
+  const loadWords = useCallback(async ({ silent = false }: { silent?: boolean } = {}) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const loadedWords = await storage.getWords();
       setWords(loadedWords);
       setError(null);
@@ -33,6 +34,9 @@ export function useWords() {
     loadWords();
   }, [loadWords]);
 
+  // Another page or the quick-capture window changed the store.
+  useEffect(() => onDataChanged('words', () => { void loadWords({ silent: true }); }), [loadWords]);
+
   // Add a new word
   const addWord = useCallback(async (word: Omit<Word, 'id' | 'dateAdded'>) => {
     try {
@@ -45,6 +49,7 @@ export function useWords() {
                 groupIds: word.groupIds || [],
             };
       await storage.addWord(newWord);
+      announceDataChanged('words');
       setWords(prev => [...prev, newWord]);
       return newWord;
     } catch (err) {
@@ -58,6 +63,7 @@ export function useWords() {
   const updateWord = useCallback(async (id: string, updates: Partial<Word>) => {
     try {
       await storage.updateWord(id, updates);
+      announceDataChanged('words');
       setWords(prev =>
         prev.map(w => (
           w.id === id
@@ -80,6 +86,7 @@ export function useWords() {
   const deleteWord = useCallback(async (id: string) => {
     try {
       await storage.deleteWord(id);
+      announceDataChanged('words');
       setWords(prev => prev.filter(w => w.id !== id));
     } catch (err) {
       setError('Failed to delete word');
