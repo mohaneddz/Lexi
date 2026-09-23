@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, FolderTree, Loader2, Pencil, Plus, Search, Trash2, WandSparkles } from "lucide-react";
 
+import { GroupContentsPanel } from "@/components/GroupContentsPanel";
 import { GroupBadge } from "@/components/lexi/GroupBadge";
 import { Button } from "@/components/ui/button";
 import { useAI } from "@/hooks/useAI";
@@ -10,15 +11,14 @@ import { useWords } from "@/hooks/useWords";
 import { getGroupIcon, GROUP_ICON_LOAD_ERROR, GROUP_ICON_NAMES, GROUP_ICON_SOURCE, iconLabelFromName } from "@/lib/group-icons";
 import { cn } from "@/lib/utils";
 import type { LexiGroup } from "@/types";
-import { formatDate } from "@/utils/formatters";
 import { ORGANIZE_BATCH_SIZE, resolveGroupAssignmentsBatch } from "@/utils/group-assignment";
 import { getSettings } from "@/utils/storage";
 
 export default function Groups() {
   const { groups, loading, addGroup, updateGroup, deleteGroup, moveGroup } = useGroups();
   const { suggestGroupIcon, suggestGroupsBatch, loading: aiLoading } = useAI();
-  const { words, updateWord } = useWords();
-  const { translations, updateTranslation } = useTranslations();
+  const { words, updateWord, deleteWord } = useWords();
+  const { translations, updateTranslation, deleteTranslation } = useTranslations();
 
   const [organizing, setOrganizing] = useState(false);
   const [organizeProgress, setOrganizeProgress] = useState<{ done: number; total: number } | null>(null);
@@ -243,7 +243,7 @@ export default function Groups() {
             type="button"
             variant="outline"
             className="border-white/15 bg-white/6 hover:bg-white/14"
-            onClick={startCreate}
+            onClick={() => { setSelectedGroupId(null); startCreate(); }}
           >
             <Plus className="mr-2 size-4" />
             New Group
@@ -268,7 +268,11 @@ export default function Groups() {
                   className={cn("word-row grid-cols-[minmax(0,1fr)_auto]", selectedGroupId === group.id && "word-row-active")}
                   role="button"
                   tabIndex={0}
-                  onClick={() => setSelectedGroupId(group.id)}
+                  onClick={() => {
+                    // Clicking the open group again closes it, back to Create Group.
+                    setSelectedGroupId((current) => (current === group.id ? null : group.id));
+                    if (editingGroup) startCreate();
+                  }}
                 >
                   <div className="min-w-0 space-y-2">
                     <GroupBadge group={group} className="w-fit" />
@@ -330,6 +334,19 @@ export default function Groups() {
 
       <section className="frost-panel flex min-h-[22rem] xl:min-h-0 flex-col overflow-hidden animate-slide-in-up">
         <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-5 md:p-6">
+          {selectedGroup && !editingGroup ? (
+            <GroupContentsPanel
+              group={selectedGroup}
+              words={words}
+              translations={translations}
+              onClose={() => setSelectedGroupId(null)}
+              onEditGroup={() => startEdit(selectedGroup)}
+              updateWord={updateWord}
+              deleteWord={deleteWord}
+              updateTranslation={updateTranslation}
+              deleteTranslation={deleteTranslation}
+            />
+          ) : (
           <div className="space-y-6">
             <div>
               <h3 className="detail-title">{editingGroup ? "Edit Group" : "Create Group"}</h3>
@@ -448,19 +465,8 @@ export default function Groups() {
             </div>
 
             {formError ? <p className="subtle-caption text-destructive">{formError}</p> : null}
-
-            {selectedGroup ? (
-              <>
-                <div className="ghost-divider" />
-                <div className="frost-panel-soft space-y-3 p-4">
-                  <p className="font-medium">Selected Group</p>
-                  <GroupBadge group={selectedGroup} className="w-fit text-base" />
-                  <p className="subtle-caption">Created {formatDate(selectedGroup.dateAdded)}</p>
-                  <p className="word-sub">{selectedGroup.description || "No description."}</p>
-                </div>
-              </>
-            ) : null}
           </div>
+          )}
         </div>
 
         <div className="flex items-center justify-between border-t border-white/10 p-2">
