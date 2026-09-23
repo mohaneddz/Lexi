@@ -346,7 +346,7 @@ export default function Books() {
         className={cn("book-card frost-panel-soft", selectedBook?.book.id === book.id && "active")}
         role="button"
         tabIndex={0}
-        onClick={() => setSelectedBook({ book, editions: [book] })}
+        onClick={() => setSelectedBook(selectedBook?.book.id === book.id ? null : { book, editions: [book] })}
       >
         <div className="book-cover-frame">
           <BookCover title={title} coverUrl={book.coverUrl} />
@@ -444,7 +444,7 @@ export default function Books() {
         className={cn("book-card frost-panel-soft", isOpen && "active")}
         role="button"
         tabIndex={0}
-        onClick={() => setSelectedBook({ book: primary, editions: variants })}
+        onClick={() => setSelectedBook(isOpen ? null : { book: primary, editions: variants })}
       >
         <div className="book-cover-frame">
           <BookCover title={baseTitle} coverUrl={primary.coverUrl} />
