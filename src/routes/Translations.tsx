@@ -606,7 +606,7 @@ export default function Translations() {
     >
       {bulkMode ? <div className="flex items-center"><input type="checkbox" checked={selectedTranslationIds.includes(translation.id)} onChange={() => toggleBulkTranslation(translation.id)} onClick={(event) => event.stopPropagation()} className="size-4 accent-white" /></div> : null}
       <div className="min-w-0">
-        <p className="serif-display truncate text-[1.6rem] leading-[0.95]">{translation.sourceWord}<span className="mx-2 inline-flex items-center align-middle text-muted-foreground/80"><ArrowRight className="size-4" /></span>{translation.targetWord}</p>
+        <p className="serif-display truncate text-[1.6rem] leading-[1.2]">{translation.sourceWord}<span className="mx-2 inline-flex items-center align-middle text-muted-foreground/80"><ArrowRight className="size-4" /></span>{translation.targetWord}</p>
         <div className="mt-1.5 flex flex-wrap gap-1.5">
           <span className="lexi-chip">{translation.sourceLanguage}</span>
           <span className="lexi-chip">{translation.targetLanguage}</span>

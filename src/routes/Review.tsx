@@ -637,7 +637,7 @@ export default function Review() {
                   onClick={() => selectItem(item.id)}
                 >
                   <div className="min-w-0">
-                    <p className="serif-display truncate text-[1.65rem] leading-[0.9]">{item.prompt}</p>
+                    <p className="serif-display truncate text-[1.65rem] leading-[1.2]">{item.prompt}</p>
                     <p className="word-sub mt-1.5 flex min-w-0 items-center gap-1.5 truncate text-sm">
                       {item.kind === "translation" ? <ArrowRight className="size-3 shrink-0" /> : null}
                       <span className="truncate">{item.answer}</span>

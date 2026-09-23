@@ -376,7 +376,7 @@ export default function Definitions() {
                 const status = getReviewStatus(word);
                 return (
                   <div key={word.id} className={cn("word-row grid-cols-[minmax(0,1fr)_88px]", selectedId === word.id && "word-row-active")} role="button" tabIndex={0} onClick={() => { setSelectedId(selectedId === word.id ? null : word.id); setExampleVersion(0); }}>
-                    <div className="min-w-0"><p className="serif-display truncate text-[1.6rem] leading-[0.95]">{word.word}</p><div className="mt-1.5 flex flex-wrap gap-1.5"><span className="lexi-chip">{word.language}</span></div><p className="word-sub mt-1.5 text-sm">{truncateText(word.definition, 95)}</p></div>
+                    <div className="min-w-0"><p className="serif-display truncate text-[1.6rem] leading-[1.2]">{word.word}</p><div className="mt-1.5 flex flex-wrap gap-1.5"><span className="lexi-chip">{word.language}</span></div><p className="word-sub mt-1.5 text-sm">{truncateText(word.definition, 95)}</p></div>
                     <span className={cn("status-pill", status === "Mastered" ? "status-mastered" : status === "Learning" ? "status-learning" : "status-new")}>{status}</span>
                   </div>
                 );
@@ -385,7 +385,7 @@ export default function Definitions() {
               <div className="grid gap-3 p-3" style={contentGridStyle}>
                 {filteredWords.map((word) => (
                   <article key={word.id} className={cn("lexi-browser-card tile", selectedId === word.id && "active")} role="button" tabIndex={0} onClick={() => { setSelectedId(selectedId === word.id ? null : word.id); setExampleVersion(0); }}>
-                    <p className="serif-display truncate text-xl leading-[0.95]">{word.word}</p>
+                    <p className="serif-display truncate text-xl leading-[1.2]">{word.word}</p>
                     <span className="lexi-chip compact w-fit">{word.language}</span>
                     <span className={cn("status-pill mt-auto w-fit", getReviewStatus(word) === "Mastered" ? "status-mastered" : getReviewStatus(word) === "Learning" ? "status-learning" : "status-new")}>{getReviewStatus(word)}</span>
                   </article>
