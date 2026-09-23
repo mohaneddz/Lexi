@@ -66,6 +66,11 @@ const RELATED_WORDS_SCHEMA = z.object({
   })),
 });
 
+const ANSWER_GRADE_SCHEMA = z.object({
+  correct: z.boolean(),
+  feedback: z.string(),
+});
+
 const CAPTURE_META_SCHEMA = z.object({
   output: z.string(),
   context: z.string(),
@@ -769,6 +774,62 @@ export async function suggestRelatedWords(
     return { success: true, data: suggestions };
   } catch (error) {
     return { success: false, data: [], error: toErrorMessage("Related word suggestion failed", error) };
+  }
+}
+
+export type AnswerGradeRequest = {
+  kind: "definition" | "translation";
+  /** The word being tested, or the source side of a pair. */
+  prompt: string;
+  /** The saved definition or translation to compare against. */
+  expected: string;
+  /** What the learner wrote. */
+  answer: string;
+  promptLanguage: string;
+  answerLanguage: string;
+};
+
+export type AnswerGrade = { correct: boolean; feedback: string };
+
+/**
+ * Judges a free-text review answer. Deliberately lenient: an explanation in
+ * the learner's own words that gets the gist counts, and so does a synonym
+ * or close variant of a translation. Spelling, grammar and wording don't.
+ */
+export async function gradeAnswer(request: AnswerGradeRequest): Promise<AIResponse<AnswerGrade>> {
+  const { kind, prompt, expected, answer, promptLanguage, answerLanguage } = request;
+  if (!answer.trim()) {
+    return { success: true, data: { correct: false, feedback: "No answer given." } };
+  }
+
+  try {
+    const object = await runStructuredPrompt({
+      schema: ANSWER_GRADE_SCHEMA,
+      system:
+        "You grade a vocabulary learner's answer. Be generous: reward understanding, not exact wording. Return JSON only.",
+      prompt: [
+        kind === "definition"
+          ? `The learner was asked to explain the ${promptLanguage} word "${prompt}" in their own words.`
+          : `The learner was asked to translate the ${promptLanguage} word "${prompt}" into ${answerLanguage}.`,
+        `Reference answer: ${expected}`,
+        `Learner's answer: ${answer.trim()}`,
+        "",
+        kind === "definition"
+          ? "Mark it correct if it captures the core meaning, even if it's short, informal, partial, uses an example, or is misspelled."
+          : "Mark it correct if it's the reference, a synonym, a close variant, or has only minor spelling or accent mistakes.",
+        "Mark it wrong only if the meaning is clearly off or missing.",
+        "In feedback, write one short, friendly sentence: what they got right, or what the word actually means.",
+      ].join("\n"),
+      temperature: 0,
+    });
+
+    return { success: true, data: { correct: object.correct, feedback: object.feedback.trim() } };
+  } catch (error) {
+    return {
+      success: false,
+      data: { correct: false, feedback: "" },
+      error: toErrorMessage("Grading failed", error),
+    };
   }
 }
 

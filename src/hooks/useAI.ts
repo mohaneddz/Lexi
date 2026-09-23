@@ -120,6 +120,12 @@ export function useAI() {
     [runCall],
   );
 
+  const gradeAnswer = useCallback(
+    async (request: aiService.AnswerGradeRequest) =>
+      runCall(() => aiService.gradeAnswer(request), { correct: false, feedback: "" }),
+    [runCall],
+  );
+
   const suggestGroupWords = useCallback(
     async (request: aiService.GroupWordSuggestionRequest) =>
       runCall(() => aiService.suggestGroupWords(request), []),
@@ -143,6 +149,7 @@ export function useAI() {
     suggestDistractorDefinitions,
     suggestRelatedTranslations,
     suggestRelatedWords,
+    gradeAnswer,
     suggestGroupWords,
   };
 }
