@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   Check,
@@ -242,16 +243,21 @@ export default function Translations() {
     return () => window.removeEventListener("lexi:group-filter-changed", onGroupFilterChanged);
   }, []);
 
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Opened from the app-wide search (?entry=<id>): clear the filters so the
+  // entry is in the list, select it, then drop the parameter so later
+  // updates don't keep reselecting it.
   useEffect(() => {
-    const onSearchFocus = (event: Event) => {
-      const customEvent = event as CustomEvent<{ path?: string }>;
-      if (customEvent.detail?.path === "/translations") searchInputRef.current?.focus();
-    };
-    window.addEventListener("lexi:focus-search", onSearchFocus);
-    return () => {
-      window.removeEventListener("lexi:focus-search", onSearchFocus);
-    };
-  }, []);
+    const entryId = new URLSearchParams(location.search).get("entry");
+    if (!entryId || !translations.some((entry) => entry.id === entryId)) return;
+    clearAllFilters();
+    setGroupFilterId("none");
+    setSelectedId(entryId);
+    navigate("/translations", { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search, translations]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {

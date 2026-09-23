@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Copy, Grid2x2, LayoutGrid, List, Loader2, Minus, PanelRightClose, PanelRightOpen, Plus, RefreshCcw, Search, SlidersHorizontal, Sparkles, WandSparkles, ZoomIn } from "lucide-react";
 
 import { TagList } from "@/components/lexi/TagList";
@@ -139,16 +140,21 @@ export default function Definitions() {
     }
   }, [filteredWords, selectedId]);
 
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Opened from the app-wide search (?entry=<id>): clear the filters so the
+  // entry is in the list, select it, then drop the parameter so later
+  // updates don't keep reselecting it.
   useEffect(() => {
-    const onSearchFocus = (event: Event) => {
-      const customEvent = event as CustomEvent<{ path?: string }>;
-      if (customEvent.detail?.path === "/definitions") searchInputRef.current?.focus();
-    };
-    window.addEventListener("lexi:focus-search", onSearchFocus);
-    return () => {
-      window.removeEventListener("lexi:focus-search", onSearchFocus);
-    };
-  }, []);
+    const entryId = new URLSearchParams(location.search).get("entry");
+    if (!entryId || !words.some((entry) => entry.id === entryId)) return;
+    clearAllFilters();
+    setGroupFilterId("none");
+    setSelectedId(entryId);
+    navigate("/definitions", { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search, words]);
 
   useEffect(() => {
     const onGroupFilterChanged = (event: Event) => {

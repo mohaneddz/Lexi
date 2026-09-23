@@ -23,6 +23,7 @@ import {
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { CaptureDialog } from "@/components/CaptureDialog";
+import { OPEN_SEARCH_EVENT, SearchDialog } from "@/components/SearchDialog";
 import { cn } from "@/lib/utils";
 import { getGroupIcon } from "@/lib/group-icons";
 import { useGroups } from "@/hooks/useGroups";
@@ -58,8 +59,8 @@ function isPathActive(pathname: string, targetPath: string): boolean {
   return pathname === targetPath || pathname.startsWith(`${targetPath}/`);
 }
 
-function emitAppEvent(name: "lexi:focus-search", path: string): void {
-  window.dispatchEvent(new CustomEvent(name, { detail: { path } }));
+function openSearch(): void {
+  window.dispatchEvent(new CustomEvent(OPEN_SEARCH_EVENT));
 }
 
 function openCapture(mode: CaptureMode): void {
@@ -197,7 +198,7 @@ export function AppShell({ children }: AppShellProps) {
 
       if (isMeta && event.key.toLowerCase() === "k") {
         event.preventDefault();
-        emitAppEvent("lexi:focus-search", location.pathname);
+        openSearch();
         return;
       }
 
@@ -437,7 +438,7 @@ export function AppShell({ children }: AppShellProps) {
               <button
                 type="button"
                 className="topbar-icon-btn inline-flex size-10 items-center justify-center rounded-lg border border-white/12 bg-white/5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground"
-                onClick={() => emitAppEvent("lexi:focus-search", location.pathname)}
+                onClick={openSearch}
                 aria-label="Search"
                 title={`${PRIMARY_MODIFIER_LABEL}+K`}
               >
@@ -483,6 +484,7 @@ export function AppShell({ children }: AppShellProps) {
       </div>
 
       <CaptureDialog />
+      <SearchDialog />
     </div>
   );
 }
