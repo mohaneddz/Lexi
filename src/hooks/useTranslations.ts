@@ -115,6 +115,21 @@ export function useTranslations() {
         }
     }, []);
 
+    // Delete many translations with a single store write
+    const deleteTranslations = useCallback(async (ids: string[]) => {
+        if (ids.length === 0) return;
+        try {
+            await storage.deleteTranslationsBulk(ids);
+            announceDataChanged('translations');
+            const remove = new Set(ids);
+            setTranslations(prev => prev.filter(t => !remove.has(t.id)));
+        } catch (err) {
+            setError('Failed to delete translations');
+            console.error(err);
+            throw err;
+        }
+    }, []);
+
     // Get translation by ID
     const getTranslationById = useCallback((id: string) => {
         return translations.find(t => t.id === id);
@@ -146,6 +161,7 @@ export function useTranslations() {
         updateTranslation,
         updateTranslations,
         deleteTranslation,
+        deleteTranslations,
         getTranslationById,
         getTranslationsByLanguagePair,
         getLanguagePairs,

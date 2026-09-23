@@ -22,8 +22,10 @@ interface GroupContentsPanelProps {
   onEditGroup: () => void;
   updateWord: (id: string, updates: Partial<Word>) => Promise<void>;
   deleteWord: (id: string) => Promise<void>;
+  deleteWords: (ids: string[]) => Promise<void>;
   updateTranslation: (id: string, updates: Partial<Translation>) => Promise<void>;
   deleteTranslation: (id: string) => Promise<void>;
+  deleteTranslations: (ids: string[]) => Promise<void>;
 }
 
 /** The Groups page side panel while a group is selected: what's in it, with quick edit, delete and capture. */
@@ -35,14 +37,17 @@ export function GroupContentsPanel({
   onEditGroup,
   updateWord,
   deleteWord,
+  deleteWords,
   updateTranslation,
   deleteTranslation,
+  deleteTranslations,
 }: GroupContentsPanelProps) {
   const [tab, setTab] = useState<Tab>("words");
   const [editingWord, setEditingWord] = useState<Word | null>(null);
   const [editingTranslation, setEditingTranslation] = useState<Translation | null>(null);
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(true);
+  const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
 
   useEffect(() => {
     void getSettings().then((settings) => setShowDeleteConfirmation(settings.showDeleteConfirmation));
@@ -140,10 +145,24 @@ export function GroupContentsPanel({
             Translations ({groupTranslations.length})
           </button>
         </div>
-        <Button type="button" size="sm" className="lexi-btn-primary" onClick={capture}>
-          <Plus className="mr-1.5 size-3.5" />
-          {tab === "words" ? "Capture word" : "Capture translation"}
-        </Button>
+        <div className="flex items-center gap-1.5">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="border-white/15 bg-white/6 hover:bg-destructive/20 hover:text-destructive"
+            disabled={(tab === "words" ? groupWords.length : groupTranslations.length) === 0}
+            onClick={() => setConfirmDeleteAll(true)}
+            title={tab === "words" ? `Delete every word in ${group.name}` : `Delete every translation in ${group.name}`}
+          >
+            <Trash2 className="mr-1.5 size-3.5" />
+            Delete all
+          </Button>
+          <Button type="button" size="sm" className="lexi-btn-primary" onClick={capture}>
+            <Plus className="mr-1.5 size-3.5" />
+            {tab === "words" ? "Capture word" : "Capture translation"}
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-1">
@@ -191,6 +210,22 @@ export function GroupContentsPanel({
         translation={editingTranslation}
         onOpenChange={(open) => { if (!open) setEditingTranslation(null); }}
         onSave={updateTranslation}
+      />
+      {/* Wiping a whole group is always confirmed, whatever the setting. */}
+      <DeleteConfirmationDialog
+        open={confirmDeleteAll}
+        onOpenChange={setConfirmDeleteAll}
+        title={tab === "words" ? "Delete all words?" : "Delete all translations?"}
+        description={tab === "words"
+          ? `Delete all ${groupWords.length} words in ${group.name}? They are removed everywhere, not just from this group. This cannot be undone.`
+          : `Delete all ${groupTranslations.length} translations in ${group.name}? They are removed everywhere, not just from this group. This cannot be undone.`}
+        confirmLabel="Delete all"
+        allowSkip={false}
+        onConfirm={() => {
+          setConfirmDeleteAll(false);
+          if (tab === "words") void deleteWords(groupWords.map((word) => word.id));
+          else void deleteTranslations(groupTranslations.map((translation) => translation.id));
+        }}
       />
       <DeleteConfirmationDialog
         open={pendingDelete !== null}

@@ -18,8 +18,8 @@ import { getSettings, updateSettings } from "@/utils/storage";
 export default function Groups() {
   const { groups, loading, addGroup, updateGroup, deleteGroup, moveGroup } = useGroups();
   const { suggestGroupIcon, suggestGroupsBatch, loading: aiLoading } = useAI();
-  const { words, updateWord, deleteWord } = useWords();
-  const { translations, updateTranslation, deleteTranslation } = useTranslations();
+  const { words, updateWord, deleteWord, deleteWords } = useWords();
+  const { translations, updateTranslation, deleteTranslation, deleteTranslations } = useTranslations();
 
   const [organizing, setOrganizing] = useState(false);
   const [organizeProgress, setOrganizeProgress] = useState<{ done: number; total: number } | null>(null);
@@ -360,8 +360,10 @@ export default function Groups() {
               onEditGroup={() => startEdit(selectedGroup)}
               updateWord={updateWord}
               deleteWord={deleteWord}
+              deleteWords={deleteWords}
               updateTranslation={updateTranslation}
               deleteTranslation={deleteTranslation}
+              deleteTranslations={deleteTranslations}
             />
           ) : (
           <div className="space-y-6">

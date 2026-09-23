@@ -156,6 +156,17 @@ export async function updateWordsBulk(changes: Record<string, Partial<Word>>): P
   await saveWords(words.map((word) => (changes[word.id] ? normalizeWord({ ...word, ...changes[word.id] }) : word)));
 }
 
+/** Deletes many words in one store write, e.g. emptying a group. */
+export async function deleteWordsBulk(ids: string[]): Promise<void> {
+  const remove = new Set(ids);
+  const words = await getWords();
+  await saveWords(words.filter((word) => !remove.has(word.id)));
+  for (const id of ids) {
+    await writeAiCache('distractors', id, undefined);
+    await writeAiCache('relatedWords', id, undefined);
+  }
+}
+
 export async function deleteWord(id: string): Promise<void> {
   const words = await getWords();
   const filtered = words.filter(w => w.id !== id);
@@ -199,6 +210,16 @@ export async function updateTranslationsBulk(changes: Record<string, Partial<Tra
   await saveTranslations(translations.map((translation) => (
     changes[translation.id] ? normalizeTranslation({ ...translation, ...changes[translation.id] }) : translation
   )));
+}
+
+/** Deletes many translations in one store write. */
+export async function deleteTranslationsBulk(ids: string[]): Promise<void> {
+  const remove = new Set(ids);
+  const translations = await getTranslations();
+  await saveTranslations(translations.filter((translation) => !remove.has(translation.id)));
+  for (const id of ids) {
+    await writeAiCache('relatedTranslations', id, undefined);
+  }
 }
 
 export async function deleteTranslation(id: string): Promise<void> {

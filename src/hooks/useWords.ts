@@ -108,6 +108,21 @@ export function useWords() {
     }
   }, []);
 
+  // Delete many words with a single store write
+  const deleteWords = useCallback(async (ids: string[]) => {
+    if (ids.length === 0) return;
+    try {
+      await storage.deleteWordsBulk(ids);
+      announceDataChanged('words');
+      const remove = new Set(ids);
+      setWords(prev => prev.filter(w => !remove.has(w.id)));
+    } catch (err) {
+      setError('Failed to delete words');
+      console.error(err);
+      throw err;
+    }
+  }, []);
+
   // Get word by ID
   const getWordById = useCallback((id: string) => {
     return words.find(w => w.id === id);
@@ -143,6 +158,7 @@ export function useWords() {
     updateWord,
     updateWords,
     deleteWord,
+    deleteWords,
     getWordById,
     getWordsByLanguage,
     getWordsByTag,
