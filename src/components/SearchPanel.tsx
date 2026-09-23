@@ -188,7 +188,7 @@ export function SearchPanel({ onClose, onOpen, headerAction, dragRegion }: Searc
         })}
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-white/10 px-3 py-2 subtle-caption">
+      <div className="shortcut-hint flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-white/10 px-3 py-2 subtle-caption">
         <span><kbd className="key-cap">↑</kbd> <kbd className="key-cap">↓</kbd> move</span>
         <span><kbd className="key-cap">Enter</kbd> copy meaning</span>
         <span><kbd className="key-cap">Shift</kbd>+<kbd className="key-cap">Enter</kbd> copy word</span>

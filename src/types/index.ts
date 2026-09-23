@@ -176,6 +176,8 @@ export interface AppSettings {
   groqModel: string;
   autoDetectLanguage: boolean;
   shortcutsEnabled: boolean;
+  /** Shows key hints on buttons, footers and the sidebar. The shortcuts work either way. */
+  showShortcutHints: boolean;
   showDeleteConfirmation: boolean;
   hideToTray: boolean;
   launchAtStartup: boolean;

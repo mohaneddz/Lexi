@@ -322,7 +322,7 @@ export function AppShell({ children }: AppShellProps) {
           </nav>
 
           <div className="lexi-sidebar-footer space-y-1.5">
-            <p className="subtle-caption px-1">{PRIMARY_MODIFIER_LABEL}+K search, {PRIMARY_MODIFIER_LABEL}+N capture, Alt+1..9 navigate</p>
+            <p className="shortcut-hint subtle-caption px-1">{PRIMARY_MODIFIER_LABEL}+K search, {PRIMARY_MODIFIER_LABEL}+N capture, Alt+1..9 navigate</p>
           </div>
         </aside>
 

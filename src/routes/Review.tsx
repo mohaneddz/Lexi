@@ -657,7 +657,7 @@ export default function Review() {
             <Flame className="size-3" />
             Streak {streak} (Best {bestStreak})
           </span>
-          <span className="subtle-caption inline-flex items-center gap-1.5">
+          <span className="shortcut-hint subtle-caption inline-flex items-center gap-1.5">
             {mode === "flashcard" ? (
               showAnswer ? (
                 <>

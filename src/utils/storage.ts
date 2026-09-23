@@ -35,6 +35,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     'openai/gpt-oss-20b',
   autoDetectLanguage: true,
   shortcutsEnabled: true,
+  showShortcutHints: true,
   showDeleteConfirmation: true,
   hideToTray: false,
   launchAtStartup: false,

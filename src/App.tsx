@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { emit, listen } from "@tauri-apps/api/event";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 
 import { useTheme } from "@/hooks/useTheme";
@@ -41,8 +42,35 @@ function AppRoutes() {
   );
 }
 
+const SHORTCUT_HINTS_EVENT = "lexi:shortcut-hints-changed";
+
+/**
+ * Applies the "Show Shortcut Hints" setting as a class on the page, in
+ * every window: Settings changes it in the main window, and the event
+ * carries it to the quick-capture popup too.
+ */
+function useShortcutHintsSetting() {
+  useEffect(() => {
+    const apply = (show: boolean) => document.documentElement.classList.toggle("hide-shortcut-hints", !show);
+    void getSettings().then((settings) => apply(settings.showShortcutHints));
+
+    const onSettingsUpdated = (event: Event) => {
+      const show = (event as CustomEvent<{ showShortcutHints?: boolean }>).detail?.showShortcutHints;
+      if (typeof show === "boolean") void emit(SHORTCUT_HINTS_EVENT, show).catch(() => apply(show));
+    };
+    window.addEventListener("lexi:settings-updated", onSettingsUpdated);
+    const unlisten = listen<boolean>(SHORTCUT_HINTS_EVENT, (event) => apply(event.payload));
+
+    return () => {
+      window.removeEventListener("lexi:settings-updated", onSettingsUpdated);
+      void unlisten.then((dispose) => dispose());
+    };
+  }, []);
+}
+
 function App() {
   useTheme();
+  useShortcutHintsSetting();
 
   useEffect(() => {
     getSettings().then((settings) => {

@@ -564,6 +564,13 @@ select.frost-select {
   line-height: normal;
 }
 
+/* "Show Shortcut Hints" off: footer and sidebar hints, and the keys printed
+   on buttons, disappear. The shortcuts themselves keep working. */
+.hide-shortcut-hints .shortcut-hint,
+.hide-shortcut-hints button kbd.key-cap {
+  display: none !important;
+}
+
 /* Behind every dialog: dims and blurs the whole window, title bar included. */
 .lexi-dialog-overlay {
   background: oklch(0.1 0.02 255 / 0.55);

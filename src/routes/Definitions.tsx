@@ -427,7 +427,7 @@ export default function Definitions() {
                 </button>
               </div>
             ) : (
-              <span className="subtle-caption inline-flex items-center gap-1.5"><kbd className="key-cap">Ctrl</kbd>/<kbd className="key-cap">Cmd</kbd> + wheel zooms cards</span>
+              <span className="shortcut-hint subtle-caption inline-flex items-center gap-1.5"><kbd className="key-cap">Ctrl</kbd>/<kbd className="key-cap">Cmd</kbd> + wheel zooms cards</span>
             )}
           </div>
         </section>
@@ -492,7 +492,7 @@ export default function Definitions() {
           </div>
           <div className="flex items-center justify-between border-t border-white/10 p-2">
             <span className="sync-pill"><Sparkles className="size-3" />Dynamic examples enabled</span>
-            <span className="subtle-caption inline-flex items-center gap-1"><kbd className="key-cap">J</kbd>/<kbd className="key-cap">K</kbd> move through entries</span>
+            <span className="shortcut-hint subtle-caption inline-flex items-center gap-1"><kbd className="key-cap">J</kbd>/<kbd className="key-cap">K</kbd> move through entries</span>
           </div>
         </section>
         ) : null}

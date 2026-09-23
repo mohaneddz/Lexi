@@ -501,6 +501,20 @@ export default function Settings() {
 
             <div className="flex cursor-pointer items-center justify-between gap-3">
               <div>
+                <p className="font-medium">Show Shortcut Hints</p>
+                <p className="subtle-caption mt-1">Key hints on buttons, page footers and the sidebar. The full list stays below.</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={settings.showShortcutHints}
+                onChange={(event) => patchSettings({ showShortcutHints: event.target.checked })}
+                className="size-4 accent-white"
+                disabled={saving}
+              />
+            </div>
+
+            <div className="flex cursor-pointer items-center justify-between gap-3">
+              <div>
                 <p className="font-medium">Delete Confirmation Dialog</p>
                 <p className="subtle-caption mt-1">Show warning dialog before deleting words and translations.</p>
               </div>
