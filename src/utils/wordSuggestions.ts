@@ -1,4 +1,4 @@
-import type { LexiGroup, Translation, Word } from "@/types";
+import type { Translation, Word } from "@/types";
 
 export type SuggestionKind = "definition" | "translation";
 
@@ -125,8 +125,8 @@ function knownTerms(words: Word[]): Set<string> {
 export type FallbackDefinitionOptions = {
   /** The whole vocabulary, used to know what's already saved regardless of scope. */
   words: Word[];
-  /** Restrict candidate-mining to one group's words, or omit for the whole vocabulary. */
-  group?: LexiGroup;
+  /** The words to mine candidates from, e.g. one group's. Defaults to the whole vocabulary. */
+  scopedWords?: Word[];
   dismissed: Set<string>;
   findDefinition: DefinitionLookup;
   /** Terms to skip in addition to `dismissed`, e.g. ones another section already used. */
@@ -143,13 +143,12 @@ export type FallbackDefinitionOptions = {
  */
 export function buildFallbackDefinitionSuggestions({
   words,
-  group,
+  scopedWords = words,
   dismissed,
   findDefinition,
   exclude,
   limit = 4,
 }: FallbackDefinitionOptions): Suggestion[] {
-  const scopedWords = group ? words.filter((word) => (word.groupIds || []).includes(group.id)) : words;
   if (scopedWords.length === 0) return [];
 
   const candidates = collectCandidates(scopedWords, knownTerms(words))
@@ -178,7 +177,10 @@ export function buildFallbackDefinitionSuggestions({
 export type FallbackTranslationOptions = {
   words: Word[];
   translations: Translation[];
-  group?: LexiGroup;
+  scopedWords?: Word[];
+  /** Only saved words in this language are offered, and only pairs into `targetLanguage` count as done. */
+  sourceLanguage: string;
+  targetLanguage: string;
   dismissed: Set<string>;
   findTranslation: TranslationLookup;
   exclude?: Set<string>;
@@ -189,18 +191,22 @@ export type FallbackTranslationOptions = {
 export function buildFallbackTranslationSuggestions({
   words,
   translations,
-  group,
+  scopedWords = words,
+  sourceLanguage,
+  targetLanguage,
   dismissed,
   findTranslation,
   exclude,
   limit = 4,
 }: FallbackTranslationOptions): Suggestion[] {
   const alreadyPaired = new Set(
-    translations.map((translation) => translation.sourceWord.trim().toLowerCase()),
+    translations
+      .filter((translation) => translation.sourceLanguage === sourceLanguage && translation.targetLanguage === targetLanguage)
+      .map((translation) => translation.sourceWord.trim().toLowerCase()),
   );
 
-  const scopedWords = group ? words.filter((word) => (word.groupIds || []).includes(group.id)) : words;
   const untranslated = scopedWords.filter((word) => {
+    if (word.language !== sourceLanguage) return false;
     const normalized = word.word.trim().toLowerCase();
     return !alreadyPaired.has(normalized) && !dismissed.has(normalized) && !exclude?.has(normalized);
   });
@@ -214,8 +220,8 @@ export function buildFallbackTranslationSuggestions({
       term: word.word,
       detail: found.targetWord,
       bookTitle: found.bookTitle,
-      language: word.language,
-      targetLanguage: found.targetLanguage,
+      language: sourceLanguage,
+      targetLanguage,
       seenIn: [],
     });
   }

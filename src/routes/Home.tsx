@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, BookOpen, Loader2, Plus, RefreshCcw, Sparkles, X } from "lucide-react";
+import { ArrowRight, BookOpen, Loader2, Plus, RefreshCcw, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useAI } from "@/hooks/useAI";
@@ -9,7 +9,8 @@ import { useGroups } from "@/hooks/useGroups";
 import { useTranslations } from "@/hooks/useTranslations";
 import { useWords } from "@/hooks/useWords";
 import { getGroupIcon } from "@/lib/group-icons";
-import type { LexiGroup } from "@/types";
+import type { AppSettings, LexiGroup } from "@/types";
+import { getSettings, readAiCache, writeAiCache } from "@/utils/storage";
 import { getReviewStatus } from "@/utils/review";
 import {
   buildFallbackDefinitionSuggestions,
@@ -22,7 +23,7 @@ import {
 const DISMISSED_KEY_PREFIX = "lexi:home:dismissed";
 const PER_SECTION = 4;
 
-type SectionKey = string; // `${kind}:${groupId | "vocabulary"}`
+type SectionKey = string;
 
 type SectionState = {
   suggestions: Suggestion[];
@@ -32,8 +33,17 @@ type SectionState = {
   error: string | null;
 };
 
-function sectionKey(kind: SuggestionKind, group: LexiGroup | null): SectionKey {
-  return `${kind}:${group?.id ?? "vocabulary"}`;
+/** What's saved to the AI cache, so a section survives restarts without regenerating. */
+type CachedSection = { suggestions: Suggestion[]; usedAi: boolean };
+
+type LanguagePrefs = { definition: string; source: string; target: string };
+
+// Translation sections are keyed by language pair too, so changing the
+// defaults in Settings brings up fresh ones instead of stale pairs.
+function sectionKey(kind: SuggestionKind, group: LexiGroup, languages: LanguagePrefs): SectionKey {
+  return kind === "definition"
+    ? `definition:${group.id}:${languages.definition}`
+    : `translation:${group.id}:${languages.source}>${languages.target}`;
 }
 
 function readDismissed(kind: SuggestionKind): Set<string> {
@@ -65,7 +75,7 @@ function greetingFor(date: Date): string {
 export default function Home() {
   const navigate = useNavigate();
   const { words, addWord, loading: wordsLoading } = useWords();
-  const { translations, addTranslation } = useTranslations();
+  const { translations, addTranslation, loading: translationsLoading } = useTranslations();
   const { groups, loading: groupsLoading } = useGroups();
   const { lookup, enabledBookIds, loading: booksLoading } = useBooks();
   const { suggestGroupWords, defineWord, translate } = useAI();
@@ -77,11 +87,40 @@ export default function Home() {
   const [pendingTerm, setPendingTerm] = useState<string | null>(null);
   const [addedTerms, setAddedTerms] = useState<Set<string>>(() => new Set());
   const [sections, setSections] = useState<Record<SectionKey, SectionState>>({});
+  const [languages, setLanguages] = useState<LanguagePrefs | null>(null);
+  const [cache, setCache] = useState<Record<SectionKey, CachedSection> | null>(null);
 
   // Tracks every term shown anywhere this session, so a refresh on one
   // section — or generating a later group — doesn't repeat a word another
   // section already offered.
   const shownTermsRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    void getSettings().then((settings) => setLanguages({
+      definition: settings.defaultDefinitionLanguage,
+      source: settings.defaultTranslationSourceLanguage,
+      target: settings.defaultTranslationTargetLanguage,
+    }));
+    const onSettingsUpdated = (event: Event) => {
+      const detail = (event as CustomEvent<Partial<AppSettings>>).detail;
+      setLanguages((current) => current && ({
+        definition: detail?.defaultDefinitionLanguage ?? current.definition,
+        source: detail?.defaultTranslationSourceLanguage ?? current.source,
+        target: detail?.defaultTranslationTargetLanguage ?? current.target,
+      }));
+    };
+    window.addEventListener("lexi:settings-updated", onSettingsUpdated);
+    return () => window.removeEventListener("lexi:settings-updated", onSettingsUpdated);
+  }, []);
+
+  useEffect(() => {
+    void readAiCache<CachedSection>("homeSuggestions").then((entries) => {
+      for (const entry of Object.values(entries)) {
+        for (const suggestion of entry.suggestions) shownTermsRef.current.add(suggestion.term.toLowerCase());
+      }
+      setCache(entries);
+    });
+  }, []);
 
   // The group tabs in the topbar drive which sections are shown, so they do
   // something here instead of sitting inert like they do on Books or Stats.
@@ -102,23 +141,36 @@ export default function Home() {
     persistDismissed("translation", dismissedTranslations);
   }, [dismissedTranslations]);
 
+  // Others also collects anything that isn't in a visible group, so words
+  // saved without a group still feed a section.
+  const scopeWords = useCallback((group: LexiGroup) => {
+    if (!group.isOthers) return words.filter((word) => (word.groupIds || []).includes(group.id));
+    const regularIds = new Set(groups.filter((entry) => !entry.isOthers).map((entry) => entry.id));
+    return words.filter((word) => {
+      const ids = word.groupIds || [];
+      return ids.includes(group.id) || !ids.some((id) => regularIds.has(id));
+    });
+  }, [groups, words]);
+
   const findDefinition = useCallback((term: string) => {
     const [best] = lookup(term, { bookType: "dictionary", fuzzy: false });
     if (!best) return null;
     return { definition: best.output, bookTitle: best.bookTitle };
   }, [lookup]);
 
-  const findTranslation = useCallback((term: string) => {
-    const [best] = lookup(term, { bookType: "translation", fuzzy: false });
-    if (!best) return null;
-    // The books are searchable from either side, so a hit can come back with
-    // the query already sitting in `output`.
-    const isReversed = best.output.trim().toLowerCase() === term.trim().toLowerCase();
-    return {
-      targetWord: isReversed ? best.input : best.output,
-      targetLanguage: isReversed ? best.inputLanguage : best.outputLanguage,
-      bookTitle: best.bookTitle,
-    };
+  const findTranslation = useCallback((term: string, source: string, target: string) => {
+    const normalized = term.trim().toLowerCase();
+    // The books are searchable from either side, so a pair stored as
+    // target -> source still answers a source -> target lookup.
+    for (const result of lookup(term, { bookType: "translation", fuzzy: false })) {
+      if (result.inputLanguage === source && result.outputLanguage === target && result.input.trim().toLowerCase() === normalized) {
+        return { targetWord: result.output, targetLanguage: target, bookTitle: result.bookTitle };
+      }
+      if (result.inputLanguage === target && result.outputLanguage === source && result.output.trim().toLowerCase() === normalized) {
+        return { targetWord: result.input, targetLanguage: target, bookTitle: result.bookTitle };
+      }
+    }
+    return null;
   }, [lookup]);
 
   /**
@@ -127,14 +179,19 @@ export default function Home() {
    * it. Falls back to the offline term-mining approach — same one used
    * before AI suggestions existed — whenever the AI is unavailable, errors,
    * or returns nothing usable, so the page still works with no API key.
+   * Results are saved, so a section only costs AI quota once until it's
+   * refreshed by hand.
    */
   const generateSection = useCallback(async (
     generateKind: SuggestionKind,
-    group: LexiGroup | null,
+    group: LexiGroup,
     options: { force?: boolean } = {},
   ) => {
-    const key = sectionKey(generateKind, group);
+    if (!languages) return;
+    const key = sectionKey(generateKind, group, languages);
     const currentDismissed = generateKind === "definition" ? dismissedDefinitions : dismissedTranslations;
+    const language = generateKind === "definition" ? languages.definition : languages.source;
+    const targetLanguage = languages.target;
 
     setSections((current) => ({
       ...current,
@@ -144,14 +201,28 @@ export default function Home() {
     const previouslyShown = options.force ? new Set(sections[key]?.suggestions.map((s) => s.term.toLowerCase()) ?? []) : new Set<string>();
     const exclude = new Set<string>([...shownTermsRef.current, ...previouslyShown]);
 
+    const groupWords = scopeWords(group);
+    const groupTranslations = translations.filter((translation) => (translation.groupIds || []).includes(group.id));
+
     const runFallback = (): Suggestion[] => {
+      // Others with nothing of its own mines the whole vocabulary instead,
+      // which is what the old catch-all section did.
+      const scopedWords = group.isOthers && groupWords.length === 0 ? words : groupWords;
       if (generateKind === "definition") {
         return buildFallbackDefinitionSuggestions({
-          words, group: group ?? undefined, dismissed: currentDismissed, findDefinition, exclude, limit: PER_SECTION,
+          words, scopedWords, dismissed: currentDismissed, findDefinition, exclude, limit: PER_SECTION,
         });
       }
       return buildFallbackTranslationSuggestions({
-        words, translations, group: group ?? undefined, dismissed: currentDismissed, findTranslation, exclude, limit: PER_SECTION,
+        words,
+        translations,
+        scopedWords,
+        sourceLanguage: language,
+        targetLanguage,
+        dismissed: currentDismissed,
+        findTranslation: (term) => findTranslation(term, language, targetLanguage),
+        exclude,
+        limit: PER_SECTION,
       });
     };
 
@@ -159,13 +230,19 @@ export default function Home() {
     let usedAi = false;
     let error: string | null = null;
 
-    // The whole-vocabulary catch-all has no single theme to few-shot on, so
-    // it always uses the offline miner rather than asking the AI to guess.
-    if (group) {
-      const groupWords = words.filter((word) => (word.groupIds || []).includes(group.id));
-      const exampleWords = groupWords.slice(0, 6).map((word) => word.word);
-      const language = groupWords[0]?.language ?? "English";
+    const exampleWords = Array.from(new Set([
+      ...groupWords.filter((word) => word.language === language).map((word) => word.word),
+      ...groupTranslations.filter((translation) => translation.sourceLanguage === language).map((translation) => translation.sourceWord),
+      ...groupWords.map((word) => word.word),
+    ])).slice(0, 6);
+
+    // Others has no theme of its own, so the AI only gets a go once it holds
+    // some words to few-shot on; a regular group can be judged by its name.
+    if (!group.isOthers || exampleWords.length > 0) {
       const known = knownTerms(words);
+      for (const translation of translations) {
+        if (translation.sourceLanguage === language) known.add(translation.sourceWord.trim().toLowerCase());
+      }
 
       const result = await suggestGroupWords({
         groupName: group.name,
@@ -186,44 +263,34 @@ export default function Home() {
           // waiting on the network is still caught.
           if (known.has(normalized) || shownTermsRef.current.has(normalized) || currentDismissed.has(normalized)) continue;
 
-          const lookupFn = generateKind === "definition" ? findDefinition : findTranslation;
-          const found = lookupFn(term);
-
           // Claimed immediately, not after the pick, so a sibling group
           // generating at the same time can't land on the same term while
           // this one is still mid-lookup.
           shownTermsRef.current.add(normalized);
 
-          if (found) {
-            picked.push(generateKind === "definition"
-              ? { term, detail: (found as { definition: string }).definition, bookTitle: found.bookTitle, language, seenIn: [] }
-              : {
-                term,
-                detail: (found as { targetWord: string }).targetWord,
-                bookTitle: found.bookTitle,
-                language,
-                targetLanguage: (found as { targetLanguage: string }).targetLanguage,
-                seenIn: [],
-              });
-            continue;
-          }
-
-          // No enabled book has this term — ask the AI to define or
-          // translate just this one word rather than dropping it, since the
-          // AI already chose it specifically for this group.
           if (generateKind === "definition") {
+            const found = findDefinition(term);
+            if (found) {
+              picked.push({ term, detail: found.definition, bookTitle: found.bookTitle, language, seenIn: [] });
+              continue;
+            }
+            // No enabled book has this term, so the AI defines just this
+            // one word rather than dropping it; it chose it for this group.
             const defined = await defineWord(term, language);
             if (defined.success && defined.data) {
               picked.push({ term, detail: defined.data, language, seenIn: [] });
             }
-          } else {
-            const targetLanguage = groupWords.find((word) => word.language !== language)?.language
-              ?? words.find((word) => word.language !== language)?.language
-              ?? "English";
-            const translated = await translate(term, language, targetLanguage);
-            if (translated.success && translated.data) {
-              picked.push({ term, detail: translated.data, language, targetLanguage, seenIn: [] });
-            }
+            continue;
+          }
+
+          const found = findTranslation(term, language, targetLanguage);
+          if (found) {
+            picked.push({ term, detail: found.targetWord, bookTitle: found.bookTitle, language, targetLanguage, seenIn: [] });
+            continue;
+          }
+          const translated = await translate(term, language, targetLanguage);
+          if (translated.success && translated.data) {
+            picked.push({ term, detail: translated.data, language, targetLanguage, seenIn: [] });
           }
         }
       } else if (!result.success) {
@@ -238,45 +305,53 @@ export default function Home() {
 
     for (const suggestion of picked) shownTermsRef.current.add(suggestion.term.toLowerCase());
 
+    const finalError = picked.length === 0 ? error : null;
     setSections((current) => ({
       ...current,
-      [key]: { suggestions: picked, loading: false, usedAi, error: picked.length === 0 ? error : null },
+      [key]: { suggestions: picked, loading: false, usedAi, error: finalError },
     }));
+
+    // A failed AI call isn't saved, so the section tries again next visit.
+    if (!finalError) {
+      const entry: CachedSection = { suggestions: picked, usedAi };
+      setCache((current) => ({ ...(current ?? {}), [key]: entry }));
+      void writeAiCache("homeSuggestions", key, entry);
+    }
   }, [
-    defineWord, dismissedDefinitions, dismissedTranslations, findDefinition, findTranslation,
-    sections, suggestGroupWords, translate, translations, words,
+    defineWord, dismissedDefinitions, dismissedTranslations, findDefinition, findTranslation, languages,
+    scopeWords, sections, suggestGroupWords, translate, translations, words,
   ]);
 
   const generateSectionRef = useRef(generateSection);
   generateSectionRef.current = generateSection;
 
-  // The groups that should have a section right now: every group with words
-  // when nothing is filtered, or just the selected one.
-  const visibleGroups = useMemo(() => {
-    const withWords = groups.filter((group) => words.some((word) => (word.groupIds || []).includes(group.id)));
-    if (groupFilterId === "none") return withWords;
-    return withWords.filter((group) => group.id === groupFilterId);
-  }, [groupFilterId, groups, words]);
+  // Every group gets a section, empty ones included, since the AI can work
+  // from a group's name and description alone. Others is already last.
+  const visibleGroups = useMemo(
+    () => (groupFilterId === "none" ? groups : groups.filter((group) => group.id === groupFilterId)),
+    [groupFilterId, groups],
+  );
 
-  const showVocabularySection = groupFilterId === "none";
+  const sameTranslationLanguages = kind === "translation" && languages !== null && languages.source === languages.target;
+  const ready = !wordsLoading && !translationsLoading && !groupsLoading && !booksLoading && languages !== null && cache !== null;
 
   useEffect(() => {
-    if (wordsLoading || groupsLoading || booksLoading || enabledBookIds.length === 0 || words.length === 0) return;
+    if (!ready || !languages || !cache || enabledBookIds.length === 0 || sameTranslationLanguages) return;
 
     for (const group of visibleGroups) {
-      const key = sectionKey(kind, group);
+      const key = sectionKey(kind, group, languages);
       if (sections[key]) continue;
+      const cached = cache[key];
+      if (cached) {
+        setSections((current) => ({ ...current, [key]: { ...cached, loading: false, error: null } }));
+        continue;
+      }
       void generateSectionRef.current(kind, group);
-    }
-
-    if (showVocabularySection) {
-      const key = sectionKey(kind, null);
-      if (!sections[key]) void generateSectionRef.current(kind, null);
     }
     // Only re-run when the set of sections that should exist changes, not on
     // every generateSection identity change (it closes over `sections`).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [kind, visibleGroups, showVocabularySection, wordsLoading, groupsLoading, booksLoading, enabledBookIds.length, words.length]);
+  }, [kind, visibleGroups, languages, ready, enabledBookIds.length, sameTranslationLanguages]);
 
   const dueCount = useMemo(
     () => words.filter((word) => getReviewStatus(word) !== "Mastered").length,
@@ -285,7 +360,33 @@ export default function Home() {
 
   const activeGroup = groups.find((group) => group.id === groupFilterId) ?? null;
 
-  const handleAdd = async (suggestion: Suggestion) => {
+  // Suggestions saved from another page (or a previous session) drop out of
+  // their section rather than lingering, except the ones added right here,
+  // which stay put with an "Added" badge.
+  const savedTerms = useMemo(() => {
+    const saved = new Set<string>();
+    if (kind === "definition") {
+      for (const word of words) saved.add(word.word.trim().toLowerCase());
+    } else if (languages) {
+      for (const translation of translations) {
+        if (translation.sourceLanguage === languages.source && translation.targetLanguage === languages.target) {
+          saved.add(translation.sourceWord.trim().toLowerCase());
+        }
+      }
+    }
+    return saved;
+  }, [kind, languages, translations, words]);
+
+  const visibleSuggestions = (state: SectionState | undefined) => {
+    const dismissed = kind === "definition" ? dismissedDefinitions : dismissedTranslations;
+    return (state?.suggestions ?? []).filter((suggestion) => {
+      const normalized = suggestion.term.trim().toLowerCase();
+      if (addedTerms.has(suggestion.term)) return true;
+      return !dismissed.has(normalized) && !savedTerms.has(normalized);
+    });
+  };
+
+  const handleAdd = async (suggestion: Suggestion, group: LexiGroup) => {
     setPendingTerm(suggestion.term);
     try {
       if (kind === "definition") {
@@ -296,7 +397,7 @@ export default function Home() {
           tags: ["suggested"],
           aiGenerated: !suggestion.bookTitle,
           favorite: false,
-          groupIds: activeGroup ? [activeGroup.id] : [],
+          groupIds: [group.id],
           examples: [],
         });
       } else {
@@ -307,7 +408,7 @@ export default function Home() {
           targetLanguage: suggestion.targetLanguage ?? suggestion.language,
           aiGenerated: !suggestion.bookTitle,
           favorite: false,
-          groupIds: activeGroup ? [activeGroup.id] : [],
+          groupIds: [group.id],
         });
       }
       setAddedTerms((current) => new Set(current).add(suggestion.term));
@@ -322,12 +423,11 @@ export default function Home() {
     setter((current) => new Set(current).add(key));
   };
 
-  const loading = wordsLoading || booksLoading || groupsLoading;
-  const sectionList = [
-    ...visibleGroups.map((group) => ({ group, key: sectionKey(kind, group) })),
-    ...(showVocabularySection ? [{ group: null as LexiGroup | null, key: sectionKey(kind, null) }] : []),
-  ];
-  const anySectionHasSuggestions = sectionList.some((entry) => (sections[entry.key]?.suggestions.length ?? 0) > 0);
+  const loading = !ready;
+  const sectionList = languages
+    ? visibleGroups.map((group) => ({ group, key: sectionKey(kind, group, languages) }))
+    : [];
+  const anySectionHasSuggestions = sectionList.some((entry) => visibleSuggestions(sections[entry.key]).length > 0);
 
   return (
     <div className="custom-scrollbar h-full overflow-y-auto">
@@ -338,7 +438,9 @@ export default function Home() {
             <p className="subtle-caption mt-2">
               {kind === "definition"
                 ? "Words drawn from your groups, suggested by AI and grounded in your books."
-                : "Saved words that still have no translation."}
+                : languages
+                  ? `Words for your groups, translated from ${languages.source} to ${languages.target}.`
+                  : "Words for your groups, with their translations."}
             </p>
 
             <div className="mt-4 flex flex-wrap items-center gap-1.5">
@@ -394,23 +496,23 @@ export default function Home() {
             actionLabel="Open Books"
             onAction={() => navigate("/books")}
           />
-        ) : words.length === 0 ? (
+        ) : sameTranslationLanguages ? (
           <EmptyNote
-            title="Save a word first"
-            body="Every suggestion is built around the vocabulary you have already saved, so there is nothing to draw from yet."
-            actionLabel="Open Definitions"
-            onAction={() => navigate("/definitions")}
+            title={`Both translation defaults are ${languages?.source}`}
+            body="Translation suggestions go from your source default to your target default, so pick two different languages first."
+            actionLabel="Open Settings"
+            onAction={() => navigate("/settings")}
           />
         ) : sectionList.length === 0 ? (
           <EmptyNote
-            title={activeGroup ? `${activeGroup.name} has no words yet` : "No groups have words yet"}
-            body="Add a word to this group first, so there is something for the suggestions to match against."
-            actionLabel="Open Definitions"
-            onAction={() => navigate("/definitions")}
+            title="Create a group first"
+            body="Suggestions are made per group, so there is nothing to suggest for until at least one exists."
+            actionLabel="Open Groups"
+            onAction={() => navigate("/groups")}
           />
         ) : (
           <>
-            {!anySectionHasSuggestions && sectionList.every((entry) => !sections[entry.key]?.loading) ? (
+            {!anySectionHasSuggestions && sectionList.every((entry) => sections[entry.key] && !sections[entry.key].loading) ? (
               <EmptyNote
                 title="Nothing new to suggest right now"
                 body={kind === "translation"
@@ -423,15 +525,18 @@ export default function Home() {
 
             {sectionList.map(({ group, key }) => {
               const state = sections[key];
-              const RailIcon = group ? getGroupIcon(group.iconName) : Sparkles;
-              const title = group ? group.name : "Across your vocabulary";
-              const reason = group
-                ? (state?.usedAi
-                  ? `AI suggestions matched to your ${group.name} words`
-                  : `Turning up in the definitions of your ${group.name} words`)
-                : (kind === "definition"
-                  ? "Showing up again and again in words you have already saved"
-                  : "Saved words still waiting for a translation");
+              const suggestions = visibleSuggestions(state);
+              const RailIcon = getGroupIcon(group.iconName);
+              const title = group.name;
+              const reason = state?.usedAi
+                ? (group.isOthers ? "AI suggestions matched to words outside your other groups" : `AI suggestions matched to your ${group.name} words`)
+                : group.isOthers
+                  ? (kind === "definition"
+                    ? "Showing up again and again in words you have already saved"
+                    : "Saved words still waiting for a translation")
+                  : (kind === "definition"
+                    ? `Turning up in the definitions of your ${group.name} words`
+                    : `${group.name} words still waiting for a translation`);
 
               return (
                 <section key={key} className="home-thread">
@@ -456,16 +561,16 @@ export default function Home() {
                   </div>
 
                   <div className="home-entries">
-                    {state?.loading && (state?.suggestions.length ?? 0) === 0 ? (
+                    {state?.loading && suggestions.length === 0 ? (
                       <p className="subtle-caption py-2">Thinking of words for {title}...</p>
-                    ) : (state?.suggestions.length ?? 0) === 0 ? (
+                    ) : suggestions.length === 0 ? (
                       <p className="subtle-caption py-2">
                         {state?.error
                           ? `Could not reach the AI (${state.error}), and no offline match was found either.`
                           : "Nothing new here yet. Everything is already saved or dismissed."}
                       </p>
                     ) : (
-                      state!.suggestions.map((suggestion) => {
+                      suggestions.map((suggestion) => {
                         const isPending = pendingTerm === suggestion.term;
                         const isAdded = addedTerms.has(suggestion.term);
 
@@ -513,7 +618,7 @@ export default function Home() {
                                     size="sm"
                                     className="lexi-btn-primary"
                                     disabled={isPending}
-                                    onClick={() => void handleAdd(suggestion)}
+                                    onClick={() => void handleAdd(suggestion, group)}
                                   >
                                     {isPending ? <Loader2 className="mr-1.5 size-3.5 animate-spin" /> : <Plus className="mr-1.5 size-3.5" />}
                                     Add
