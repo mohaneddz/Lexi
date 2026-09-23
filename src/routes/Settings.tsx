@@ -6,6 +6,7 @@ import {
   isEnabled as isAutostartEnabled,
 } from "@tauri-apps/plugin-autostart";
 import {
+  Eraser,
   FileJson,
   Keyboard,
   KeyRound,
@@ -25,7 +26,8 @@ import { useBooks } from "@/hooks/useBooks";
 import { useTheme } from "@/hooks/useTheme";
 import type { AppSettings, RevisionMode, Theme } from "@/types";
 import { GROQ_MODELS } from "@/utils/ai-service";
-import { clearAllData, getSettings, MAX_SUGGESTION_COUNT, MIN_SUGGESTION_COUNT, updateSettings } from "@/utils/storage";
+import { clearAllData, eraseAllTags, getSettings, MAX_SUGGESTION_COUNT, MIN_SUGGESTION_COUNT, updateSettings } from "@/utils/storage";
+import { announceDataChanged } from "@/utils/dataEvents";
 import { validateGroqApiKey, validateGroqModel } from "@/utils/validators";
 
 const LANGUAGE_OPTIONS = [
@@ -88,6 +90,8 @@ export default function Settings() {
   const [resetting, setResetting] = useState(false);
   const [importBookOpen, setImportBookOpen] = useState(false);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [eraseTagsDialogOpen, setEraseTagsDialogOpen] = useState(false);
+  const [erasingTags, setErasingTags] = useState(false);
 
   const [apiDraft, setApiDraft] = useState("");
   const [modelDraft, setModelDraft] = useState<string>(GROQ_MODELS[0]);
@@ -194,6 +198,17 @@ export default function Settings() {
       setApiSuccess(null);
     } finally {
       setResetting(false);
+    }
+  };
+
+  const handleEraseTags = async () => {
+    setErasingTags(true);
+    try {
+      await eraseAllTags();
+      announceDataChanged("words");
+      announceDataChanged("translations");
+    } finally {
+      setErasingTags(false);
     }
   };
 
@@ -626,20 +641,33 @@ export default function Settings() {
 
           <div className="frost-panel-soft space-y-3 p-4">
             <div>
-              <p className="font-medium text-red-200">Danger Zone</p>
-              <p className="subtle-caption mt-1">Completely reset all saved vocabulary and preferences.</p>
+              <p className="font-medium text-red-700 dark:text-red-200">Danger Zone</p>
+              <p className="subtle-caption mt-1">Remove tags from every entry, or reset all saved vocabulary and preferences.</p>
             </div>
 
-            <Button
-              type="button"
-              variant="outline"
-              disabled={resetting}
-              className="border-red-300/30 bg-red-900/20 text-red-100 hover:bg-red-900/35"
-              onClick={() => setResetDialogOpen(true)}
-            >
-              <RefreshCcw className="mr-2 size-4" />
-              {resetting ? "Resetting..." : "Reset App Data"}
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={erasingTags || resetting}
+                className="border-red-500/30 bg-red-500/10 text-red-700 hover:bg-red-500/20 dark:border-red-300/30 dark:bg-red-900/20 dark:text-red-100 dark:hover:bg-red-900/35"
+                onClick={() => setEraseTagsDialogOpen(true)}
+              >
+                <Eraser className="mr-2 size-4" />
+                {erasingTags ? "Erasing tags..." : "Erase All Tags"}
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                disabled={resetting}
+                className="border-red-500/30 bg-red-500/10 text-red-700 hover:bg-red-500/20 dark:border-red-300/30 dark:bg-red-900/20 dark:text-red-100 dark:hover:bg-red-900/35"
+                onClick={() => setResetDialogOpen(true)}
+              >
+                <RefreshCcw className="mr-2 size-4" />
+                {resetting ? "Resetting..." : "Reset App Data"}
+              </Button>
+            </div>
           </div>
         </div>
       </section>
@@ -701,6 +729,16 @@ export default function Settings() {
         open={importBookOpen}
         onOpenChange={setImportBookOpen}
         onImport={importCustomSourceFromFile}
+      />
+
+      <DeleteConfirmationDialog
+        open={eraseTagsDialogOpen}
+        onOpenChange={setEraseTagsDialogOpen}
+        title="Erase all tags?"
+        description="This removes tags from every saved definition and translation. Your entries, groups, and review progress stay saved."
+        confirmLabel="Erase tags"
+        allowSkip={false}
+        onConfirm={() => { setEraseTagsDialogOpen(false); void handleEraseTags(); }}
       />
 
       <DeleteConfirmationDialog

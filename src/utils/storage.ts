@@ -217,6 +217,13 @@ export async function updateTranslationsBulk(changes: Record<string, Partial<Tra
   )));
 }
 
+/** Removes descriptive tags from every saved entry without changing review progress. */
+export async function eraseAllTags(): Promise<void> {
+  const [words, translations] = await Promise.all([getWords(), getTranslations()]);
+  await saveWords(words.map((word) => ({ ...word, tags: [] })));
+  await saveTranslations(translations.map((translation) => ({ ...translation, tags: [] })));
+}
+
 /** Deletes many translations in one store write. */
 export async function deleteTranslationsBulk(ids: string[]): Promise<void> {
   const remove = new Set(ids);
