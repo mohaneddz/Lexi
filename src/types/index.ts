@@ -1,5 +1,17 @@
 // Type definitions for Lexi
 
+/** Spaced-repetition progress for a word or translation. */
+export interface ReviewState {
+  /** 0 until first reviewed; each correct answer moves it up one. */
+  stage: number;
+  /** When it's next due. 0 means due now. */
+  dueAt: number;
+  lastReviewedAt?: number;
+  reviewCount?: number;
+  /** How many times it was missed after being learned. */
+  lapses?: number;
+}
+
 export interface Word {
   id: string;
   word: string;
@@ -11,6 +23,7 @@ export interface Word {
   favorite?: boolean;
   examples?: string[];
   groupIds?: string[];
+  review?: ReviewState;
 }
 
 export interface Translation {
@@ -27,6 +40,7 @@ export interface Translation {
   groupIds?: string[];
   sourceExamples?: string[];
   targetExamples?: string[];
+  review?: ReviewState;
 }
 
 export type BookType = "dictionary" | "translation";
