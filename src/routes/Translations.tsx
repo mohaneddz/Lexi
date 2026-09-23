@@ -26,6 +26,7 @@ import {
 
 import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 import { EditTranslationDialog } from "@/components/EditTranslationDialog";
+import { TextPromptDialog } from "@/components/TextPromptDialog";
 import { GroupBadge } from "@/components/lexi/GroupBadge";
 import { Button } from "@/components/ui/button";
 import {
@@ -100,6 +101,7 @@ export default function Translations() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(true);
+  const [newGroupTarget, setNewGroupTarget] = useState<Translation | null>(null);
   const [actionMenu, setActionMenu] = useState<ActionMenuState | null>(null);
   const [translationSuggestions, setTranslationSuggestions] = useState<RelatedTranslationSuggestion[]>([]);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
@@ -372,12 +374,15 @@ export default function Translations() {
     await updateTranslation(translation.id, { groupIds: next });
   };
 
-  const createGroupAndAssign = async (translation: Translation) => {
-    const name = window.prompt("New group name");
-    if (!name || !name.trim()) return;
-    const group = await addGroup({ name: name.trim(), iconName: "Folder" });
-    const nextGroupIds = Array.from(new Set([...(translation.groupIds || []), group.id]));
-    await updateTranslation(translation.id, { groupIds: nextGroupIds });
+  const createGroupAndAssign = (translation: Translation) => {
+    setNewGroupTarget(translation);
+  };
+
+  const submitNewGroup = async (name: string) => {
+    if (!newGroupTarget) return;
+    const group = await addGroup({ name, iconName: "Folder" });
+    const nextGroupIds = Array.from(new Set([...(newGroupTarget.groupIds || []), group.id]));
+    await updateTranslation(newGroupTarget.id, { groupIds: nextGroupIds });
   };
 
   const requestDeleteTranslation = (translation: Translation) => {
@@ -865,11 +870,11 @@ export default function Translations() {
             <button type="button" className="menu-action" onClick={() => { enterBulkMode(actionMenu.translation.id); setActionMenu(null); }}><Check className="size-4" />Start multi-select</button>
             <div className="my-1 h-px bg-white/10" />
             <p className="menu-section-label">Groups</p>
-            {groups.length === 0 ? <button type="button" className="menu-action" onClick={() => { void createGroupAndAssign(actionMenu.translation); setActionMenu(null); }}><FolderPlus className="size-4" />Create first group</button> : groups.map((group) => {
+            {groups.length === 0 ? <button type="button" className="menu-action" onClick={() => { createGroupAndAssign(actionMenu.translation); setActionMenu(null); }}><FolderPlus className="size-4" />Create first group</button> : groups.map((group) => {
               const assigned = (actionMenu.translation.groupIds || []).includes(group.id);
               return <button key={group.id} type="button" className="menu-action" onClick={() => { void toggleTranslationGroup(actionMenu.translation, group.id); setActionMenu(null); }}><Check className={cn("size-4", !assigned && "opacity-0")} /><GroupBadge group={group} /></button>;
             })}
-            <button type="button" className="menu-action" onClick={() => { void createGroupAndAssign(actionMenu.translation); setActionMenu(null); }}><FolderPlus className="size-4" />Create group and add</button>
+            <button type="button" className="menu-action" onClick={() => { createGroupAndAssign(actionMenu.translation); setActionMenu(null); }}><FolderPlus className="size-4" />Create group and add</button>
             {(actionMenu.translation.groupIds || []).length > 0 ? <button type="button" className="menu-action" onClick={() => { void updateTranslation(actionMenu.translation.id, { groupIds: [] }); setActionMenu(null); }}><Trash2 className="size-4" />Remove from all groups</button> : null}
             <div className="my-1 h-px bg-white/10" />
             <button type="button" className="menu-action destructive" onClick={() => { requestDeleteTranslation(actionMenu.translation); setActionMenu(null); }}><Trash2 className="size-4" />Delete pair</button>
@@ -877,6 +882,15 @@ export default function Translations() {
         </div>
       ) : null}
 
+      <TextPromptDialog
+        open={newGroupTarget !== null}
+        onOpenChange={(open) => { if (!open) setNewGroupTarget(null); }}
+        title="New group"
+        description={newGroupTarget ? `Create a group and add "${newGroupTarget.sourceWord}" to it.` : undefined}
+        placeholder="e.g. Travel"
+        submitLabel="Create"
+        onSubmit={submitNewGroup}
+      />
       <EditTranslationDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} translation={editingTranslation} onSave={updateTranslation} />
       <DeleteConfirmationDialog
         open={deleteDialogOpen}

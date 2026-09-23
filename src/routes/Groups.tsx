@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, FolderTree, Loader2, Pencil, Plus, Search, Trash2, WandSparkles } from "lucide-react";
 
+import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 import { GroupContentsPanel } from "@/components/GroupContentsPanel";
 import { GroupBadge } from "@/components/lexi/GroupBadge";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,7 @@ import { getGroupIcon, GROUP_ICON_LOAD_ERROR, GROUP_ICON_NAMES, GROUP_ICON_SOURC
 import { cn } from "@/lib/utils";
 import type { LexiGroup } from "@/types";
 import { ORGANIZE_BATCH_SIZE, resolveGroupAssignmentsBatch } from "@/utils/group-assignment";
-import { getSettings } from "@/utils/storage";
+import { getSettings, updateSettings } from "@/utils/storage";
 
 export default function Groups() {
   const { groups, loading, addGroup, updateGroup, deleteGroup, moveGroup } = useGroups();
@@ -32,6 +33,18 @@ export default function Groups() {
   const [editingGroup, setEditingGroup] = useState<LexiGroup | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [pendingGroupDelete, setPendingGroupDelete] = useState<LexiGroup | null>(null);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(true);
+
+  useEffect(() => {
+    void getSettings().then((settings) => setShowDeleteConfirmation(settings.showDeleteConfirmation));
+    const onSettingsUpdated = (event: Event) => {
+      const detail = (event as CustomEvent<{ showDeleteConfirmation?: boolean }>).detail;
+      if (typeof detail?.showDeleteConfirmation === "boolean") setShowDeleteConfirmation(detail.showDeleteConfirmation);
+    };
+    window.addEventListener("lexi:settings-updated", onSettingsUpdated);
+    return () => window.removeEventListener("lexi:settings-updated", onSettingsUpdated);
+  }, []);
 
   const groupUsage = useMemo(() => {
     const counts = new Map<string, { words: number; translations: number }>();
@@ -144,12 +157,16 @@ export default function Groups() {
     setDraftIconName(result.data);
   };
 
-  const handleDelete = async (group: LexiGroup) => {
-    const confirmed = window.confirm(
-      `Delete "${group.name}"? It will be removed from all words and translations.`,
-    );
-    if (!confirmed) {
-      return;
+  const requestDelete = (group: LexiGroup) => {
+    if (showDeleteConfirmation) setPendingGroupDelete(group);
+    else void handleDelete(group, false);
+  };
+
+  const handleDelete = async (group: LexiGroup, disableConfirmation: boolean) => {
+    if (disableConfirmation) {
+      await updateSettings({ showDeleteConfirmation: false });
+      setShowDeleteConfirmation(false);
+      window.dispatchEvent(new CustomEvent("lexi:settings-updated", { detail: { showDeleteConfirmation: false } }));
     }
 
     await deleteGroup(group.id);
@@ -319,7 +336,7 @@ export default function Groups() {
                       title={group.isOthers ? "Built in. Turn Others off in Settings to hide it." : `Delete ${group.name}`}
                       onClick={(event) => {
                         event.stopPropagation();
-                        void handleDelete(group);
+                        requestDelete(group);
                       }}
                     >
                       <Trash2 className="size-4" />
@@ -481,6 +498,17 @@ export default function Groups() {
           </span>
         </div>
       </section>
+
+      <DeleteConfirmationDialog
+        open={pendingGroupDelete !== null}
+        onOpenChange={(open) => { if (!open) setPendingGroupDelete(null); }}
+        title="Delete Group?"
+        description={pendingGroupDelete ? `Delete "${pendingGroupDelete.name}"? Its words and translations are kept, just no longer in this group.` : ""}
+        onConfirm={(skipNextTime) => {
+          if (pendingGroupDelete) void handleDelete(pendingGroupDelete, skipNextTime);
+          setPendingGroupDelete(null);
+        }}
+      />
     </div>
   );
 }

@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 import { ImportBookDialog } from "@/components/ImportBookDialog";
 import { useAI } from "@/hooks/useAI";
 import { useBooks } from "@/hooks/useBooks";
@@ -79,6 +80,7 @@ export default function Settings() {
   const [saving, setSaving] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [importBookOpen, setImportBookOpen] = useState(false);
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
   const [apiDraft, setApiDraft] = useState("");
   const [modelDraft, setModelDraft] = useState<string>(GROQ_MODELS[0]);
@@ -174,14 +176,6 @@ export default function Settings() {
   };
 
   const handleResetData = async () => {
-    const accepted = window.confirm(
-      "This will remove all saved words, translations, and preferences. Continue?",
-    );
-
-    if (!accepted) {
-      return;
-    }
-
     setResetting(true);
     try {
       await clearAllData();
@@ -592,7 +586,7 @@ export default function Settings() {
               variant="outline"
               disabled={resetting}
               className="border-red-300/30 bg-red-900/20 text-red-100 hover:bg-red-900/35"
-              onClick={handleResetData}
+              onClick={() => setResetDialogOpen(true)}
             >
               <RefreshCcw className="mr-2 size-4" />
               {resetting ? "Resetting..." : "Reset App Data"}
@@ -658,6 +652,19 @@ export default function Settings() {
         open={importBookOpen}
         onOpenChange={setImportBookOpen}
         onImport={importCustomSourceFromFile}
+      />
+
+      <DeleteConfirmationDialog
+        open={resetDialogOpen}
+        onOpenChange={setResetDialogOpen}
+        title="Reset all data?"
+        description="This removes every saved word, translation, group and preference. It cannot be undone."
+        confirmLabel="Reset everything"
+        allowSkip={false}
+        onConfirm={() => {
+          setResetDialogOpen(false);
+          void handleResetData();
+        }}
       />
     </div>
   );
