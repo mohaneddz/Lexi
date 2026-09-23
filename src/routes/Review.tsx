@@ -9,6 +9,7 @@ import {
   Timer,
 } from "lucide-react";
 
+import { ChoicesSkeleton, ListRowsSkeleton } from "@/components/lexi/Skeletons";
 import { Button } from "@/components/ui/button";
 import { useAI } from "@/hooks/useAI";
 import { useWords } from "@/hooks/useWords";
@@ -394,11 +395,7 @@ export default function Review() {
 
         <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto">
           {loading ? (
-            <div className="space-y-2 p-3">
-              {[1, 2, 3, 4].map((index) => (
-                <div key={index} className="h-14 rounded-lg bg-white/6" />
-              ))}
-            </div>
+            <ListRowsSkeleton />
           ) : queue.length === 0 ? (
             <div className="flex h-full min-h-[240px] flex-col items-center justify-center gap-2 px-5 text-center">
               <p className="section-title">Queue clear</p>
@@ -566,7 +563,7 @@ export default function Review() {
                   <p className="subtle-caption">Choose the matching definition:</p>
 
                   {mcLoading && options.length < 4 ? (
-                    <p className="subtle-caption">Generating close distractors with AI...</p>
+                    <ChoicesSkeleton />
                   ) : (
                     <div className="space-y-2">
                       {options.map((option, index) => (

@@ -6,6 +6,7 @@ import { BookOpen, Check, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAI } from "@/hooks/useAI";
 import { useBooks } from "@/hooks/useBooks";
 import { useGroups } from "@/hooks/useGroups";
@@ -439,7 +440,13 @@ export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragReg
             </div>
           </div>
 
-          {mode === "define" ? (
+          {mode === "define" && aiLoading ? (
+            <div className="frost-input form-textarea flex min-h-[7.5rem] flex-col gap-2.5 py-3" aria-busy>
+              <Skeleton className="h-4 w-full bg-white/8" />
+              <Skeleton className="h-4 w-11/12 bg-white/8" />
+              <Skeleton className="h-4 w-3/5 bg-white/8" />
+            </div>
+          ) : mode === "define" ? (
             <textarea
               className="frost-input form-textarea"
               value={outputText}
@@ -469,6 +476,11 @@ export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragReg
                   ))}
                 </SelectContent>
               </Select>
+              {aiLoading ? (
+                <div className="frost-input flex min-w-0 flex-1 items-center" aria-busy>
+                  <Skeleton className="h-4 w-1/2 bg-white/8" />
+                </div>
+              ) : (
               <Input
                 className="frost-input min-w-0 flex-1"
                 value={outputText}
@@ -485,6 +497,7 @@ export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragReg
                 }}
                 placeholder="Enter or generate translation..."
               />
+              )}
             </div>
           )}
           {errors.outputText ? <p className="text-xs text-destructive">{errors.outputText}</p> : null}
@@ -512,6 +525,13 @@ export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragReg
         <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_11rem]">
           <div className="space-y-2">
             <div className="text-sm font-medium">Tags</div>
+            {aiLoading && !tagsTouched ? (
+              <div className="frost-input flex items-center gap-2" aria-busy>
+                <Skeleton className="h-5 w-16 rounded-full bg-white/8" />
+                <Skeleton className="h-5 w-20 rounded-full bg-white/8" />
+                <Skeleton className="h-5 w-12 rounded-full bg-white/8" />
+              </div>
+            ) : (
             <Input
               className="frost-input"
               value={tagsText}
@@ -521,6 +541,7 @@ export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragReg
               }}
               placeholder="e.g. travel, formal, verb"
             />
+            )}
           </div>
           <div className="space-y-2">
             <div className="text-sm font-medium">Group</div>

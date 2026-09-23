@@ -29,6 +29,7 @@ import { EditTranslationDialog } from "@/components/EditTranslationDialog";
 import { TextPromptDialog } from "@/components/TextPromptDialog";
 import { GroupBadge } from "@/components/lexi/GroupBadge";
 import { TagList } from "@/components/lexi/TagList";
+import { ExampleSkeleton, ListRowsSkeleton, SuggestionCardsSkeleton } from "@/components/lexi/Skeletons";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -757,7 +758,7 @@ export default function Translations() {
           ) : null}
           {viewMode === "list" ? <div className={cn("table-head", bulkMode ? "grid-cols-[28px_minmax(0,1fr)_26px]" : "grid-cols-[minmax(0,1fr)_26px]")}><span>Translation</span><span /></div> : null}
           <div ref={gridScrollRef} className="custom-scrollbar min-h-0 flex-1 overflow-y-auto" onWheel={(event) => { if (!(event.ctrlKey || event.metaKey) || !canZoom) return; event.preventDefault(); void stepZoom(event.deltaY < 0 ? "in" : "out", event.currentTarget.clientWidth - GRID_CONTENT_PADDING_PX); }}>
-            {loading ? <div className="space-y-2 p-3">{[1, 2, 3, 4].map((index) => <div key={index} className="h-16 rounded-lg bg-white/6" />)}</div> : filteredTranslations.length === 0 ? (
+            {loading ? <ListRowsSkeleton /> : filteredTranslations.length === 0 ? (
               <div className="flex h-full min-h-[260px] flex-col items-center justify-center text-center"><p className="section-title">No translations</p><p className="subtle-caption mt-2 max-w-sm px-4">Add translation pairs first to build your language map.</p></div>
             ) : viewMode === "list" ? (
               groupedTranslations.map((group) => <div key={group.key}>{groupMode !== "none" ? <div className="sticky top-0 z-10 flex items-center justify-between border-y border-white/8 bg-black/20 px-3 py-1.5 text-xs text-muted-foreground backdrop-blur-md"><span>{group.key}</span><span>{group.items.length}</span></div> : null}{group.items.map(renderListRow)}</div>)
@@ -808,7 +809,13 @@ export default function Translations() {
                         </Button>
                       </div>
                     </div>
-                    {selectedSourceExample || selectedTargetExample ? (
+                    {generatingExamples ? (
+                      <div className="space-y-3">
+                        <ExampleSkeleton lines={1} />
+                        <div className="ghost-divider" />
+                        <ExampleSkeleton lines={1} />
+                      </div>
+                    ) : selectedSourceExample || selectedTargetExample ? (
                       <div className="space-y-3">
                         {selectedSourceExample ? <p className="serif-display text-2xl italic text-muted-foreground">{selectedSourceExample}</p> : null}
                         {selectedSourceExample && selectedTargetExample ? <div className="ghost-divider" /> : null}
@@ -845,7 +852,7 @@ export default function Translations() {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between"><p className="font-medium">Translation Suggestions</p><Sparkles className="size-4 text-muted-foreground" /></div>
                     {suggestionsLoading ? (
-                      <div className="frost-panel-soft p-3 text-sm text-muted-foreground">Finding related words...</div>
+                      <SuggestionCardsSkeleton count={Math.min(suggestionCount, 4)} />
                     ) : suggestionsError ? (
                       <div className="frost-panel-soft p-3 text-sm text-muted-foreground">{suggestionsError}</div>
                     ) : translationSuggestions.length === 0 ? (

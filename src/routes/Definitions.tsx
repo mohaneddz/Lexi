@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Copy, Grid2x2, LayoutGrid, List, Loader2, Minus, PanelRightClose, PanelRightOpen, Plus, RefreshCcw, Search, SlidersHorizontal, Sparkles, WandSparkles, ZoomIn } from "lucide-react";
 
 import { TagList } from "@/components/lexi/TagList";
+import { ExampleSkeleton, ListRowsSkeleton, SuggestionCardsSkeleton } from "@/components/lexi/Skeletons";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -360,7 +361,7 @@ export default function Definitions() {
 
           <div ref={gridScrollRef} className="custom-scrollbar min-h-0 flex-1 overflow-y-auto" onWheel={(event) => { if (!(event.ctrlKey || event.metaKey) || !canZoom) return; event.preventDefault(); void stepZoom(event.deltaY < 0 ? "in" : "out", event.currentTarget.clientWidth - GRID_CONTENT_PADDING_PX); }}>
             {loading ? (
-              <div className="space-y-2 p-3">{[1, 2, 3, 4].map((index) => <div key={index} className="h-16 rounded-lg bg-white/6" />)}</div>
+              <ListRowsSkeleton />
             ) : filteredWords.length === 0 ? (
               <div className="flex h-full min-h-[260px] flex-col items-center justify-center text-center"><p className="section-title">No entries</p><p className="subtle-caption mt-2 max-w-sm px-4">Add words first to build your definitions handbook.</p></div>
             ) : viewMode === "list" ? (
@@ -439,7 +440,7 @@ export default function Definitions() {
                         <Button type="button" size="sm" variant="outline" disabled={!selectedWord.examples || selectedWord.examples.length <= 1} className="border-white/15 bg-white/6 hover:bg-white/14" onClick={() => setExampleVersion((current) => current + 1)}><RefreshCcw className="mr-1.5 size-3.5" />Rotate</Button>
                       </div>
                     </div>
-                    {selectedExample ? <p className="serif-display text-2xl italic text-muted-foreground">{selectedExample}</p> : <p className="subtle-caption">No examples yet. Click Generate to create some.</p>}
+                    {generatingExamples ? <ExampleSkeleton /> : selectedExample ? <p className="serif-display text-2xl italic text-muted-foreground">{selectedExample}</p> : <p className="subtle-caption">No examples yet. Click Generate to create some.</p>}
                   </div>
                   <div className="flex flex-wrap gap-2"><Button type="button" variant="outline" className="border-white/15 bg-white/6 hover:bg-white/14" onClick={() => void copyDefinition()}><Copy className="mr-2 size-3.5" />{copied ? "Copied" : "Copy Definition"}</Button><span className="sync-pill"><Sparkles className="size-3" />{selectedWord.aiGenerated ? "AI generated" : "Manually curated"}</span></div>
                 </>
@@ -452,7 +453,7 @@ export default function Definitions() {
                 {!selectedWord ? (
                   <div className="frost-panel-soft p-3 text-sm text-muted-foreground">Pick a word to see related ones.</div>
                 ) : suggestionsLoading ? (
-                  <div className="frost-panel-soft p-3 text-sm text-muted-foreground">Finding related words...</div>
+                  <SuggestionCardsSkeleton count={Math.min(suggestionCount, 4)} />
                 ) : suggestionsError ? (
                   <div className="frost-panel-soft p-3 text-sm text-muted-foreground">{suggestionsError}</div>
                 ) : definitionSuggestions.length === 0 ? (

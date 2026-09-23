@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, BookOpen, Loader2, Plus, RefreshCcw, X } from "lucide-react";
 
+import { HomeEntriesSkeleton } from "@/components/lexi/Skeletons";
 import { Button } from "@/components/ui/button";
 import { useAI } from "@/hooks/useAI";
 import { useBooks } from "@/hooks/useBooks";
@@ -538,7 +539,7 @@ export default function Home() {
 
         {loading ? (
           <div className="space-y-3">
-            {[1, 2, 3].map((index) => <div key={index} className="h-24 rounded-lg bg-white/6" />)}
+            <HomeEntriesSkeleton count={3} />
           </div>
         ) : enabledBookIds.length === 0 ? (
           <EmptyNote
@@ -613,7 +614,7 @@ export default function Home() {
 
                   <div className="home-entries">
                     {state?.loading && suggestions.length === 0 ? (
-                      <p className="subtle-caption py-2">Thinking of words for {title}...</p>
+                      <HomeEntriesSkeleton count={Math.min(perSection, 4)} />
                     ) : suggestions.length === 0 ? (
                       <p className="subtle-caption py-2">
                         {state?.error

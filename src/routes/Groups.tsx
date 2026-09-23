@@ -4,6 +4,7 @@ import { ArrowDown, ArrowUp, FolderTree, Loader2, Pencil, Plus, Search, Trash2, 
 import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 import { GroupContentsPanel } from "@/components/GroupContentsPanel";
 import { GroupBadge } from "@/components/lexi/GroupBadge";
+import { ListRowsSkeleton } from "@/components/lexi/Skeletons";
 import { Button } from "@/components/ui/button";
 import { useAI } from "@/hooks/useAI";
 import { useGroups } from "@/hooks/useGroups";
@@ -269,7 +270,7 @@ export default function Groups() {
 
         <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto">
           {loading ? (
-            <div className="space-y-2 p-3">{[1, 2, 3, 4].map((index) => <div key={index} className="h-16 rounded-lg bg-white/6" />)}</div>
+            <ListRowsSkeleton count={4} />
           ) : groups.length === 0 ? (
             <div className="flex h-full min-h-[260px] flex-col items-center justify-center gap-3 px-6 text-center">
               <FolderTree className="size-7 text-muted-foreground" />

@@ -1,6 +1,7 @@
 import { useDeferredValue, useMemo, useState } from "react";
 import { BookOpen, Check, Circle, CircleDot, Copy, Languages, Loader2, Minus, Search, Sparkles, Trash2 } from "lucide-react";
 
+import { BookCardsSkeleton } from "@/components/lexi/Skeletons";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -314,7 +315,7 @@ export default function Books() {
 
         <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-2">
           {loading ? (
-            <div className="space-y-2">{[1, 2, 3, 4].map((index) => <div key={index} className="h-36 rounded-lg bg-white/6" />)}</div>
+            <BookCardsSkeleton />
           ) : groupedCatalog.length === 0 ? (
             <div className="flex min-h-[260px] items-center justify-center text-center">
               <p className="subtle-caption">
