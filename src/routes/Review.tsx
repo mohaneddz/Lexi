@@ -14,7 +14,7 @@ import { useAI } from "@/hooks/useAI";
 import { useWords } from "@/hooks/useWords";
 import { cn } from "@/lib/utils";
 import { buildExample, getReviewStatus, setReviewStatus, type ReviewStatus } from "@/utils/review";
-import { getSettings } from "@/utils/storage";
+import { getSettings, readAiCacheEntry, writeAiCache } from "@/utils/storage";
 import type { RevisionMode } from "@/types";
 
 function statusClass(status: ReviewStatus): string {
@@ -157,6 +157,17 @@ export default function Review() {
     const generate = async () => {
       setMcLoading(true);
       try {
+        // Distractors are saved per word, and only reused while the
+        // definition they were written against hasn't changed.
+        const cached = await readAiCacheEntry<{ definition: string; distractors: string[] }>("distractors", selectedWord.id);
+        if (cancelled) {
+          return;
+        }
+        if (cached?.definition === selectedWord.definition && cached.distractors.length === 3) {
+          setMcOptionsByWordId((prev) => ({ ...prev, [selectedWord.id]: cached.distractors }));
+          return;
+        }
+
         const result = await suggestDistractorDefinitions(
           selectedWord.word,
           selectedWord.definition,
@@ -167,10 +178,12 @@ export default function Review() {
           return;
         }
 
-        const distractors =
-          result.success && result.data.length === 3
-            ? result.data
-            : createFallbackDistractors();
+        const aiWorked = result.success && result.data.length === 3;
+        const distractors = aiWorked ? result.data : createFallbackDistractors();
+        // The canned fallback isn't saved, so the AI gets another go next time.
+        if (aiWorked) {
+          void writeAiCache("distractors", selectedWord.id, { definition: selectedWord.definition, distractors });
+        }
 
         setMcOptionsByWordId((prev) => ({
           ...prev,

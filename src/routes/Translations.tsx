@@ -49,7 +49,7 @@ import type { Translation, ViewMode } from "@/types";
 import type { RelatedTranslationSuggestion } from "@/utils/ai-service";
 import { formatDate } from "@/utils/formatters";
 import { resolveGroupAssignment } from "@/utils/group-assignment";
-import { getSettings, updateSettings } from "@/utils/storage";
+import { getSettings, readAiCacheEntry, updateSettings, writeAiCache } from "@/utils/storage";
 import { parseJsonArray, translationFingerprint } from "@/utils/suggestions";
 
 function suggestionKey(suggestion: RelatedTranslationSuggestion): string {
@@ -487,23 +487,40 @@ export default function Translations() {
       if (word.language === sourceLanguage) knownWords.add(word.word.toLowerCase());
     }
 
-    void suggestRelatedTranslations(sourceWord, sourceLanguage, targetLanguage, context, Array.from(knownWords)).then((result) => {
+    // Suggestions are saved per pair, so reopening one doesn't call the AI
+    // again. Editing the pair's source word or languages invalidates them.
+    const cacheSignature = `${sourceWord.toLowerCase()}|${sourceLanguage}|${targetLanguage}`;
+
+    const load = async () => {
+      const cached = await readAiCacheEntry<{ signature: string; suggestions: RelatedTranslationSuggestion[] }>(
+        "relatedTranslations",
+        translationId,
+      );
       if (cancelled) return;
 
-      if (!result.success) {
-        setTranslationSuggestions([]);
-        setSuggestionsError(result.error ?? "Could not load suggestions.");
-        return;
+      let suggestions = cached?.signature === cacheSignature ? cached.suggestions : null;
+      if (!suggestions) {
+        const result = await suggestRelatedTranslations(sourceWord, sourceLanguage, targetLanguage, context, Array.from(knownWords));
+        if (cancelled) return;
+        if (!result.success) {
+          setTranslationSuggestions([]);
+          setSuggestionsError(result.error ?? "Could not load suggestions.");
+          return;
+        }
+        suggestions = result.data;
+        void writeAiCache("relatedTranslations", translationId, { signature: cacheSignature, suggestions });
       }
 
       const existingPairs = new Set(translations.map((entry) => translationFingerprint(entry)));
-      const filtered = result.data.filter((suggestion) => {
+      const filtered = suggestions.filter((suggestion) => {
         if (dismissed.has(suggestionKey(suggestion))) return false;
         const fingerprint = translationFingerprint({ sourceWord: suggestion.sourceWord, sourceLanguage, targetWord: suggestion.targetWord, targetLanguage });
         return !existingPairs.has(fingerprint);
       });
       setTranslationSuggestions(filtered);
-    }).finally(() => {
+    };
+
+    void load().finally(() => {
       if (!cancelled) setSuggestionsLoading(false);
     });
 

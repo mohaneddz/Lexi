@@ -16,6 +16,7 @@ const KEYS = {
   BOOKS_INSTALLED: 'books_installed',
   BOOKS_ACTIVE_IDS: 'books_active_ids',
   BOOKS_CUSTOM_SOURCES: 'books_custom_sources',
+  AI_CACHE: 'ai_cache',
 } as const;
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -149,6 +150,7 @@ export async function deleteWord(id: string): Promise<void> {
   const words = await getWords();
   const filtered = words.filter(w => w.id !== id);
   await saveWords(filtered);
+  await writeAiCache('distractors', id, undefined);
 }
 
 // Translations operations
@@ -184,6 +186,7 @@ export async function deleteTranslation(id: string): Promise<void> {
   const translations = await getTranslations();
   const filtered = translations.filter(t => t.id !== id);
   await saveTranslations(filtered);
+  await writeAiCache('relatedTranslations', id, undefined);
 }
 
 // Groups operations
@@ -287,6 +290,46 @@ export async function updateSettings(updates: Partial<AppSettings>): Promise<voi
   const settings = await getSettings();
   const updated = { ...settings, ...updates };
   await saveSettings(updated);
+}
+
+// AI results worth keeping between sessions, so revisiting a page doesn't
+// spend API quota regenerating what was already produced. Grouped by
+// feature, then keyed by whatever the result belongs to (a word id, a Home
+// section, ...).
+export type AiCacheNamespace = 'homeSuggestions' | 'relatedTranslations' | 'distractors';
+
+type AiCache = Partial<Record<AiCacheNamespace, Record<string, unknown>>>;
+
+// Writes are read-modify-write on one store key, so they're queued to keep
+// several sections finishing at once from overwriting each other.
+let aiCacheWrites: Promise<void> = Promise.resolve();
+
+export async function readAiCache<T>(namespace: AiCacheNamespace): Promise<Record<string, T>> {
+  const cache = await store.get<AiCache>(KEYS.AI_CACHE);
+  return (cache?.[namespace] ?? {}) as Record<string, T>;
+}
+
+export async function readAiCacheEntry<T>(namespace: AiCacheNamespace, key: string): Promise<T | undefined> {
+  return (await readAiCache<T>(namespace))[key];
+}
+
+/** Passing `undefined` removes the entry. */
+export function writeAiCache(namespace: AiCacheNamespace, key: string, value: unknown): Promise<void> {
+  aiCacheWrites = aiCacheWrites.then(async () => {
+    const cache = (await store.get<AiCache>(KEYS.AI_CACHE)) ?? {};
+    const entries = { ...(cache[namespace] ?? {}) };
+    if (value === undefined) {
+      if (!(key in entries)) return;
+      delete entries[key];
+    } else {
+      entries[key] = value;
+    }
+    await store.set(KEYS.AI_CACHE, { ...cache, [namespace]: entries });
+    await store.save();
+  }).catch((error) => {
+    console.error('Failed to write AI cache', error);
+  });
+  return aiCacheWrites;
 }
 
 // Clear all data (for reset functionality)
