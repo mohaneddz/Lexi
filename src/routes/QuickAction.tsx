@@ -20,7 +20,14 @@ export default function QuickAction({ initialMode = "define" }: QuickActionProps
   // than holding whatever was typed the last time it was open.
   const [session, setSession] = useState(0);
 
-  const hide = useMemo(() => () => { void windowRef.hide(); }, [windowRef]);
+  // If hiding is ever refused, closing still works: the Rust side turns a
+  // close request on this window into a hide, so it stays warm for next time.
+  const hide = useMemo(() => () => {
+    windowRef.hide().catch((error) => {
+      console.error("Failed to hide quick capture window, closing instead", error);
+      void windowRef.close();
+    });
+  }, [windowRef]);
   const lastHeightRef = useRef(0);
 
   // The window sizes itself to the form, so nothing is cut off and there's
