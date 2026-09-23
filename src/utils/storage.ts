@@ -2,6 +2,7 @@
 
 import { LazyStore } from '@tauri-apps/plugin-store';
 import { clampSurfaceZoom } from '@/lib/surface-view';
+import { capitalizeTerm } from '@/utils/formatters';
 import { isReviewStatusTag, reviewStateFromLegacyTags } from '@/utils/review';
 import type { AppSettings, BookCatalogItem, InstalledBook, LexiGroup, SurfaceKey, SurfaceViewPreference, Translation, Word } from '@/types';
 
@@ -70,15 +71,11 @@ function normalizeSurfaceViews(value: Partial<Record<SurfaceKey, Partial<Surface
   };
 }
 
-function capitalizeLeadingCharacter(value: string): string {
-  return value.replace(/^(\s*)(\S)/, (_match, ws: string, first: string) => `${ws}${first.toUpperCase()}`);
-}
-
 function normalizeWord(word: Word): Word {
   const tags = Array.isArray(word.tags) ? word.tags : [];
   return {
     ...word,
-    word: capitalizeLeadingCharacter(word.word),
+    word: capitalizeTerm(word.word),
     // Status used to be kept as tags; it now lives in `review`, and the
     // old tags are converted once and dropped.
     review: word.review ?? reviewStateFromLegacyTags(tags, word.dateAdded),
@@ -92,8 +89,8 @@ function normalizeWord(word: Word): Word {
 function normalizeTranslation(translation: Translation): Translation {
   return {
     ...translation,
-    sourceWord: capitalizeLeadingCharacter(translation.sourceWord),
-    targetWord: capitalizeLeadingCharacter(translation.targetWord),
+    sourceWord: capitalizeTerm(translation.sourceWord),
+    targetWord: capitalizeTerm(translation.targetWord),
     favorite: Boolean(translation.favorite),
     review: translation.review ?? reviewStateFromLegacyTags(translation.tags ?? [], translation.dateAdded),
     tags: Array.isArray(translation.tags) ? translation.tags.filter((tag) => !isReviewStatusTag(tag)) : [],

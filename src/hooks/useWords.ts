@@ -3,11 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Word } from '@/types';
 import * as storage from '@/utils/storage';
+import { capitalizeTerm } from '@/utils/formatters';
 import { announceDataChanged, onDataChanged } from '@/utils/dataEvents';
-
-function capitalizeLeadingCharacter(value: string): string {
-  return value.replace(/^(\s*)(\S)/, (_match, ws: string, first: string) => `${ws}${first.toUpperCase()}`);
-}
 
 export function useWords() {
   const [words, setWords] = useState<Word[]>([]);
@@ -42,7 +39,7 @@ export function useWords() {
     try {
             const newWord: Word = {
                 ...word,
-                word: capitalizeLeadingCharacter(word.word),
+                word: capitalizeTerm(word.word),
                 id: crypto.randomUUID(),
                 dateAdded: Date.now(),
                 favorite: Boolean(word.favorite),
@@ -70,7 +67,7 @@ export function useWords() {
             ? {
                 ...w,
                 ...updates,
-                ...(typeof updates.word === "string" ? { word: capitalizeLeadingCharacter(updates.word) } : {}),
+                ...(typeof updates.word === "string" ? { word: capitalizeTerm(updates.word) } : {}),
               }
             : w
         ))

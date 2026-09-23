@@ -10,6 +10,7 @@ import { useGroups } from "@/hooks/useGroups";
 import { useTranslations } from "@/hooks/useTranslations";
 import { useWords } from "@/hooks/useWords";
 import { getGroupIcon } from "@/lib/group-icons";
+import { capitalizeTerm } from "@/utils/formatters";
 import type { AppSettings, LexiGroup } from "@/types";
 import { getSettings, readAiCache, writeAiCache } from "@/utils/storage";
 import { isDue } from "@/utils/review";
@@ -630,11 +631,11 @@ export default function Home() {
                           <article key={`${key}:${suggestion.term}`} className="home-entry">
                             <div className="min-w-0">
                               <h2 className="home-entry-term">
-                                {suggestion.term}
+                                {capitalizeTerm(suggestion.term)}
                                 {kind === "translation" ? (
                                   <span className="home-entry-target">
                                     <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
-                                    {suggestion.detail}
+                                    {capitalizeTerm(suggestion.detail)}
                                   </span>
                                 ) : null}
                               </h2>

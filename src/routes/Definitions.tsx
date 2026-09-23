@@ -21,7 +21,7 @@ import { useWords } from "@/hooks/useWords";
 import { cn } from "@/lib/utils";
 import type { ViewMode, Word } from "@/types";
 import { getReviewStatus, type ReviewStatus } from "@/utils/review";
-import { truncateText } from "@/utils/formatters";
+import { capitalizeTerm, truncateText } from "@/utils/formatters";
 import type { RelatedWordSuggestion } from "@/utils/ai-service";
 import { getSettings, readAiCacheEntry, writeAiCache } from "@/utils/storage";
 import { parseJsonArray } from "@/utils/suggestions";
@@ -463,7 +463,7 @@ export default function Definitions() {
                     {definitionSuggestions.map((suggestion) => (
                       <div key={suggestion.word} className="frost-panel-soft space-y-2 p-3">
                         <div className="flex items-start justify-between gap-2">
-                          <p className="serif-display text-2xl leading-[0.95]">{suggestion.word}</p>
+                          <p className="serif-display text-2xl leading-[0.95]">{capitalizeTerm(suggestion.word)}</p>
                           <div className="flex gap-2">
                             <Button type="button" size="sm" variant="outline" className="border-white/15 bg-white/6 hover:bg-white/14" disabled={addingSuggestionWord === suggestion.word} onClick={() => void applySuggestion(suggestion)}>{addingSuggestionWord === suggestion.word ? "Adding..." : "Add"}</Button>
                             <Button type="button" size="sm" variant="outline" className="border-white/15 bg-white/6 hover:bg-white/14" onClick={() => dismissSuggestion(suggestion)}>Dismiss</Button>

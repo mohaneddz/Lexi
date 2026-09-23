@@ -3,11 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Translation } from '@/types';
 import * as storage from '@/utils/storage';
+import { capitalizeTerm } from '@/utils/formatters';
 import { announceDataChanged, onDataChanged } from '@/utils/dataEvents';
-
-function capitalizeLeadingCharacter(value: string): string {
-    return value.replace(/^(\s*)(\S)/, (_match, ws: string, first: string) => `${ws}${first.toUpperCase()}`);
-}
 
 export function useTranslations() {
     const [translations, setTranslations] = useState<Translation[]>([]);
@@ -44,8 +41,8 @@ export function useTranslations() {
         try {
             const newTranslation: Translation = {
                 ...translation,
-                sourceWord: capitalizeLeadingCharacter(translation.sourceWord),
-                targetWord: capitalizeLeadingCharacter(translation.targetWord),
+                sourceWord: capitalizeTerm(translation.sourceWord),
+                targetWord: capitalizeTerm(translation.targetWord),
                 id: crypto.randomUUID(),
                 dateAdded: Date.now(),
                 favorite: Boolean(translation.favorite),
@@ -76,8 +73,8 @@ export function useTranslations() {
                         ? {
                             ...t,
                             ...updates,
-                            ...(typeof updates.sourceWord === "string" ? { sourceWord: capitalizeLeadingCharacter(updates.sourceWord) } : {}),
-                            ...(typeof updates.targetWord === "string" ? { targetWord: capitalizeLeadingCharacter(updates.targetWord) } : {}),
+                            ...(typeof updates.sourceWord === "string" ? { sourceWord: capitalizeTerm(updates.sourceWord) } : {}),
+                            ...(typeof updates.targetWord === "string" ? { targetWord: capitalizeTerm(updates.targetWord) } : {}),
                         }
                         : t
                 ))

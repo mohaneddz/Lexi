@@ -1,5 +1,15 @@
 // Formatting utilities
 
+/**
+ * Capitalizes the first letter of every word in a term ("machine learning"
+ * becomes "Machine Learning") and leaves the rest alone, so acronyms and
+ * names like "BatchNorm" keep their own casing.
+ */
+export function capitalizeTerm(value: string): string {
+    return value.replace(/(^|[\s(])(\p{Ll})/gu, (_match, before: string, letter: string) => `${before}${letter.toLocaleUpperCase()}`);
+}
+
+
 export function formatDate(timestamp: number): string {
     const date = new Date(timestamp);
     const now = new Date();

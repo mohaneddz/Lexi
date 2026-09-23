@@ -50,7 +50,7 @@ import { cardMinWidthFor } from "@/lib/surface-view";
 import { cn } from "@/lib/utils";
 import type { Translation, ViewMode } from "@/types";
 import type { RelatedTranslationSuggestion } from "@/utils/ai-service";
-import { formatDate } from "@/utils/formatters";
+import { capitalizeTerm, formatDate } from "@/utils/formatters";
 import { resolveGroupAssignment } from "@/utils/group-assignment";
 import { getSettings, readAiCacheEntry, updateSettings, writeAiCache } from "@/utils/storage";
 import { parseJsonArray, translationFingerprint } from "@/utils/suggestions";
@@ -865,7 +865,7 @@ export default function Translations() {
                             <div key={key} className="frost-panel-soft space-y-2 p-3">
                               <div className="flex items-start justify-between gap-2">
                                 <div>
-                                  <p className="serif-display text-2xl leading-[0.95]">{suggestion.sourceWord}<span className="mx-2 inline-flex items-center align-middle text-muted-foreground/80"><ArrowRight className="size-4" /></span>{suggestion.targetWord}</p>
+                                  <p className="serif-display text-2xl leading-[0.95]">{capitalizeTerm(suggestion.sourceWord)}<span className="mx-2 inline-flex items-center align-middle text-muted-foreground/80"><ArrowRight className="size-4" /></span>{capitalizeTerm(suggestion.targetWord)}</p>
                                   <p className="subtle-caption">{selectedTranslation.sourceLanguage} {"->"} {selectedTranslation.targetLanguage}</p>
                                 </div>
                                 <div className="flex gap-2">
