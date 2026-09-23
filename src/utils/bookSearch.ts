@@ -55,8 +55,13 @@ export type ScoredMatch = {
  */
 const indexCache = new WeakMap<BookPayload, BookIndex>();
 
+// Arabic short vowels and other marks, plus the tatweel stretch. Dictionaries
+// print words fully vocalized but people type them bare, so both sides of a
+// search drop these before comparing.
+const ARABIC_MARKS = /[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED\u0640]/g;
+
 function normalize(value: string): string {
-  return value.trim().toLowerCase();
+  return value.trim().toLowerCase().replace(ARABIC_MARKS, "");
 }
 
 function isSeparator(character: string): boolean {

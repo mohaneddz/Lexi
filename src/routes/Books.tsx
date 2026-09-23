@@ -31,6 +31,17 @@ function stripVariantSuffix(title: string): string {
   return title.replace(/\s*\([^()]*\bto\b[^()]*\)\s*$/i, "").trim();
 }
 
+/**
+ * How a variant is named in its group: just the target language when every
+ * variant starts from the same one ("French"), otherwise the full pair
+ * ("German to Arabic"), since a list of identical targets says nothing.
+ */
+function variantLabel(variant: BookCatalogItem, variants: BookCatalogItem[]): string {
+  const sameSource = variants.every((entry) => entry.inputLanguages.join("/") === variants[0].inputLanguages.join("/"));
+  const target = variant.outputLanguages.join("/");
+  return sameSource ? target : `${variant.inputLanguages.join("/")} to ${target}`;
+}
+
 function displayTitle(book: BookCatalogItem): string {
   return book.type === "translation" ? stripVariantSuffix(book.title) : book.title;
 }
@@ -435,7 +446,7 @@ export default function Books() {
     const isToggling = variants.some((variant) => loadingBookIds.includes(variant.id));
     const primary = variants[0];
     const sharedInputLanguages = Array.from(new Set(variants.flatMap((variant) => variant.inputLanguages)));
-    const variantSummary = variants.map((variant) => variant.outputLanguages.join("/")).join(", ");
+    const variantSummary = variants.map((variant) => variantLabel(variant, variants)).join(", ");
 
     return (
       <article key={`group:${type}:${baseTitle}`} className="book-card frost-panel-soft">
@@ -503,7 +514,7 @@ export default function Books() {
                 {variants.map((variant) => {
                   const variantEnabled = enabledBookIds.includes(variant.id);
                   const variantLoading = loadingBookIds.includes(variant.id);
-                  const label = type === "translation" ? variant.outputLanguages.join("/") : variant.title;
+                  const label = type === "translation" ? variantLabel(variant, variants) : variant.title;
                   return (
                     <DropdownMenuCheckboxItem
                       key={variant.id}
