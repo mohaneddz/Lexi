@@ -59,6 +59,15 @@ function suggestionKey(suggestion: RelatedTranslationSuggestion): string {
 }
 
 type SortMode = "recent" | "oldest" | "source" | "target" | "sourceLang" | "targetLang";
+
+const SORT_OPTIONS: Array<{ value: SortMode; label: string }> = [
+  { value: "recent", label: "Recent" },
+  { value: "oldest", label: "Oldest" },
+  { value: "source", label: "Source A to Z" },
+  { value: "target", label: "Target A to Z" },
+  { value: "sourceLang", label: "Source language" },
+  { value: "targetLang", label: "Target language" },
+];
 type GroupMode = "none" | "sourceLang" | "targetLang" | "pair";
 type SourceFilter = "All" | "AI" | "Manual";
 type ActionMenuState = {
@@ -148,7 +157,8 @@ export default function Translations() {
         translation.targetWord.toLowerCase().includes(normalizedQuery) ||
         translation.sourceLanguage.toLowerCase().includes(normalizedQuery) ||
         translation.targetLanguage.toLowerCase().includes(normalizedQuery) ||
-        (translation.context ?? "").toLowerCase().includes(normalizedQuery)
+        (translation.context ?? "").toLowerCase().includes(normalizedQuery) ||
+        (translation.tags ?? []).some((tag) => tag.toLowerCase().includes(normalizedQuery))
       );
     });
 
@@ -466,6 +476,7 @@ export default function Translations() {
   };
 
   const clearAllFilters = () => {
+    setSortMode("recent");
     setLanguageFilter("All");
     setSourceFilter("All");
     setQuery("");
@@ -684,16 +695,8 @@ export default function Translations() {
           <div className="flex flex-wrap items-center gap-2 border-b border-white/10 p-3">
             <div className="search-field-wrap min-w-[170px] flex-[1_1_250px] sm:min-w-[220px] sm:flex-[1_1_340px]">
               <Search className="search-field-icon" />
-              <input ref={searchInputRef} value={query} onChange={(event) => setQuery(event.target.value)} className="frost-input search-field-input" placeholder="Search translations" />
+              <input ref={searchInputRef} value={query} onChange={(event) => setQuery(event.target.value)} className="frost-input search-field-input" placeholder="Search translations or tags" />
             </div>
-            <select value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)} className="frost-input toolbar-select max-[520px]:max-w-none max-[520px]:flex-1">
-              <option value="recent">Recent</option>
-              <option value="oldest">Oldest</option>
-              <option value="source">Source</option>
-              <option value="target">Target</option>
-              <option value="sourceLang">Source Language</option>
-              <option value="targetLang">Target Language</option>
-            </select>
             <div className="flex items-center rounded-lg border border-white/12 bg-white/6 p-1">
               {VIEW_OPTIONS.map((option) => {
                 const Icon = option.icon;
@@ -713,7 +716,12 @@ export default function Translations() {
               <DropdownMenuTrigger asChild>
                 <Button type="button" variant="outline" size="icon" className="border-white/15 bg-white/6 hover:bg-white/14" aria-label="Filters" title="Filters"><SlidersHorizontal className="size-4" /></Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64">
+              <DropdownMenuContent align="end" className="custom-scrollbar max-h-[70vh] w-64 overflow-y-auto">
+                <DropdownMenudiv>Sort</DropdownMenudiv>
+                <DropdownMenuRadioGroup value={sortMode} onValueChange={(value) => setSortMode(value as SortMode)}>
+                  {SORT_OPTIONS.map((entry) => <DropdownMenuRadioItem key={entry.value} value={entry.value}>{entry.label}</DropdownMenuRadioItem>)}
+                </DropdownMenuRadioGroup>
+                <DropdownMenuSeparator />
                 <DropdownMenudiv>Source</DropdownMenudiv>
                 <DropdownMenuRadioGroup value={sourceFilter} onValueChange={(value) => setSourceFilter(value as SourceFilter)}>
                   {(["All", "AI", "Manual"] as SourceFilter[]).map((entry) => <DropdownMenuRadioItem key={entry} value={entry}>{entry}</DropdownMenuRadioItem>)}

@@ -1,15 +1,25 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Copy, Grid2x2, LayoutGrid, List, Loader2, Minus, PanelRightClose, PanelRightOpen, Plus, RefreshCcw, Search, Sparkles, WandSparkles, ZoomIn } from "lucide-react";
+import { Copy, Grid2x2, LayoutGrid, List, Loader2, Minus, PanelRightClose, PanelRightOpen, Plus, RefreshCcw, Search, SlidersHorizontal, Sparkles, WandSparkles, ZoomIn } from "lucide-react";
 
 import { TagList } from "@/components/lexi/TagList";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenudiv,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useAI } from "@/hooks/useAI";
 import { useSurfaceViewPreference } from "@/hooks/useSurfaceViewPreference";
 import { cardMinWidthFor } from "@/lib/surface-view";
 import { useWords } from "@/hooks/useWords";
 import { cn } from "@/lib/utils";
-import type { ViewMode } from "@/types";
-import { getReviewStatus } from "@/utils/review";
+import type { ViewMode, Word } from "@/types";
+import { getReviewStatus, type ReviewStatus } from "@/utils/review";
 import { truncateText } from "@/utils/formatters";
 import type { RelatedWordSuggestion } from "@/utils/ai-service";
 import { getSettings, readAiCacheEntry, writeAiCache } from "@/utils/storage";
@@ -17,6 +27,21 @@ import { parseJsonArray } from "@/utils/suggestions";
 import { SUGGESTED_TAG } from "@/utils/tags";
 
 const GRID_CONTENT_PADDING_PX = 24;
+
+type SortMode = "alpha" | "alphaDesc" | "recent" | "oldest" | "language" | "status";
+type SourceFilter = "All" | "AI" | "Manual";
+type StatusFilter = "All" | ReviewStatus;
+
+const SORT_OPTIONS: Array<{ value: SortMode; label: string }> = [
+  { value: "alpha", label: "A to Z" },
+  { value: "alphaDesc", label: "Z to A" },
+  { value: "recent", label: "Recent" },
+  { value: "oldest", label: "Oldest" },
+  { value: "language", label: "Language" },
+  { value: "status", label: "Review status" },
+];
+
+const STATUS_ORDER: Record<ReviewStatus, number> = { New: 0, Learning: 1, Mastered: 2 };
 
 const VIEW_OPTIONS: Array<{ label: string; value: ViewMode; icon: typeof List }> = [
   { label: "List", value: "list", icon: List },
@@ -40,6 +65,10 @@ export default function Definitions() {
   const { viewMode, setViewMode, zoom, stepZoom, canZoom, detailPanelOpen, toggleDetailPanel } = useSurfaceViewPreference("definitions", "list", 100);
 
   const [query, setQuery] = useState("");
+  const [sortMode, setSortMode] = useState<SortMode>("alpha");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("All");
+  const [languageFilter, setLanguageFilter] = useState("All");
+  const [sourceFilter, setSourceFilter] = useState<SourceFilter>("All");
   const [groupFilterId, setGroupFilterId] = useState("none");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [exampleVersion, setExampleVersion] = useState(0);
@@ -54,14 +83,47 @@ export default function Definitions() {
   const filteredWords = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
-    return [...words]
+    const scoped = words
       .filter((word) => groupFilterId === "none" || (word.groupIds || []).includes(groupFilterId))
+      .filter((word) => languageFilter === "All" || word.language === languageFilter)
+      .filter((word) => sourceFilter === "All" || (sourceFilter === "AI") === word.aiGenerated)
+      .filter((word) => statusFilter === "All" || getReviewStatus(word) === statusFilter)
       .filter((word) => {
         if (!normalizedQuery) return true;
-        return word.word.toLowerCase().includes(normalizedQuery) || word.definition.toLowerCase().includes(normalizedQuery);
-      })
-      .sort((a, b) => a.word.localeCompare(b.word));
-  }, [groupFilterId, query, words]);
+        return word.word.toLowerCase().includes(normalizedQuery)
+          || word.definition.toLowerCase().includes(normalizedQuery)
+          || word.tags.some((tag) => tag.toLowerCase().includes(normalizedQuery));
+      });
+
+    const byWord = (a: Word, b: Word) => a.word.localeCompare(b.word);
+    switch (sortMode) {
+      case "alphaDesc":
+        return scoped.sort((a, b) => byWord(b, a));
+      case "recent":
+        return scoped.sort((a, b) => b.dateAdded - a.dateAdded);
+      case "oldest":
+        return scoped.sort((a, b) => a.dateAdded - b.dateAdded);
+      case "language":
+        return scoped.sort((a, b) => a.language.localeCompare(b.language) || byWord(a, b));
+      case "status":
+        return scoped.sort((a, b) => STATUS_ORDER[getReviewStatus(a)] - STATUS_ORDER[getReviewStatus(b)] || byWord(a, b));
+      default:
+        return scoped.sort(byWord);
+    }
+  }, [groupFilterId, languageFilter, query, sortMode, sourceFilter, statusFilter, words]);
+
+  const availableLanguages = useMemo(
+    () => ["All", ...Array.from(new Set(words.map((word) => word.language))).sort()],
+    [words],
+  );
+
+  const clearAllFilters = () => {
+    setSortMode("alpha");
+    setStatusFilter("All");
+    setLanguageFilter("All");
+    setSourceFilter("All");
+    setQuery("");
+  };
 
   useEffect(() => {
     if (filteredWords.length === 0) {
@@ -247,7 +309,7 @@ export default function Definitions() {
           <div className="flex flex-wrap items-center gap-2 border-b border-white/10 p-3">
             <div className="search-field-wrap min-w-[170px] flex-[1_1_250px] sm:min-w-[220px] sm:flex-[1_1_340px]">
               <Search className="search-field-icon" />
-              <input ref={searchInputRef} value={query} onChange={(event) => setQuery(event.target.value)} className="frost-input search-field-input" placeholder="Search definitions" />
+              <input ref={searchInputRef} value={query} onChange={(event) => setQuery(event.target.value)} className="frost-input search-field-input" placeholder="Search definitions or tags" />
             </div>
             <div className="flex items-center rounded-lg border border-white/12 bg-white/6 p-1">
               {VIEW_OPTIONS.map((option) => {
@@ -264,6 +326,34 @@ export default function Definitions() {
             >
               {detailPanelOpen ? <PanelRightClose className="size-4" /> : <PanelRightOpen className="size-4" />}
             </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button type="button" variant="outline" size="icon" className="border-white/15 bg-white/6 hover:bg-white/14" aria-label="Filters" title="Filters"><SlidersHorizontal className="size-4" /></Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="custom-scrollbar max-h-[70vh] w-64 overflow-y-auto">
+                <DropdownMenudiv>Sort</DropdownMenudiv>
+                <DropdownMenuRadioGroup value={sortMode} onValueChange={(value) => setSortMode(value as SortMode)}>
+                  {SORT_OPTIONS.map((entry) => <DropdownMenuRadioItem key={entry.value} value={entry.value}>{entry.label}</DropdownMenuRadioItem>)}
+                </DropdownMenuRadioGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenudiv>Status</DropdownMenudiv>
+                <DropdownMenuRadioGroup value={statusFilter} onValueChange={(value) => setStatusFilter(value as StatusFilter)}>
+                  {(["All", "New", "Learning", "Mastered"] as StatusFilter[]).map((entry) => <DropdownMenuRadioItem key={entry} value={entry}>{entry}</DropdownMenuRadioItem>)}
+                </DropdownMenuRadioGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenudiv>Source</DropdownMenudiv>
+                <DropdownMenuRadioGroup value={sourceFilter} onValueChange={(value) => setSourceFilter(value as SourceFilter)}>
+                  {(["All", "AI", "Manual"] as SourceFilter[]).map((entry) => <DropdownMenuRadioItem key={entry} value={entry}>{entry}</DropdownMenuRadioItem>)}
+                </DropdownMenuRadioGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenudiv>Language</DropdownMenudiv>
+                <DropdownMenuRadioGroup value={languageFilter} onValueChange={setLanguageFilter}>
+                  {availableLanguages.map((entry) => <DropdownMenuRadioItem key={entry} value={entry}>{entry}</DropdownMenuRadioItem>)}
+                </DropdownMenuRadioGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={clearAllFilters}>Clear filters</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {viewMode === "list" ? <div className="table-head grid-cols-[minmax(0,1fr)_88px]"><span>Definition Entry</span><span>Status</span></div> : null}
