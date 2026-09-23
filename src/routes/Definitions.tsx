@@ -5,20 +5,15 @@ import { Button } from "@/components/ui/button";
 import { useAI } from "@/hooks/useAI";
 import { useSurfaceViewPreference } from "@/hooks/useSurfaceViewPreference";
 import { cardMinWidthFor } from "@/lib/surface-view";
-import { useTranslations } from "@/hooks/useTranslations";
 import { useWords } from "@/hooks/useWords";
 import { cn } from "@/lib/utils";
 import type { ViewMode } from "@/types";
 import { getReviewStatus } from "@/utils/review";
 import { truncateText } from "@/utils/formatters";
-import {
-  DEFINITION_SUGGESTION_BANK,
-  dayKey,
-  parseJsonArray,
-  shuffleArray,
-  wordFingerprint,
-  type DefinitionSuggestion,
-} from "@/utils/suggestions";
+import type { RelatedWordSuggestion } from "@/utils/ai-service";
+import { getSettings, readAiCacheEntry, writeAiCache } from "@/utils/storage";
+import { parseJsonArray } from "@/utils/suggestions";
+import { SUGGESTED_TAG } from "@/utils/tags";
 
 const GRID_CONTENT_PADDING_PX = 24;
 
@@ -40,8 +35,7 @@ export default function Definitions() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const gridScrollRef = useRef<HTMLDivElement>(null);
   const { words, loading, addWord, updateWord } = useWords();
-  const { translations } = useTranslations();
-  const { getExamples } = useAI();
+  const { getExamples, suggestRelatedWords } = useAI();
   const { viewMode, setViewMode, zoom, stepZoom, canZoom, detailPanelOpen, toggleDetailPanel } = useSurfaceViewPreference("definitions", "list", 100);
 
   const [query, setQuery] = useState("");
@@ -50,10 +44,11 @@ export default function Definitions() {
   const [exampleVersion, setExampleVersion] = useState(0);
   const [copied, setCopied] = useState(false);
   const [generatingExamples, setGeneratingExamples] = useState(false);
-  const [definitionSuggestions, setDefinitionSuggestions] = useState<DefinitionSuggestion[]>([]);
-  const [addingSuggestionId, setAddingSuggestionId] = useState<string | null>(null);
-  const todayKey = useMemo(() => dayKey(Date.now()), []);
-  const suggestionScopeKey = groupFilterId === "none" ? "global" : `group:${groupFilterId}`;
+  const [definitionSuggestions, setDefinitionSuggestions] = useState<RelatedWordSuggestion[]>([]);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  const [suggestionsError, setSuggestionsError] = useState<string | null>(null);
+  const [addingSuggestionWord, setAddingSuggestionWord] = useState<string | null>(null);
+  const [suggestionCount, setSuggestionCount] = useState(4);
 
   const filteredWords = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -146,69 +141,97 @@ export default function Definitions() {
   };
 
   useEffect(() => {
-    const existingWordSet = new Set(words.map((word) => wordFingerprint(word)));
-    const dismissedKey = `lexi:definitions:daily-dismissed:${todayKey}:${suggestionScopeKey}`;
-    const generatedKey = `lexi:definitions:daily-generated:${todayKey}:${suggestionScopeKey}`;
-    const scopedWords = groupFilterId === "none" ? words : words.filter((word) => (word.groupIds || []).includes(groupFilterId));
-    const scopedTranslations = groupFilterId === "none" ? translations : translations.filter((entry) => (entry.groupIds || []).includes(groupFilterId));
-
-    const languageWeights = new Map<string, number>();
-    const addLanguageWeight = (language: string, weight: number) => {
-      languageWeights.set(language, (languageWeights.get(language) || 0) + weight);
+    void getSettings().then((settings) => setSuggestionCount(settings.definitionSuggestionCount));
+    const onSettingsUpdated = (event: Event) => {
+      const detail = (event as CustomEvent<{ definitionSuggestionCount?: number }>).detail;
+      if (typeof detail?.definitionSuggestionCount === "number") setSuggestionCount(detail.definitionSuggestionCount);
     };
+    window.addEventListener("lexi:settings-updated", onSettingsUpdated);
+    return () => window.removeEventListener("lexi:settings-updated", onSettingsUpdated);
+  }, []);
 
-    for (const word of words) addLanguageWeight(word.language, 1);
-    for (const translation of translations) {
-      addLanguageWeight(translation.sourceLanguage, 1);
-      addLanguageWeight(translation.targetLanguage, 1);
-    }
-    for (const word of scopedWords) addLanguageWeight(word.language, 3);
-    for (const translation of scopedTranslations) {
-      addLanguageWeight(translation.sourceLanguage, 3);
-      addLanguageWeight(translation.targetLanguage, 3);
-    }
-
-    const knownLanguages = new Set(languageWeights.keys());
-    if (knownLanguages.size === 0) knownLanguages.add("English");
-
-    const dismissed = new Set(parseJsonArray(window.localStorage.getItem(dismissedKey)));
-    const persisted = parseJsonArray(window.localStorage.getItem(generatedKey));
-
-    if (persisted.length > 0) {
-      const persistedSet = new Set(persisted);
-      setDefinitionSuggestions(DEFINITION_SUGGESTION_BANK.filter((entry) => persistedSet.has(entry.id) && !dismissed.has(entry.id) && knownLanguages.has(entry.language) && !existingWordSet.has(wordFingerprint({ word: entry.word, language: entry.language }))));
+  // Related words are saved per word, so reopening one doesn't call the AI
+  // again. Editing the word or its language, or raising the count, fetches
+  // a fresh set.
+  useEffect(() => {
+    if (!selectedWord) {
+      setDefinitionSuggestions([]);
+      setSuggestionsError(null);
+      setSuggestionsLoading(false);
       return;
     }
 
-    const nextFresh = shuffleArray(
-      DEFINITION_SUGGESTION_BANK.filter((entry) => !dismissed.has(entry.id) && knownLanguages.has(entry.language) && !existingWordSet.has(wordFingerprint({ word: entry.word, language: entry.language }))),
-    ).slice(0, 4);
-    setDefinitionSuggestions(nextFresh);
-    window.localStorage.setItem(generatedKey, JSON.stringify(nextFresh.map((entry) => entry.id)));
-  }, [groupFilterId, suggestionScopeKey, todayKey, translations, words]);
+    const { id: wordId, word, language, definition } = selectedWord;
+    const cacheSignature = `${word.toLowerCase()}|${language}`;
+    const dismissed = new Set(parseJsonArray(window.localStorage.getItem(`lexi:definitions:dismissed:${wordId}`)));
+    const knownWords = words.filter((entry) => entry.language === language).map((entry) => entry.word.toLowerCase());
+    let cancelled = false;
+    setSuggestionsLoading(true);
+    setSuggestionsError(null);
 
-  const dismissSuggestion = (id: string) => {
-    const dismissedKey = `lexi:definitions:daily-dismissed:${todayKey}:${suggestionScopeKey}`;
-    const dismissed = new Set(parseJsonArray(window.localStorage.getItem(dismissedKey)));
-    dismissed.add(id);
-    window.localStorage.setItem(dismissedKey, JSON.stringify(Array.from(dismissed)));
-    setDefinitionSuggestions((current) => current.filter((entry) => entry.id !== id));
+    const load = async () => {
+      const cached = await readAiCacheEntry<{ signature: string; suggestions: RelatedWordSuggestion[]; requested: number }>("relatedWords", wordId);
+      if (cancelled) return;
+
+      let suggestions = cached?.signature === cacheSignature && cached.requested >= suggestionCount ? cached.suggestions : null;
+      if (!suggestions) {
+        const result = await suggestRelatedWords(word, language, definition, knownWords, suggestionCount);
+        if (cancelled) return;
+        if (!result.success) {
+          setDefinitionSuggestions([]);
+          setSuggestionsError(result.error ?? "Could not load suggestions.");
+          return;
+        }
+        suggestions = result.data;
+        void writeAiCache("relatedWords", wordId, { signature: cacheSignature, suggestions, requested: suggestionCount });
+      }
+
+      const known = new Set(knownWords);
+      setDefinitionSuggestions(
+        suggestions
+          .filter((suggestion) => !dismissed.has(suggestion.word.toLowerCase()) && !known.has(suggestion.word.toLowerCase()))
+          .slice(0, suggestionCount),
+      );
+    };
+
+    void load().finally(() => {
+      if (!cancelled) setSuggestionsLoading(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedWord?.id, selectedWord?.word, selectedWord?.language, suggestionCount]);
+
+  const dismissSuggestion = (suggestion: RelatedWordSuggestion) => {
+    if (!selectedWord) return;
+    const key = `lexi:definitions:dismissed:${selectedWord.id}`;
+    const dismissed = new Set(parseJsonArray(window.localStorage.getItem(key)));
+    dismissed.add(suggestion.word.toLowerCase());
+    try {
+      window.localStorage.setItem(key, JSON.stringify(Array.from(dismissed)));
+    } catch {
+      // A full or blocked store just means the dismissal lasts for this session.
+    }
+    setDefinitionSuggestions((current) => current.filter((entry) => entry.word !== suggestion.word));
   };
 
-  const applySuggestion = async (suggestion: DefinitionSuggestion) => {
-    setAddingSuggestionId(suggestion.id);
+  const applySuggestion = async (suggestion: RelatedWordSuggestion) => {
+    if (!selectedWord) return;
+    setAddingSuggestionWord(suggestion.word);
     try {
       await addWord({
         word: suggestion.word,
         definition: suggestion.definition,
-        language: suggestion.language,
-        tags: Array.from(new Set([...(suggestion.tags || []), "suggested"])),
-        aiGenerated: false,
-        groupIds: groupFilterId !== "none" ? [groupFilterId] : [],
+        language: selectedWord.language,
+        tags: [SUGGESTED_TAG],
+        aiGenerated: true,
+        groupIds: selectedWord.groupIds ?? [],
       });
-      setDefinitionSuggestions((current) => current.filter((entry) => entry.id !== suggestion.id));
+      setDefinitionSuggestions((current) => current.filter((entry) => entry.word !== suggestion.word));
     } finally {
-      setAddingSuggestionId(null);
+      setAddingSuggestionWord(null);
     }
   };
 
@@ -333,8 +356,31 @@ export default function Definitions() {
               )}
               <div className="ghost-divider" />
               <div className="space-y-3">
-                <div className="flex items-center justify-between"><p className="font-medium">Definition Suggestions</p><Sparkles className="size-4 text-muted-foreground" /></div>
-                {definitionSuggestions.length === 0 ? <div className="frost-panel-soft p-3 text-sm text-muted-foreground">No suggestions left for today.</div> : <div className="space-y-2">{definitionSuggestions.map((suggestion) => <div key={suggestion.id} className="frost-panel-soft space-y-2 p-3"><div className="flex items-start justify-between gap-2"><div><p className="serif-display text-2xl leading-[0.95]">{suggestion.word}</p><p className="subtle-caption">{suggestion.language}</p></div><div className="flex gap-2"><Button type="button" size="sm" variant="outline" className="border-white/15 bg-white/6 hover:bg-white/14" disabled={addingSuggestionId === suggestion.id} onClick={() => void applySuggestion(suggestion)}>{addingSuggestionId === suggestion.id ? "Adding..." : "Add"}</Button><Button type="button" size="sm" variant="outline" className="border-white/15 bg-white/6 hover:bg-white/14" onClick={() => dismissSuggestion(suggestion.id)}>Dismiss</Button></div></div><p className="word-sub">{suggestion.definition}</p><div className="flex flex-wrap gap-1.5">{suggestion.tags.map((tag) => <span key={`${suggestion.id}-${tag}`} className="lexi-chip">{tag}</span>)}</div></div>)}</div>}
+                <div className="flex items-center justify-between"><p className="font-medium">Related Words</p><Sparkles className="size-4 text-muted-foreground" /></div>
+                {!selectedWord ? (
+                  <div className="frost-panel-soft p-3 text-sm text-muted-foreground">Pick a word to see related ones.</div>
+                ) : suggestionsLoading ? (
+                  <div className="frost-panel-soft p-3 text-sm text-muted-foreground">Finding related words...</div>
+                ) : suggestionsError ? (
+                  <div className="frost-panel-soft p-3 text-sm text-muted-foreground">{suggestionsError}</div>
+                ) : definitionSuggestions.length === 0 ? (
+                  <div className="frost-panel-soft p-3 text-sm text-muted-foreground">No suggestions right now.</div>
+                ) : (
+                  <div className="space-y-2">
+                    {definitionSuggestions.map((suggestion) => (
+                      <div key={suggestion.word} className="frost-panel-soft space-y-2 p-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="serif-display text-2xl leading-[0.95]">{suggestion.word}</p>
+                          <div className="flex gap-2">
+                            <Button type="button" size="sm" variant="outline" className="border-white/15 bg-white/6 hover:bg-white/14" disabled={addingSuggestionWord === suggestion.word} onClick={() => void applySuggestion(suggestion)}>{addingSuggestionWord === suggestion.word ? "Adding..." : "Add"}</Button>
+                            <Button type="button" size="sm" variant="outline" className="border-white/15 bg-white/6 hover:bg-white/14" onClick={() => dismissSuggestion(suggestion)}>Dismiss</Button>
+                          </div>
+                        </div>
+                        <p className="word-sub">{suggestion.definition}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>

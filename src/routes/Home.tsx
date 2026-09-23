@@ -21,7 +21,7 @@ import {
 } from "@/utils/wordSuggestions";
 
 const DISMISSED_KEY_PREFIX = "lexi:home:dismissed";
-const PER_SECTION = 4;
+const DEFAULT_PER_SECTION = 4;
 
 type SectionKey = string;
 
@@ -31,10 +31,12 @@ type SectionState = {
   /** False once a fallback (or empty AI result) means this section stopped trying the AI. */
   usedAi: boolean;
   error: string | null;
+  /** How many suggestions this section was asked for, so raising the setting regenerates it. */
+  requested: number;
 };
 
 /** What's saved to the AI cache, so a section survives restarts without regenerating. */
-type CachedSection = { suggestions: Suggestion[]; usedAi: boolean };
+type CachedSection = { suggestions: Suggestion[]; usedAi: boolean; requested?: number };
 
 type LanguagePrefs = { definition: string; source: string; target: string };
 
@@ -89,6 +91,7 @@ export default function Home() {
   const [sections, setSections] = useState<Record<SectionKey, SectionState>>({});
   const [languages, setLanguages] = useState<LanguagePrefs | null>(null);
   const [cache, setCache] = useState<Record<SectionKey, CachedSection> | null>(null);
+  const [perSection, setPerSection] = useState(DEFAULT_PER_SECTION);
 
   // Tracks every term shown anywhere this session, so a refresh on one
   // section — or generating a later group — doesn't repeat a word another
@@ -96,13 +99,17 @@ export default function Home() {
   const shownTermsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    void getSettings().then((settings) => setLanguages({
-      definition: settings.defaultDefinitionLanguage,
-      source: settings.defaultTranslationSourceLanguage,
-      target: settings.defaultTranslationTargetLanguage,
-    }));
+    void getSettings().then((settings) => {
+      setPerSection(settings.homeSuggestionCount);
+      setLanguages({
+        definition: settings.defaultDefinitionLanguage,
+        source: settings.defaultTranslationSourceLanguage,
+        target: settings.defaultTranslationTargetLanguage,
+      });
+    });
     const onSettingsUpdated = (event: Event) => {
       const detail = (event as CustomEvent<Partial<AppSettings>>).detail;
+      if (typeof detail?.homeSuggestionCount === "number") setPerSection(detail.homeSuggestionCount);
       setLanguages((current) => current && ({
         definition: detail?.defaultDefinitionLanguage ?? current.definition,
         source: detail?.defaultTranslationSourceLanguage ?? current.source,
@@ -195,7 +202,13 @@ export default function Home() {
 
     setSections((current) => ({
       ...current,
-      [key]: { suggestions: current[key]?.suggestions ?? [], loading: true, usedAi: current[key]?.usedAi ?? true, error: null },
+      [key]: {
+        suggestions: current[key]?.suggestions ?? [],
+        loading: true,
+        usedAi: current[key]?.usedAi ?? true,
+        error: null,
+        requested: perSection,
+      },
     }));
 
     const previouslyShown = options.force ? new Set(sections[key]?.suggestions.map((s) => s.term.toLowerCase()) ?? []) : new Set<string>();
@@ -210,7 +223,7 @@ export default function Home() {
       const scopedWords = group.isOthers && groupWords.length === 0 ? words : groupWords;
       if (generateKind === "definition") {
         return buildFallbackDefinitionSuggestions({
-          words, scopedWords, dismissed: currentDismissed, findDefinition, exclude, limit: PER_SECTION,
+          words, scopedWords, dismissed: currentDismissed, findDefinition, exclude, limit: perSection,
         });
       }
       return buildFallbackTranslationSuggestions({
@@ -222,7 +235,7 @@ export default function Home() {
         dismissed: currentDismissed,
         findTranslation: (term) => findTranslation(term, language, targetLanguage),
         exclude,
-        limit: PER_SECTION,
+        limit: perSection,
       });
     };
 
@@ -250,13 +263,13 @@ export default function Home() {
         language,
         exampleWords,
         excludeWords: [...known, ...exclude, ...currentDismissed],
-        count: PER_SECTION + 2,
+        count: perSection + 2,
       });
 
       if (result.success && result.data.length > 0) {
         usedAi = true;
         for (const term of result.data) {
-          if (picked.length >= PER_SECTION) break;
+          if (picked.length >= perSection) break;
           const normalized = term.toLowerCase();
           // Checks the live ref, not the snapshot taken before the AI call,
           // so a sibling group that claimed this term while this one was
@@ -308,18 +321,18 @@ export default function Home() {
     const finalError = picked.length === 0 ? error : null;
     setSections((current) => ({
       ...current,
-      [key]: { suggestions: picked, loading: false, usedAi, error: finalError },
+      [key]: { suggestions: picked, loading: false, usedAi, error: finalError, requested: perSection },
     }));
 
     // A failed AI call isn't saved, so the section tries again next visit.
     if (!finalError) {
-      const entry: CachedSection = { suggestions: picked, usedAi };
+      const entry: CachedSection = { suggestions: picked, usedAi, requested: perSection };
       setCache((current) => ({ ...(current ?? {}), [key]: entry }));
       void writeAiCache("homeSuggestions", key, entry);
     }
   }, [
     defineWord, dismissedDefinitions, dismissedTranslations, findDefinition, findTranslation, languages,
-    scopeWords, sections, suggestGroupWords, translate, translations, words,
+    perSection, scopeWords, sections, suggestGroupWords, translate, translations, words,
   ]);
 
   const generateSectionRef = useRef(generateSection);
@@ -340,18 +353,22 @@ export default function Home() {
 
     for (const group of visibleGroups) {
       const key = sectionKey(kind, group, languages);
-      if (sections[key]) continue;
+      // Lowering the count just shows fewer of what's already there; only
+      // raising it past what a section was generated with asks the AI again.
+      if (sections[key] && sections[key].requested >= perSection) continue;
       const cached = cache[key];
-      if (cached) {
-        setSections((current) => ({ ...current, [key]: { ...cached, loading: false, error: null } }));
+      const cachedRequested = cached?.requested ?? DEFAULT_PER_SECTION;
+      if (cached && cachedRequested >= perSection && !sections[key]) {
+        setSections((current) => ({ ...current, [key]: { ...cached, loading: false, error: null, requested: cachedRequested } }));
         continue;
       }
+      if (sections[key]?.loading) continue;
       void generateSectionRef.current(kind, group);
     }
     // Only re-run when the set of sections that should exist changes, not on
     // every generateSection identity change (it closes over `sections`).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [kind, visibleGroups, languages, ready, enabledBookIds.length, sameTranslationLanguages]);
+  }, [kind, visibleGroups, languages, ready, enabledBookIds.length, sameTranslationLanguages, perSection]);
 
   const dueCount = useMemo(
     () => words.filter((word) => getReviewStatus(word) !== "Mastered").length,
@@ -383,7 +400,7 @@ export default function Home() {
       const normalized = suggestion.term.trim().toLowerCase();
       if (addedTerms.has(suggestion.term)) return true;
       return !dismissed.has(normalized) && !savedTerms.has(normalized);
-    });
+    }).slice(0, perSection);
   };
 
   const handleAdd = async (suggestion: Suggestion, group: LexiGroup) => {

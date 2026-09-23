@@ -102,6 +102,7 @@ export default function Translations() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(true);
   const [newGroupTarget, setNewGroupTarget] = useState<Translation | null>(null);
+  const [suggestionCount, setSuggestionCount] = useState(4);
   const [actionMenu, setActionMenu] = useState<ActionMenuState | null>(null);
   const [translationSuggestions, setTranslationSuggestions] = useState<RelatedTranslationSuggestion[]>([]);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
@@ -198,9 +199,13 @@ export default function Translations() {
     void getSettings().then((settings) => {
       setShowDeleteConfirmation(settings.showDeleteConfirmation);
       setOthersGroupEnabled(settings.othersGroupEnabled);
+      setSuggestionCount(settings.translationSuggestionCount);
     });
     const onSettingsUpdated = (event: Event) => {
-      const custom = event as CustomEvent<{ showDeleteConfirmation?: boolean; othersGroupEnabled?: boolean }>;
+      const custom = event as CustomEvent<{ showDeleteConfirmation?: boolean; othersGroupEnabled?: boolean; translationSuggestionCount?: number }>;
+      if (typeof custom.detail?.translationSuggestionCount === "number") {
+        setSuggestionCount(custom.detail.translationSuggestionCount);
+      }
       if (typeof custom.detail?.showDeleteConfirmation === "boolean") {
         setShowDeleteConfirmation(custom.detail.showDeleteConfirmation);
       }
@@ -497,15 +502,17 @@ export default function Translations() {
     const cacheSignature = `${sourceWord.toLowerCase()}|${sourceLanguage}|${targetLanguage}`;
 
     const load = async () => {
-      const cached = await readAiCacheEntry<{ signature: string; suggestions: RelatedTranslationSuggestion[] }>(
+      const cached = await readAiCacheEntry<{ signature: string; suggestions: RelatedTranslationSuggestion[]; requested?: number }>(
         "relatedTranslations",
         translationId,
       );
       if (cancelled) return;
 
-      let suggestions = cached?.signature === cacheSignature ? cached.suggestions : null;
+      // Lowering the count reuses what's saved; raising it asks for a fresh set.
+      const cachedRequested = cached?.requested ?? cached?.suggestions.length ?? 0;
+      let suggestions = cached?.signature === cacheSignature && cachedRequested >= suggestionCount ? cached.suggestions : null;
       if (!suggestions) {
-        const result = await suggestRelatedTranslations(sourceWord, sourceLanguage, targetLanguage, context, Array.from(knownWords));
+        const result = await suggestRelatedTranslations(sourceWord, sourceLanguage, targetLanguage, context, Array.from(knownWords), suggestionCount);
         if (cancelled) return;
         if (!result.success) {
           setTranslationSuggestions([]);
@@ -513,7 +520,7 @@ export default function Translations() {
           return;
         }
         suggestions = result.data;
-        void writeAiCache("relatedTranslations", translationId, { signature: cacheSignature, suggestions });
+        void writeAiCache("relatedTranslations", translationId, { signature: cacheSignature, suggestions, requested: suggestionCount });
       }
 
       const existingPairs = new Set(translations.map((entry) => translationFingerprint(entry)));
@@ -522,7 +529,7 @@ export default function Translations() {
         const fingerprint = translationFingerprint({ sourceWord: suggestion.sourceWord, sourceLanguage, targetWord: suggestion.targetWord, targetLanguage });
         return !existingPairs.has(fingerprint);
       });
-      setTranslationSuggestions(filtered);
+      setTranslationSuggestions(filtered.slice(0, suggestionCount));
     };
 
     void load().finally(() => {
@@ -533,7 +540,7 @@ export default function Translations() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedTranslation?.id]);
+  }, [selectedTranslation?.id, suggestionCount]);
 
   const dismissSuggestion = (suggestion: RelatedTranslationSuggestion) => {
     if (!selectedTranslation) return;

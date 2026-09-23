@@ -41,6 +41,9 @@ const DEFAULT_SETTINGS: AppSettings = {
   defaultRevisionMode: 'flashcard',
   groupTabsIconOnly: false,
   othersGroupEnabled: true,
+  homeSuggestionCount: 4,
+  definitionSuggestionCount: 4,
+  translationSuggestionCount: 4,
   surfaceViews: {
     definitions: { mode: "list", zoom: 100, detailPanelOpen: true },
     translations: { mode: "list", zoom: 100, detailPanelOpen: true },
@@ -158,6 +161,7 @@ export async function deleteWord(id: string): Promise<void> {
   const filtered = words.filter(w => w.id !== id);
   await saveWords(filtered);
   await writeAiCache('distractors', id, undefined);
+  await writeAiCache('relatedWords', id, undefined);
 }
 
 // Translations operations
@@ -274,6 +278,14 @@ export async function deleteGroup(id: string): Promise<void> {
   await saveTranslations(nextTranslations);
 }
 
+export const MIN_SUGGESTION_COUNT = 1;
+export const MAX_SUGGESTION_COUNT = 10;
+
+function clampSuggestionCount(value: unknown): number {
+  const numeric = typeof value === 'number' && Number.isFinite(value) ? Math.round(value) : 4;
+  return Math.min(MAX_SUGGESTION_COUNT, Math.max(MIN_SUGGESTION_COUNT, numeric));
+}
+
 // Settings operations
 export async function getSettings(): Promise<AppSettings> {
   const settings = await store.get<Partial<AppSettings>>(KEYS.SETTINGS);
@@ -282,6 +294,9 @@ export async function getSettings(): Promise<AppSettings> {
   return {
     ...merged,
     groupTabsIconOnly: Boolean(settings?.groupTabsIconOnly),
+    homeSuggestionCount: clampSuggestionCount(merged.homeSuggestionCount),
+    definitionSuggestionCount: clampSuggestionCount(merged.definitionSuggestionCount),
+    translationSuggestionCount: clampSuggestionCount(merged.translationSuggestionCount),
     // Older builds stored this as the Others auto-assign fallback toggle.
     othersGroupEnabled: typeof settings?.othersGroupEnabled === 'boolean'
       ? settings.othersGroupEnabled
@@ -311,7 +326,7 @@ export async function updateSettings(updates: Partial<AppSettings>): Promise<voi
 // spend API quota regenerating what was already produced. Grouped by
 // feature, then keyed by whatever the result belongs to (a word id, a Home
 // section, ...).
-export type AiCacheNamespace = 'homeSuggestions' | 'relatedTranslations' | 'distractors';
+export type AiCacheNamespace = 'homeSuggestions' | 'relatedTranslations' | 'relatedWords' | 'distractors';
 
 type AiCache = Partial<Record<AiCacheNamespace, Record<string, unknown>>>;
 

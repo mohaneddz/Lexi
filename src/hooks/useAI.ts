@@ -109,8 +109,14 @@ export function useAI() {
   );
 
   const suggestRelatedTranslations = useCallback(
-    async (sourceWord: string, sourceLanguage: string, targetLanguage: string, context: string | undefined, excludeWords: string[]) =>
-      runCall(() => aiService.suggestRelatedTranslations(sourceWord, sourceLanguage, targetLanguage, context, excludeWords), []),
+    async (sourceWord: string, sourceLanguage: string, targetLanguage: string, context: string | undefined, excludeWords: string[], count?: number) =>
+      runCall(() => aiService.suggestRelatedTranslations(sourceWord, sourceLanguage, targetLanguage, context, excludeWords, count), []),
+    [runCall],
+  );
+
+  const suggestRelatedWords = useCallback(
+    async (word: string, language: string, definition: string, excludeWords: string[], count?: number) =>
+      runCall(() => aiService.suggestRelatedWords(word, language, definition, excludeWords, count), []),
     [runCall],
   );
 
@@ -136,6 +142,7 @@ export function useAI() {
     suggestGroupIcon,
     suggestDistractorDefinitions,
     suggestRelatedTranslations,
+    suggestRelatedWords,
     suggestGroupWords,
   };
 }

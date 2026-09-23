@@ -25,7 +25,7 @@ import { useBooks } from "@/hooks/useBooks";
 import { useTheme } from "@/hooks/useTheme";
 import type { AppSettings, RevisionMode, Theme } from "@/types";
 import { GROQ_MODELS } from "@/utils/ai-service";
-import { clearAllData, getSettings, updateSettings } from "@/utils/storage";
+import { clearAllData, getSettings, MAX_SUGGESTION_COUNT, MIN_SUGGESTION_COUNT, updateSettings } from "@/utils/storage";
 import { validateGroqApiKey, validateGroqModel } from "@/utils/validators";
 
 const LANGUAGE_OPTIONS = [
@@ -51,6 +51,12 @@ const REVISION_MODES: Array<{ div: string; value: RevisionMode }> = [
   { div: "Flashcards", value: "flashcard" },
   { div: "Multiple Choice", value: "multiple-choice" },
   { div: "Typing", value: "typing" },
+];
+
+const SUGGESTION_COUNT_FIELDS: Array<{ key: "homeSuggestionCount" | "definitionSuggestionCount" | "translationSuggestionCount"; label: string }> = [
+  { key: "homeSuggestionCount", label: "Home, per group" },
+  { key: "definitionSuggestionCount", label: "Definitions panel" },
+  { key: "translationSuggestionCount", label: "Translations panel" },
 ];
 
 const PRIMARY_MODIFIER_div = navigator.platform.toLowerCase().includes("mac") ? "Cmd" : "Ctrl";
@@ -331,6 +337,34 @@ export default function Settings() {
                   ))}
                 </select>
               </div>
+            </div>
+          </div>
+
+          <div className="frost-panel-soft space-y-4 p-4">
+            <div>
+              <p className="font-medium">Suggestions</p>
+              <p className="subtle-caption mt-1">How many suggestions to show. More means more AI quota each time a list is generated.</p>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-3">
+              {SUGGESTION_COUNT_FIELDS.map((field) => (
+                <div key={field.key} className="space-y-1">
+                  <span className="subtle-caption">{field.label}</span>
+                  <input
+                    type="number"
+                    min={MIN_SUGGESTION_COUNT}
+                    max={MAX_SUGGESTION_COUNT}
+                    value={settings[field.key]}
+                    onChange={(event) => {
+                      const next = Number(event.target.value);
+                      if (!Number.isFinite(next)) return;
+                      const clamped = Math.min(MAX_SUGGESTION_COUNT, Math.max(MIN_SUGGESTION_COUNT, Math.round(next)));
+                      void patchSettings({ [field.key]: clamped });
+                    }}
+                    className="frost-input"
+                  />
+                </div>
+              ))}
             </div>
           </div>
 

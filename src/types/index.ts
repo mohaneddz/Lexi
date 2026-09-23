@@ -171,5 +171,11 @@ export interface AppSettings {
   groupTabsIconOnly: boolean;
   /** Keeps the built-in Others group: shown in tabs and Home, and used when auto-assign finds no match. */
   othersGroupEnabled: boolean;
+  /** How many suggestions each Home group section shows. */
+  homeSuggestionCount: number;
+  /** How many related words the Definitions side panel suggests for the selected word. */
+  definitionSuggestionCount: number;
+  /** How many related pairs the Translations side panel suggests for the selected pair. */
+  translationSuggestionCount: number;
   surfaceViews: Partial<Record<SurfaceKey, SurfaceViewPreference>>;
 }

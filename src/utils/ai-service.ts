@@ -59,6 +59,13 @@ const TAG_BATCH_SUGGESTION_SCHEMA = z.object({
   })),
 });
 
+const RELATED_WORDS_SCHEMA = z.object({
+  suggestions: z.array(z.object({
+    word: z.string(),
+    definition: z.string(),
+  })),
+});
+
 const CAPTURE_META_SCHEMA = z.object({
   output: z.string(),
   tags: z.array(z.string()),
@@ -75,12 +82,12 @@ const RELATED_TRANSLATIONS_SCHEMA = z.object({
     sourceWord: z.string().min(1).max(80),
     targetWord: z.string().min(1).max(80),
     context: z.string().min(4).max(200),
-  })).min(1).max(6),
+  })).min(1).max(12),
   confidence: z.number().min(0).max(1),
 });
 
 const GROUP_WORD_SUGGESTIONS_SCHEMA = z.object({
-  terms: z.array(z.string().min(1).max(60)).min(1).max(8),
+  terms: z.array(z.string().min(1).max(60)).min(1).max(14),
   confidence: z.number().min(0).max(1),
 });
 
@@ -700,6 +707,58 @@ export async function captureWithMeta(request: CaptureMetaRequest): Promise<AIRe
   }
 }
 
+export type RelatedWordSuggestion = { word: string; definition: string };
+
+/** Words related to a saved one, in the same language, each with a short definition, for the Definitions side panel. */
+export async function suggestRelatedWords(
+  word: string,
+  language: string,
+  definition: string,
+  excludeWords: string[],
+  count = 4,
+): Promise<AIResponse<RelatedWordSuggestion[]>> {
+  const trimmedWord = word.trim();
+  if (!trimmedWord) {
+    return { success: false, data: [], error: "No word provided for related word suggestions." };
+  }
+
+  try {
+    const object = await runStructuredPrompt({
+      schema: RELATED_WORDS_SCHEMA,
+      system: "You suggest vocabulary for language learners, related to a given word. Return strict JSON only.",
+      prompt: [
+        `Word: ${trimmedWord}`,
+        `Language: ${language}`,
+        `Its meaning: ${definition.trim().slice(0, 300)}`,
+        `Suggest ${count} other ${language} words that are related in topic or meaning and at a similar difficulty level.`,
+        "Give each a clear, learner-friendly definition in one sentence.",
+        "Do not repeat the word itself or any of these already-known words:",
+        excludeWords.length > 0 ? excludeWords.slice(0, 80).join(", ") : "none",
+      ].join("\n"),
+      temperature: 0.4,
+    });
+
+    const excludeSet = new Set([trimmedWord.toLowerCase(), ...excludeWords.map((entry) => entry.toLowerCase())]);
+    const seen = new Set<string>();
+    const suggestions = object.suggestions
+      .map((item) => ({ word: item.word.trim(), definition: item.definition.trim() }))
+      .filter((item) => item.word && item.definition && !excludeSet.has(item.word.toLowerCase()))
+      .filter((item) => {
+        const key = item.word.toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
+    if (suggestions.length === 0) {
+      return { success: false, data: [], error: "AI returned no new related words." };
+    }
+    return { success: true, data: suggestions };
+  } catch (error) {
+    return { success: false, data: [], error: toErrorMessage("Related word suggestion failed", error) };
+  }
+}
+
 export type GroupBatchItem = { label: string; definition: string };
 
 /**
@@ -992,6 +1051,7 @@ export async function suggestRelatedTranslations(
   targetLanguage: string,
   context: string | undefined,
   excludeWords: string[],
+  count = 4,
 ): Promise<AIResponse<RelatedTranslationSuggestion[]>> {
   const trimmedWord = sourceWord.trim();
 
@@ -1015,7 +1075,7 @@ export async function suggestRelatedTranslations(
         `Source language: ${sourceLanguage}`,
         `Target language: ${targetLanguage}`,
         context ? `Context/usage of the source word: ${context}` : "",
-        "Suggest 4 other word pairs in the same source-to-target language direction that are similar to the source word in topic, context, and difficulty level.",
+        `Suggest ${count} other word pairs in the same source-to-target language direction that are similar to the source word in topic, context, and difficulty level.`,
         "Do not repeat the source word itself, and do not repeat any of these already-known words:",
         exclusionList,
         "Each suggestion needs a short usage note or context sentence (under 15 words).",
