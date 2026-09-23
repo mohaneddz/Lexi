@@ -78,6 +78,12 @@ export function useAI() {
     [runCall],
   );
 
+  const suggestGroupsBatch = useCallback(
+    async (items: aiService.GroupBatchItem[], availableGroups: Array<{ id: string; name: string; description?: string }>) =>
+      runCall(() => aiService.suggestGroupsBatch(items, availableGroups), []),
+    [runCall],
+  );
+
   const suggestGroupIcon = useCallback(
     async (groupName: string, groupDescription: string | undefined, availableIconNames: string[]) =>
       runCall(() => aiService.suggestGroupIcon(groupName, groupDescription, availableIconNames), ""),
@@ -112,6 +118,7 @@ export function useAI() {
     getExamples,
     testConnection,
     suggestGroup,
+    suggestGroupsBatch,
     suggestGroupIcon,
     suggestDistractorDefinitions,
     suggestRelatedTranslations,

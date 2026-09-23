@@ -44,6 +44,13 @@ const GROUP_SUGGESTION_SCHEMA = z.object({
   confidence: z.number().min(0).max(1),
 });
 
+const GROUP_BATCH_SUGGESTION_SCHEMA = z.object({
+  assignments: z.array(z.object({
+    item: z.number().int(),
+    group: z.string(),
+  })),
+});
+
 const GROUP_ICON_SUGGESTION_SCHEMA = z.object({
   iconName: z.string().min(1),
   confidence: z.number().min(0).max(1),
@@ -548,6 +555,71 @@ export async function getExamples(
       success: false,
       data: [],
       error: toErrorMessage("Example generation failed", error),
+    };
+  }
+}
+
+export type GroupBatchItem = { label: string; definition: string };
+
+/**
+ * Sorts several items into groups in one request, so organizing a backlog
+ * costs one call per batch instead of one per item. Groups are shown to the
+ * model as short labels (G1, G2, ...) rather than their UUIDs, which keeps
+ * the prompt small and the answers easy to get right.
+ *
+ * Returns one entry per item, in order: the chosen group id, or null when
+ * the model picked none or skipped the item.
+ */
+export async function suggestGroupsBatch(
+  items: GroupBatchItem[],
+  availableGroups: Array<{ id: string; name: string; description?: string }>,
+): Promise<AIResponse<Array<string | null>>> {
+  if (items.length === 0) {
+    return { success: true, data: [] };
+  }
+  if (availableGroups.length === 0) {
+    return { success: false, data: [], error: "No groups available for suggestion." };
+  }
+
+  try {
+    const labelToId = new Map(availableGroups.map((group, index) => [`G${index + 1}`, group.id]));
+    const groupsList = availableGroups
+      .map((group, index) => `G${index + 1}: ${group.name}${group.description ? ` (${group.description})` : ""}`)
+      .join("\n");
+    const itemsList = items
+      .map((item, index) => `${index + 1}. ${item.label.trim()} :: ${item.definition.trim().slice(0, 200)}`)
+      .join("\n");
+
+    const object = await runStructuredPrompt({
+      schema: GROUP_BATCH_SUGGESTION_SCHEMA,
+      system:
+        "You are a vocabulary categorization assistant. Sort each numbered item into the most fitting group. Return JSON only.",
+      prompt: [
+        "Groups:",
+        groupsList,
+        "",
+        "Items (number. word :: meaning):",
+        itemsList,
+        "",
+        `Return exactly one assignment for each of the ${items.length} items: its number and the group label (such as G1).`,
+        "If an item does not clearly fit any group, use NONE as its group instead of forcing a match.",
+      ].join("\n"),
+      temperature: 0.1,
+    });
+
+    const result: Array<string | null> = items.map(() => null);
+    for (const assignment of object.assignments) {
+      const index = assignment.item - 1;
+      if (index < 0 || index >= items.length) continue;
+      result[index] = labelToId.get(assignment.group.trim().toUpperCase()) ?? null;
+    }
+
+    return { success: true, data: result };
+  } catch (error) {
+    return {
+      success: false,
+      data: [],
+      error: toErrorMessage("Batch group suggestion failed", error),
     };
   }
 }

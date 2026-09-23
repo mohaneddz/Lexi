@@ -11,12 +11,12 @@ import { getGroupIcon, GROUP_ICON_LOAD_ERROR, GROUP_ICON_NAMES, GROUP_ICON_SOURC
 import { cn } from "@/lib/utils";
 import type { LexiGroup } from "@/types";
 import { formatDate } from "@/utils/formatters";
-import { resolveGroupAssignment } from "@/utils/group-assignment";
+import { ORGANIZE_BATCH_SIZE, resolveGroupAssignmentsBatch } from "@/utils/group-assignment";
 import { getSettings } from "@/utils/storage";
 
 export default function Groups() {
   const { groups, loading, addGroup, updateGroup, deleteGroup, moveGroup } = useGroups();
-  const { suggestGroupIcon, suggestGroup, loading: aiLoading } = useAI();
+  const { suggestGroupIcon, suggestGroupsBatch, loading: aiLoading } = useAI();
   const { words, updateWord } = useWords();
   const { translations, updateTranslation } = useTranslations();
 
@@ -184,33 +184,46 @@ export default function Groups() {
     const settings = await getSettings();
     let assigned = 0;
     let done = 0;
+    let lastError: string | undefined;
 
-    for (const word of pendingWords) {
-      const groupId = await resolveGroupAssignment(word.word, word.definition, groups, suggestGroup, settings.othersGroupEnabled);
-      if (groupId) {
-        await updateWord(word.id, { groupIds: [groupId] });
-        assigned += 1;
-      }
-      done += 1;
-      setOrganizeProgress({ done, total });
-    }
+    type PendingItem = { label: string; definition: string; apply: (groupId: string) => Promise<void> };
+    const pending: PendingItem[] = [
+      ...pendingWords.map((word) => ({
+        label: word.word,
+        definition: word.definition,
+        apply: (groupId: string) => updateWord(word.id, { groupIds: [groupId] }),
+      })),
+      ...pendingTranslations.map((translation) => ({
+        label: `${translation.sourceWord} -> ${translation.targetWord}`,
+        definition: translation.context?.trim() || `Translation from ${translation.sourceLanguage} to ${translation.targetLanguage}.`,
+        apply: (groupId: string) => updateTranslation(translation.id, { groupIds: [groupId] }),
+      })),
+    ];
 
-    for (const translation of pendingTranslations) {
-      const label = `${translation.sourceWord} -> ${translation.targetWord}`;
-      const definition = translation.context?.trim() || `Translation from ${translation.sourceLanguage} to ${translation.targetLanguage}.`;
-      const groupId = await resolveGroupAssignment(label, definition, groups, suggestGroup, settings.othersGroupEnabled);
-      if (groupId) {
-        await updateTranslation(translation.id, { groupIds: [groupId] });
-        assigned += 1;
+    for (let start = 0; start < pending.length; start += ORGANIZE_BATCH_SIZE) {
+      const batch = pending.slice(start, start + ORGANIZE_BATCH_SIZE);
+      const { groupIds, error } = await resolveGroupAssignmentsBatch(batch, groups, suggestGroupsBatch, settings.othersGroupEnabled);
+      if (error) lastError = error;
+
+      for (let index = 0; index < batch.length; index += 1) {
+        const groupId = groupIds[index];
+        if (groupId) {
+          await batch[index].apply(groupId);
+          assigned += 1;
+        }
       }
-      done += 1;
+      done += batch.length;
       setOrganizeProgress({ done, total });
     }
 
     setOrganizing(false);
     setOrganizeProgress(null);
-    setOrganizeSummary(`Assigned ${assigned} of ${total} unsorted items.`);
-  }, [organizing, groups, words, translations, suggestGroup, updateWord, updateTranslation]);
+    setOrganizeSummary(
+      lastError && assigned < total
+        ? `Assigned ${assigned} of ${total} unsorted items. Some batches failed: ${lastError}`
+        : `Assigned ${assigned} of ${total} unsorted items.`,
+    );
+  }, [organizing, groups, words, translations, suggestGroupsBatch, updateWord, updateTranslation]);
 
   useEffect(() => {
     const onOrganize = () => void runOrganize();
