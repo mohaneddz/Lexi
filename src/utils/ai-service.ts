@@ -31,7 +31,7 @@ const TRANSLATION_SCHEMA = z.object({
 });
 
 const TAG_SUGGESTION_SCHEMA = z.object({
-  tags: z.array(z.string().min(2).max(30)).min(3).max(8),
+  tags: z.array(z.string().min(2).max(30)).min(1).max(4),
   confidence: z.number().min(0).max(1),
 });
 
@@ -244,6 +244,8 @@ function titleCase(input: string): string {
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
 }
+
+const GENERIC_TAGS = new Set(["definition", "translation", "word", "words", "vocabulary", "term", "terms"]);
 
 function normalizeTag(tag: string): string {
   return tag
@@ -522,7 +524,8 @@ export async function suggestTags(
       prompt: [
         `Word: ${trimmedWord}`,
         `Definition: ${trimmedDefinition}`,
-        "Return 3 to 8 tags.",
+        "Return 1 to 4 tags only when they genuinely apply.",
+        TAG_GUIDANCE,
         "Use lowercase words or short phrases only. No punctuation.",
       ].join("\n"),
       temperature: 0.2,
@@ -532,9 +535,9 @@ export async function suggestTags(
       new Set(
         object.tags
           .map(normalizeTag)
-          .filter((tag) => tag.length >= 2 && tag.length <= 30),
+          .filter((tag) => tag.length >= 2 && tag.length <= 30 && !GENERIC_TAGS.has(tag) && tag !== normalizeTag(trimmedWord)),
       ),
-    ).slice(0, 8);
+    ).slice(0, 4);
 
     return {
       success: true,
@@ -592,14 +595,17 @@ export async function getExamples(
 }
 
 function cleanTags(tags: string[], limit: number): string[] {
-  return Array.from(new Set(tags.map(normalizeTag).filter((tag) => tag.length >= 2 && tag.length <= 30 && !isReviewStatusTag(tag)))).slice(0, limit);
+  return Array.from(new Set(tags.map(normalizeTag).filter((tag) => tag.length >= 2 && tag.length <= 30 && !GENERIC_TAGS.has(tag) && !isReviewStatusTag(tag)))).slice(0, limit);
 }
 
 function describeTagVocabulary(knownTags: string[]): string {
-  return knownTags.length > 0
-    ? `Reuse these existing tags whenever they fit, so tagging stays consistent: ${knownTags.slice(0, 40).join(", ")}`
+  const reusable = knownTags.filter((tag) => !GENERIC_TAGS.has(normalizeTag(tag)));
+  return reusable.length > 0
+    ? `Reuse these existing tags whenever they fit, so tagging stays consistent: ${reusable.slice(0, 40).join(", ")}`
     : "";
 }
+
+const TAG_GUIDANCE = "Choose broad, reusable categories shared by many entries: part of speech (noun, verb, adjective), subject (math, science, religion, history, food, nature), or useful register. Prefer the same category for related terms. Never use generic labels such as definition, translation, word, vocabulary, or the entry itself.";
 
 export type TagBatchItem = { label: string; definition: string };
 
@@ -628,8 +634,9 @@ export async function suggestTagsBatch(
         "Items (number. entry :: meaning):",
         itemsList,
         "",
-        `Return tags for each of the ${items.length} items: its number and 2 to 4 tags.`,
+        `Return tags for each of the ${items.length} items: its number and 1 to 3 broad tags.`,
         "Tags are lowercase words or short phrases describing topic, register or part of speech. No punctuation.",
+        TAG_GUIDANCE,
         describeTagVocabulary(knownTags),
       ].filter(Boolean).join("\n"),
       temperature: 0.2,
@@ -756,7 +763,8 @@ export async function captureWithMeta(request: CaptureMetaRequest): Promise<AIRe
         targetLanguage
           ? `In context, write one short, natural ${language} sentence (under 15 words) showing how "${trimmed}" is typically used.`
           : "Leave context empty.",
-        "Also give 2 to 4 short lowercase tags (topic, register or part of speech, no punctuation).",
+        "Also give 1 to 3 short lowercase tags with no punctuation.",
+        TAG_GUIDANCE,
         describeTagVocabulary(knownTags),
         "",
         "Groups:",
