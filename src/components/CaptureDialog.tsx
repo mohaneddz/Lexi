@@ -11,13 +11,17 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 export function CaptureDialog() {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<CaptureMode>("define");
+  const [group, setGroup] = useState<{ id: string; name: string } | undefined>(undefined);
 
   useEffect(() => {
     const onCapture = (event: Event) => {
-      const detail = (event as CustomEvent<{ mode?: CaptureMode }>).detail;
+      const detail = (event as CustomEvent<{ mode?: CaptureMode; group?: { id: string; name: string } }>).detail;
       if (detail?.mode === "define" || detail?.mode === "translate") {
         setMode(detail.mode);
       }
+      // Only a capture started from a group targets it; the topbar button
+      // and shortcuts always save ungrouped.
+      setGroup(detail?.group);
       setOpen(true);
     };
 
@@ -39,6 +43,7 @@ export function CaptureDialog() {
           mode={mode}
           onModeChange={setMode}
           onClose={close}
+          group={group}
           headerAction={(
             <button
               type="button"

@@ -37,9 +37,11 @@ interface CaptureFormProps {
   headerAction?: React.ReactNode;
   /** Set on the outer element so the quick window can be dragged by its header. */
   dragRegion?: boolean;
+  /** Saves the new entry straight into this group, e.g. when capturing from the Groups page. */
+  group?: { id: string; name: string };
 }
 
-export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragRegion }: CaptureFormProps) {
+export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragRegion, group }: CaptureFormProps) {
   const { defineWord, translate, loading: aiLoading } = useAI();
   const { addWord } = useWords();
   const { addTranslation } = useTranslations();
@@ -171,7 +173,7 @@ export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragReg
           language,
           tags: [],
           aiGenerated,
-          groupIds: [],
+          groupIds: group ? [group.id] : [],
         });
         await updateSettings({ defaultDefinitionLanguage: language });
       } else {
@@ -190,7 +192,7 @@ export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragReg
           targetLanguage,
           aiGenerated,
           context: context.trim() ? sanitizeInput(context) : undefined,
-          groupIds: [],
+          groupIds: group ? [group.id] : [],
         });
         await updateSettings({
           defaultTranslationSourceLanguage: sourceLanguage,
@@ -231,6 +233,7 @@ export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragReg
               {mode === "define"
                 ? "Capture a word and what it means."
                 : "Capture a word and its translation."}
+              {group ? ` Saved to ${group.name}.` : null}
             </p>
           </div>
 
