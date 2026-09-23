@@ -8,12 +8,14 @@ import {
   ChevronRight,
   FolderTree,
   House,
-  ImageOff,
   Languages,
   Menu,
+  Moon,
   Plus,
+  RemoveFormatting,
   Search,
   Settings,
+  Sun,
   Tags,
   Type,
   WandSparkles,
@@ -24,6 +26,7 @@ import { CaptureDialog } from "@/components/CaptureDialog";
 import { cn } from "@/lib/utils";
 import { getGroupIcon } from "@/lib/group-icons";
 import { useGroups } from "@/hooks/useGroups";
+import { useTheme } from "@/hooks/useTheme";
 import { getSettings, updateSettings } from "@/utils/storage";
 
 type NavItem = {
@@ -96,6 +99,7 @@ export function AppShell({ children }: AppShellProps) {
   const [canScrollTabsLeft, setCanScrollTabsLeft] = useState(false);
   const [canScrollTabsRight, setCanScrollTabsRight] = useState(false);
   const { groups } = useGroups();
+  const { effectiveTheme, setTheme } = useTheme();
   const isGroupsRoute = location.pathname === "/groups";
   const isStatsRoute = location.pathname === "/stats";
   const groupTabsDisabled =
@@ -417,7 +421,17 @@ export function AppShell({ children }: AppShellProps) {
                 aria-label={groupTabsIconOnly ? "Show group names" : "Hide group names"}
                 title={groupTabsIconOnly ? "Show group names" : "Hide group names"}
               >
-                {groupTabsIconOnly ? <Type className="size-4" /> : <ImageOff className="size-4" />}
+                {groupTabsIconOnly ? <Type className="size-4" /> : <RemoveFormatting className="size-4" />}
+              </button>
+
+              <button
+                type="button"
+                className="topbar-icon-btn inline-flex size-10 items-center justify-center rounded-lg border border-white/12 bg-white/5 text-muted-foreground transition hover:bg-white/10 hover:text-foreground"
+                onClick={() => void setTheme(effectiveTheme === "dark" ? "light" : "dark")}
+                aria-label={effectiveTheme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                title={effectiveTheme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              >
+                {effectiveTheme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
               </button>
 
               <button
