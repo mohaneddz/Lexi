@@ -1,6 +1,7 @@
 # Cover art sources
 
-All photographed covers below are public domain, sourced from Wikimedia Commons.
+Every cover is public domain or CC0, sourced from Wikimedia Commons, and no
+two unrelated books share one (language editions of the same book do).
 File names are the Commons file names.
 
 ## Dictionaries and translations
@@ -8,7 +9,8 @@ File names are the Commons file names.
 | Cover | Work | Commons file |
 | --- | --- | --- |
 | `dict-webster-essentials.jpg` | Binding of *Webster's International Dictionary* | `Webster's Unabridged Dictionary Volume I.pdf` (page 1) |
-| `trans-countries-en-*.jpg`, `swadesh-*.jpg` | *A New and Accurate Map of the Known World*, Emanuel Bowen, 1744 | `1744 Bowen Map of the World in Hemispheres - Geographicus - World-bowen-1744.jpg` |
+| `trans-countries.jpg` | *A New and Accurate Map of the Known World*, Emanuel Bowen, 1744 | `1744 Bowen Map of the World in Hemispheres - Geographicus - World-bowen-1744.jpg` |
+| `swadesh.jpg` | *The Tower of Babel*, Pieter Bruegel the Elder, 1563 | `Pieter Bruegel the Elder - The Tower of Babel (Vienna) - Google Art Project - edited.jpg` |
 
 ## Topical books
 
@@ -23,18 +25,20 @@ File names are the Commons file names.
 | `dict-topic-places.jpg` | *Maris Pacifici*, Abraham Ortelius, 1589 | `Ortelius - Maris Pacifici 1589.jpg` |
 | `dict-topic-people.jpg` | *Essays on Physiognomy*, Johann Kaspar Lavater, 1797 | `Essays on physiognomy... (1797) (14782491965).jpg` |
 | `dict-topic-feelings.png` | *The Expression of the Emotions in Man and Animals*, Charles Darwin | `Expression of the Emotions Plate VII.png` |
+| `topic-nature.jpg` | *The Great Wave off Kanagawa*, Katsushika Hokusai | `Tsunami by hokusai 19th century.jpg` |
+| `topic-substances.jpg` | Woodcut from *De re metallica*, Georgius Agricola, 1556 | `Bloomeried de re Metallica Agricola.jpg` |
 
-## Designed covers
+## WordNet part-of-speech books
 
-Drawn for this app, because no public-domain illustration depicts the subject
-directly:
+WordNet is a database rather than a printed book, so each cover shows what its
+part of speech does.
 
-- `dict-wordnet-*.svg` — Princeton WordNet is a lexical database, never a
-  printed book, so these are typographic covers over a word-graph motif rather
-  than an invented book jacket.
-- `dict-topic-substances.svg`, `dict-topic-nature.svg` — searches turned up
-  nothing public domain that actually depicts the subject, so these are drawn
-  instead of using a loosely related stock image.
+| Cover | Work | Commons file |
+| --- | --- | --- |
+| `wordnet-nouns.jpg` | A page of Comenius's *Orbis Pictus*, the first picture book naming things | `Orbis-pictus-018.jpg` |
+| `wordnet-verbs.jpg` | *The Horse in Motion*, Eadweard Muybridge, 1878 | `The Horse in Motion high res.jpg` |
+| `wordnet-adjectives.jpg` | Goethe's colour wheel, 1809 | `Goethe, Farbenkreis zur Symbolisierung des menschlichen Geistes- und Seelenlebens, 1809.jpg` |
+| `wordnet-adverbs.jpg` | Pendulum clock by Jacob Kock (CC0 photograph) | `Pendulum clock by Jacob Kock, antique furniture photography, IMG 0931 edit.jpg` |
 
 ## Field, general and monolingual books
 
@@ -56,4 +60,7 @@ Fetched by `scripts/books/fetch_covers.py`, which only accepts files Commons lis
 | `mono-es.jpg` | Title page of the *Diccionario de Autoridades*, 1726 | `Autoridades.jpg` |
 | `mono-zh.jpg` | A page of the *Shuowen Jiezi*, Xu Xuan's edition | `Shuowen Jiezi, by Xu Xuan.png` |
 
-The Medicine, Zoology, Astronomy and Botany field books reuse `dict-topic-body.png`, `dict-topic-animals.jpg`, `dict-topic-astronomy.jpg` and `dict-topic-plants.jpg` from above.
+| `field-zoology.jpg` | *Wild Turkey*, plate 1 of John James Audubon's *The Birds of America* | `Wild Turkey (Audubon).jpg` |
+| `field-astronomy.jpg` | Galileo's drawings of the Moon, *Sidereus Nuncius*, 1610 | `Sidereus Nuncius sickle moon.jpg` |
+| `field-medicine.jpg` | Skeleton with Clara the rhinoceros, Albinus's *Tabulae sceleti et musculorum*, 1747 (CC0 scan, KU Leuven Libraries) | `Tabulae sceleti et musculorum corporis humani, Albinus, 1747, KU Leuven Libraries, Maurits Sabbe Library, P Plano 155, Folio 028r plate 13.jpg` |
+| `field-botany.jpg` | Cork cells from Robert Hooke's *Micrographia*, 1665, where "cell" was first used | `Cork Micrographia Hooke.png` |

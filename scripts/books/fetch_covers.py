@@ -49,6 +49,20 @@ COVER_SEARCHES = {
     "mono-de.jpg": ["Deutsches Wörterbuch Jacob Grimm", "Grimm Deutsches Wörterbuch", "Adelung Wörterbuch"],
     "mono-es.jpg": ["Diccionario de autoridades", "Tesoro de la lengua castellana Covarrubias", "Nebrija gramatica castellana"],
     "mono-zh.jpg": ["Shuowen Jiezi", "說文解字", "Kangxi Dictionary cover"],
+    # Field books that used to borrow the matching WordNet topic book's cover.
+    "field-zoology.jpg": ["Audubon Wild Turkey Birds of America plate 1", "Audubon Carolina Parakeet plate", "Audubon Snowy Owl plate"],
+    "field-astronomy.jpg": ["Sidereus Nuncius moon Galileo", "Galileo moon drawings 1610"],
+    "field-medicine.jpg": ["Albinus Tabulae sceleti rhinoceros", "Albinus skeleton rhinoceros Wandelaar", "Gray Anatomy 1918 heart plate"],
+    "field-botany.jpg": ["Hooke Micrographia cork", "Micrographia Hooke plate"],
+    # One cover per book where several used to share a single image or template.
+    "swadesh.jpg": ["Pieter Bruegel Tower of Babel Vienna", "Tower of Babel Bruegel"],
+    "trans-countries.jpg": ["1744 Bowen Map of the World in Hemispheres"],
+    "wordnet-nouns.jpg": ["Orbis Pictus Comenius page", "Orbis sensualium pictus"],
+    "wordnet-verbs.jpg": ["Muybridge The Horse in Motion 1878", "Muybridge horse in motion"],
+    "wordnet-adjectives.jpg": ["Goethe Farbenkreis 1809", "Goethe color wheel"],
+    "wordnet-adverbs.jpg": ["Huygens Horologium Oscillatorium clock", "Huygens pendulum clock drawing"],
+    "topic-nature.jpg": ["The Great Wave off Kanagawa Hokusai", "Great Wave Kanagawa"],
+    "topic-substances.jpg": ["Agricola De re metallica woodcut", "De re metallica Agricola"],
 }
 
 # Scans that carry a website watermark along the bottom edge: the share of

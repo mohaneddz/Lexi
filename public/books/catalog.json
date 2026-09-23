@@ -76,7 +76,7 @@
       "French"
     ],
     "sizeBytes": 33978,
-    "coverUrl": "/books/covers/trans-countries-en-fr.jpg",
+    "coverUrl": "/books/covers/trans-countries.jpg",
     "authors": [
       "Mohammed Le Doze",
       "mledoze/countries contributors"
@@ -106,7 +106,7 @@
       "Spanish"
     ],
     "sizeBytes": 33967,
-    "coverUrl": "/books/covers/trans-countries-en-es.jpg",
+    "coverUrl": "/books/covers/trans-countries.jpg",
     "authors": [
       "Mohammed Le Doze",
       "mledoze/countries contributors"
@@ -136,7 +136,7 @@
       "German"
     ],
     "sizeBytes": 32905,
-    "coverUrl": "/books/covers/trans-countries-en-de.jpg",
+    "coverUrl": "/books/covers/trans-countries.jpg",
     "authors": [
       "Mohammed Le Doze",
       "mledoze/countries contributors"
@@ -166,7 +166,7 @@
       "Italian"
     ],
     "sizeBytes": 33906,
-    "coverUrl": "/books/covers/trans-countries-en-it.jpg",
+    "coverUrl": "/books/covers/trans-countries.jpg",
     "authors": [
       "Mohammed Le Doze",
       "mledoze/countries contributors"
@@ -196,7 +196,7 @@
       "Portuguese"
     ],
     "sizeBytes": 34843,
-    "coverUrl": "/books/covers/trans-countries-en-pt.jpg",
+    "coverUrl": "/books/covers/trans-countries.jpg",
     "authors": [
       "Mohammed Le Doze",
       "mledoze/countries contributors"
@@ -226,7 +226,7 @@
       "Japanese"
     ],
     "sizeBytes": 35413,
-    "coverUrl": "/books/covers/trans-countries-en-ja.jpg",
+    "coverUrl": "/books/covers/trans-countries.jpg",
     "authors": [
       "Mohammed Le Doze",
       "mledoze/countries contributors"
@@ -256,7 +256,7 @@
       "Korean"
     ],
     "sizeBytes": 33117,
-    "coverUrl": "/books/covers/trans-countries-en-ko.jpg",
+    "coverUrl": "/books/covers/trans-countries.jpg",
     "authors": [
       "Mohammed Le Doze",
       "mledoze/countries contributors"
@@ -286,7 +286,7 @@
       "Chinese"
     ],
     "sizeBytes": 32701,
-    "coverUrl": "/books/covers/trans-countries-en-zh.jpg",
+    "coverUrl": "/books/covers/trans-countries.jpg",
     "authors": [
       "Mohammed Le Doze",
       "mledoze/countries contributors"
@@ -316,7 +316,7 @@
       "Arabic"
     ],
     "sizeBytes": 37181,
-    "coverUrl": "/books/covers/trans-countries-en-ar.jpg",
+    "coverUrl": "/books/covers/trans-countries.jpg",
     "authors": [
       "Mohammed Le Doze",
       "mledoze/countries contributors"
@@ -346,7 +346,7 @@
       "French"
     ],
     "sizeBytes": 20816,
-    "coverUrl": "/books/covers/swadesh-en-fr.jpg",
+    "coverUrl": "/books/covers/swadesh.jpg",
     "authors": [
       "Morris Swadesh (list)",
       "Wiktionary contributors"
@@ -377,7 +377,7 @@
       "German"
     ],
     "sizeBytes": 20785,
-    "coverUrl": "/books/covers/swadesh-en-de.jpg",
+    "coverUrl": "/books/covers/swadesh.jpg",
     "authors": [
       "Morris Swadesh (list)",
       "Wiktionary contributors"
@@ -408,7 +408,7 @@
       "Chinese"
     ],
     "sizeBytes": 20755,
-    "coverUrl": "/books/covers/swadesh-en-zh.jpg",
+    "coverUrl": "/books/covers/swadesh.jpg",
     "authors": [
       "Morris Swadesh (list)",
       "Wiktionary contributors"
@@ -439,7 +439,7 @@
       "French"
     ],
     "sizeBytes": 22038,
-    "coverUrl": "/books/covers/swadesh-ar-fr.jpg",
+    "coverUrl": "/books/covers/swadesh.jpg",
     "authors": [
       "Morris Swadesh (list)",
       "Wiktionary contributors"
@@ -470,7 +470,7 @@
       "German"
     ],
     "sizeBytes": 22007,
-    "coverUrl": "/books/covers/swadesh-ar-de.jpg",
+    "coverUrl": "/books/covers/swadesh.jpg",
     "authors": [
       "Morris Swadesh (list)",
       "Wiktionary contributors"
@@ -501,7 +501,7 @@
       "Chinese"
     ],
     "sizeBytes": 21977,
-    "coverUrl": "/books/covers/swadesh-ar-zh.jpg",
+    "coverUrl": "/books/covers/swadesh.jpg",
     "authors": [
       "Morris Swadesh (list)",
       "Wiktionary contributors"
@@ -625,7 +625,7 @@
       "English"
     ],
     "sizeBytes": 155572,
-    "coverUrl": "/books/covers/dict-topic-nature.svg",
+    "coverUrl": "/books/covers/topic-nature.jpg",
     "authors": [
       "Princeton University",
       "George A. Miller",
@@ -749,7 +749,7 @@
       "English"
     ],
     "sizeBytes": 687797,
-    "coverUrl": "/books/covers/dict-topic-substances.svg",
+    "coverUrl": "/books/covers/topic-substances.jpg",
     "authors": [
       "Princeton University",
       "George A. Miller",
@@ -841,7 +841,7 @@
       "English"
     ],
     "sizeBytes": 4481321,
-    "coverUrl": "/books/covers/dict-wordnet-adjectives.svg",
+    "coverUrl": "/books/covers/wordnet-adjectives.jpg",
     "authors": [
       "Princeton University",
       "George A. Miller",
@@ -872,7 +872,7 @@
       "English"
     ],
     "sizeBytes": 814175,
-    "coverUrl": "/books/covers/dict-wordnet-adverbs.svg",
+    "coverUrl": "/books/covers/wordnet-adverbs.jpg",
     "authors": [
       "Princeton University",
       "George A. Miller",
@@ -903,7 +903,7 @@
       "English"
     ],
     "sizeBytes": 20300442,
-    "coverUrl": "/books/covers/dict-wordnet-nouns.svg",
+    "coverUrl": "/books/covers/wordnet-nouns.jpg",
     "authors": [
       "Princeton University",
       "George A. Miller",
@@ -934,7 +934,7 @@
       "English"
     ],
     "sizeBytes": 3426631,
-    "coverUrl": "/books/covers/dict-wordnet-verbs.svg",
+    "coverUrl": "/books/covers/wordnet-verbs.jpg",
     "authors": [
       "Princeton University",
       "George A. Miller",
@@ -1429,8 +1429,8 @@
     "outputLanguages": [
       "Arabic"
     ],
-    "sizeBytes": 254178,
-    "coverUrl": "/books/covers/dict-topic-body.png",
+    "sizeBytes": 254177,
+    "coverUrl": "/books/covers/field-medicine.jpg",
     "authors": [
       "Wiktionary contributors",
       "Tatu Ylonen (Wiktextract)"
@@ -1460,8 +1460,8 @@
     "outputLanguages": [
       "German"
     ],
-    "sizeBytes": 501262,
-    "coverUrl": "/books/covers/dict-topic-body.png",
+    "sizeBytes": 501261,
+    "coverUrl": "/books/covers/field-medicine.jpg",
     "authors": [
       "Wiktionary contributors",
       "Tatu Ylonen (Wiktextract)"
@@ -1491,8 +1491,8 @@
     "outputLanguages": [
       "French"
     ],
-    "sizeBytes": 584515,
-    "coverUrl": "/books/covers/dict-topic-body.png",
+    "sizeBytes": 584514,
+    "coverUrl": "/books/covers/field-medicine.jpg",
     "authors": [
       "Wiktionary contributors",
       "Tatu Ylonen (Wiktextract)"
@@ -1522,8 +1522,8 @@
     "outputLanguages": [
       "Spanish"
     ],
-    "sizeBytes": 634486,
-    "coverUrl": "/books/covers/dict-topic-body.png",
+    "sizeBytes": 634485,
+    "coverUrl": "/books/covers/field-medicine.jpg",
     "authors": [
       "Wiktionary contributors",
       "Tatu Ylonen (Wiktextract)"
@@ -1553,8 +1553,8 @@
     "outputLanguages": [
       "Chinese"
     ],
-    "sizeBytes": 890445,
-    "coverUrl": "/books/covers/dict-topic-body.png",
+    "sizeBytes": 890444,
+    "coverUrl": "/books/covers/field-medicine.jpg",
     "authors": [
       "Wiktionary contributors",
       "Tatu Ylonen (Wiktextract)"
@@ -1584,8 +1584,8 @@
     "outputLanguages": [
       "Arabic"
     ],
-    "sizeBytes": 99413,
-    "coverUrl": "/books/covers/dict-topic-animals.jpg",
+    "sizeBytes": 99408,
+    "coverUrl": "/books/covers/field-zoology.jpg",
     "authors": [
       "Wiktionary contributors",
       "Tatu Ylonen (Wiktextract)"
@@ -1615,8 +1615,8 @@
     "outputLanguages": [
       "German"
     ],
-    "sizeBytes": 174019,
-    "coverUrl": "/books/covers/dict-topic-animals.jpg",
+    "sizeBytes": 174014,
+    "coverUrl": "/books/covers/field-zoology.jpg",
     "authors": [
       "Wiktionary contributors",
       "Tatu Ylonen (Wiktextract)"
@@ -1646,8 +1646,8 @@
     "outputLanguages": [
       "French"
     ],
-    "sizeBytes": 152289,
-    "coverUrl": "/books/covers/dict-topic-animals.jpg",
+    "sizeBytes": 152284,
+    "coverUrl": "/books/covers/field-zoology.jpg",
     "authors": [
       "Wiktionary contributors",
       "Tatu Ylonen (Wiktextract)"
@@ -1677,8 +1677,8 @@
     "outputLanguages": [
       "Spanish"
     ],
-    "sizeBytes": 215481,
-    "coverUrl": "/books/covers/dict-topic-animals.jpg",
+    "sizeBytes": 215476,
+    "coverUrl": "/books/covers/field-zoology.jpg",
     "authors": [
       "Wiktionary contributors",
       "Tatu Ylonen (Wiktextract)"
@@ -1708,8 +1708,8 @@
     "outputLanguages": [
       "Chinese"
     ],
-    "sizeBytes": 216801,
-    "coverUrl": "/books/covers/dict-topic-animals.jpg",
+    "sizeBytes": 216796,
+    "coverUrl": "/books/covers/field-zoology.jpg",
     "authors": [
       "Wiktionary contributors",
       "Tatu Ylonen (Wiktextract)"
@@ -1739,8 +1739,8 @@
     "outputLanguages": [
       "Arabic"
     ],
-    "sizeBytes": 53267,
-    "coverUrl": "/books/covers/dict-topic-astronomy.jpg",
+    "sizeBytes": 53262,
+    "coverUrl": "/books/covers/field-astronomy.jpg",
     "authors": [
       "Wiktionary contributors",
       "Tatu Ylonen (Wiktextract)"
@@ -1770,8 +1770,8 @@
     "outputLanguages": [
       "German"
     ],
-    "sizeBytes": 91040,
-    "coverUrl": "/books/covers/dict-topic-astronomy.jpg",
+    "sizeBytes": 91035,
+    "coverUrl": "/books/covers/field-astronomy.jpg",
     "authors": [
       "Wiktionary contributors",
       "Tatu Ylonen (Wiktextract)"
@@ -1801,8 +1801,8 @@
     "outputLanguages": [
       "French"
     ],
-    "sizeBytes": 97822,
-    "coverUrl": "/books/covers/dict-topic-astronomy.jpg",
+    "sizeBytes": 97817,
+    "coverUrl": "/books/covers/field-astronomy.jpg",
     "authors": [
       "Wiktionary contributors",
       "Tatu Ylonen (Wiktextract)"
@@ -1832,8 +1832,8 @@
     "outputLanguages": [
       "Spanish"
     ],
-    "sizeBytes": 79241,
-    "coverUrl": "/books/covers/dict-topic-astronomy.jpg",
+    "sizeBytes": 79236,
+    "coverUrl": "/books/covers/field-astronomy.jpg",
     "authors": [
       "Wiktionary contributors",
       "Tatu Ylonen (Wiktextract)"
@@ -1863,8 +1863,8 @@
     "outputLanguages": [
       "Chinese"
     ],
-    "sizeBytes": 172645,
-    "coverUrl": "/books/covers/dict-topic-astronomy.jpg",
+    "sizeBytes": 172640,
+    "coverUrl": "/books/covers/field-astronomy.jpg",
     "authors": [
       "Wiktionary contributors",
       "Tatu Ylonen (Wiktextract)"
@@ -2204,8 +2204,8 @@
     "outputLanguages": [
       "Arabic"
     ],
-    "sizeBytes": 130248,
-    "coverUrl": "/books/covers/dict-topic-plants.jpg",
+    "sizeBytes": 130243,
+    "coverUrl": "/books/covers/field-botany.jpg",
     "authors": [
       "Wiktionary contributors",
       "Tatu Ylonen (Wiktextract)"
@@ -2235,8 +2235,8 @@
     "outputLanguages": [
       "German"
     ],
-    "sizeBytes": 321537,
-    "coverUrl": "/books/covers/dict-topic-plants.jpg",
+    "sizeBytes": 321532,
+    "coverUrl": "/books/covers/field-botany.jpg",
     "authors": [
       "Wiktionary contributors",
       "Tatu Ylonen (Wiktextract)"
@@ -2266,8 +2266,8 @@
     "outputLanguages": [
       "French"
     ],
-    "sizeBytes": 405706,
-    "coverUrl": "/books/covers/dict-topic-plants.jpg",
+    "sizeBytes": 405701,
+    "coverUrl": "/books/covers/field-botany.jpg",
     "authors": [
       "Wiktionary contributors",
       "Tatu Ylonen (Wiktextract)"
@@ -2297,8 +2297,8 @@
     "outputLanguages": [
       "Spanish"
     ],
-    "sizeBytes": 398625,
-    "coverUrl": "/books/covers/dict-topic-plants.jpg",
+    "sizeBytes": 398620,
+    "coverUrl": "/books/covers/field-botany.jpg",
     "authors": [
       "Wiktionary contributors",
       "Tatu Ylonen (Wiktextract)"
@@ -2328,8 +2328,8 @@
     "outputLanguages": [
       "Chinese"
     ],
-    "sizeBytes": 432398,
-    "coverUrl": "/books/covers/dict-topic-plants.jpg",
+    "sizeBytes": 432393,
+    "coverUrl": "/books/covers/field-botany.jpg",
     "authors": [
       "Wiktionary contributors",
       "Tatu Ylonen (Wiktextract)"

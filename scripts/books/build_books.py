@@ -108,7 +108,7 @@ FIELDS = [
                        "Body parts", "Organs", "Medical equipment", "Physiology", "Pathology", "Dentistry",
                        "Bones", "Drugs", "Infectious diseases", "Psychiatry"},
         "exclude": set(),
-        "cover": "dict-topic-body.png",
+        "cover": "field-medicine.jpg",
     },
     {
         "id": "zoology",
@@ -123,7 +123,7 @@ FIELDS = [
                        "Beetles", "Sharks", "Parrots", "Owls", "Anseriform birds", "Galliform birds",
                        "Passerines", "Waders", "Bats", "Deer", "Marsupials", "Worms", "Ants", "Bees"},
         "exclude": set(),
-        "cover": "dict-topic-animals.jpg",
+        "cover": "field-zoology.jpg",
     },
     {
         "id": "astronomy",
@@ -134,7 +134,7 @@ FIELDS = [
                        "Galaxies", "Space", "Spaceflight", "Planets of the Solar System", "Celestial bodies",
                        "Dwarf planets", "Astronomical objects"},
         "exclude": set(),
-        "cover": "dict-topic-astronomy.jpg",
+        "cover": "field-astronomy.jpg",
     },
     {
         "id": "physics",
@@ -171,7 +171,7 @@ FIELDS = [
                        "Cell biology", "Ecology", "Microbiology", "Grasses", "Shrubs", "Ferns", "Mosses",
                        "Legumes", "Rose family plants", "Mint family plants", "Conifers", "Palm trees"},
         "exclude": {"zoology", "medicine", "anatomy"},
-        "cover": "dict-topic-plants.jpg",
+        "cover": "field-botany.jpg",
     },
     {
         "id": "business",
