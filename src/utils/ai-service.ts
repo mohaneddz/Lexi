@@ -7,6 +7,7 @@ import { isReviewStatusTag } from "@/utils/review";
 import { getSettings } from "@/utils/storage";
 
 export const DEFAULT_MODEL = "openai/gpt-oss-20b";
+const JSON_FALLBACK_MODEL = "llama-3.3-70b-versatile";
 export const GROQ_MODELS = [
   "openai/gpt-oss-20b",
   "llama-3.3-70b-versatile",
@@ -81,7 +82,7 @@ const ENTRY_CLASSIFICATION_SCHEMA = z.object({
 
 const CAPTURE_META_SCHEMA = z.object({
   output: z.string(),
-  context: z.string(),
+  example: z.string(),
   tags: z.array(z.string()),
   group: z.string(),
 });
@@ -236,6 +237,13 @@ function isUnsupportedJsonSchemaModelError(error: unknown): boolean {
   );
 }
 
+function isFailedJsonGeneration(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const message = [error.message, isObject(error) ? getNestedString(error, ["data", "error", "message"]) : ""]
+    .join(" ").toLowerCase();
+  return message.includes("failed to validate json") || message.includes("failed_generation");
+}
+
 function titleCase(input: string): string {
   return input
     .trim()
@@ -290,11 +298,8 @@ async function runStructuredPrompt<T>(options: {
   try {
     result = await attempt(configuredModel);
   } catch (error) {
-    if (
-      configuredModel !== DEFAULT_MODEL &&
-      isUnsupportedJsonSchemaModelError(error)
-    ) {
-      result = await attempt(DEFAULT_MODEL);
+    if (isUnsupportedJsonSchemaModelError(error) || isFailedJsonGeneration(error)) {
+      result = await attempt(configuredModel === DEFAULT_MODEL ? JSON_FALLBACK_MODEL : DEFAULT_MODEL);
     } else {
       throw error;
     }
@@ -415,6 +420,7 @@ export async function translateText(
   text: string,
   sourceLang: string,
   targetLang: string,
+  example?: string,
 ): Promise<AIResponse<string>> {
   const trimmedText = text.trim();
 
@@ -433,9 +439,10 @@ export async function translateText(
         "You are a precise translation assistant. Return only valid JSON matching the schema.",
       prompt: [
         `Translate this text from ${sourceLang} to ${targetLang}.`,
-        "Preserve tone, punctuation, and intent.",
+        "Return only the equivalent word or short phrase. Do not include examples or explanations.",
+        example?.trim() ? `Use this example to choose the intended sense: ${example.trim()}` : "",
         `Text: ${trimmedText}`,
-      ].join("\n"),
+      ].filter(Boolean).join("\n"),
       temperature: 0,
     });
 
@@ -449,8 +456,7 @@ export async function translateText(
     try {
       const config = await resolveAiConfig();
       const groq = createGroq({ apiKey: config.apiKey });
-      const candidateModels =
-        config.model !== DEFAULT_MODEL ? [config.model, DEFAULT_MODEL] : [config.model];
+      const candidateModels = Array.from(new Set([config.model, DEFAULT_MODEL, JSON_FALLBACK_MODEL]));
       let translated = "";
       let fallbackError: unknown = null;
 
@@ -459,12 +465,13 @@ export async function translateText(
           const result = await generateText({
             model: groq(model),
             system:
-              "You are a precise translation assistant. Return only the translated text, with no JSON, markdown, or explanation.",
+              "You are a precise vocabulary translator. Return only the equivalent word or short phrase, with no JSON, markdown, example, or explanation.",
             prompt: [
               `Translate this text from ${sourceLang} to ${targetLang}.`,
-              "Preserve tone, punctuation, and intent.",
+              "Return only the equivalent word or short phrase. Do not include examples or explanations.",
+              example?.trim() ? `Use this example to choose the intended sense: ${example.trim()}` : "",
               `Text: ${trimmedText}`,
-            ].join("\n"),
+            ].filter(Boolean).join("\n"),
             temperature: 0,
           });
 
@@ -721,24 +728,23 @@ export type CaptureMetaRequest = {
   language: string;
   /** Only set when translating. */
   targetLanguage?: string;
-  /** Context the user already wrote, used to pick the right sense when translating. */
-  context?: string;
+  /** Example the user already wrote, used to pick the right sense when translating. */
+  example?: string;
   groups: Array<{ id: string; name: string; description?: string }>;
   knownTags: string[];
 };
 
-/** `context` is a short usage sentence, only filled when translating. */
-export type CaptureMeta = { output: string; context: string; tags: string[]; groupId: string | null };
+export type CaptureMeta = { output: string; example: string; tags: string[]; groupId: string | null };
 
 /**
  * Defines or translates a captured entry and, in the same request, picks its
  * tags and group, so filling the capture form costs one call instead of three.
  */
 export async function captureWithMeta(request: CaptureMetaRequest): Promise<AIResponse<CaptureMeta>> {
-  const { text, language, targetLanguage, context, groups, knownTags } = request;
+  const { text, language, targetLanguage, example, groups, knownTags } = request;
   const trimmed = text.trim();
   if (!trimmed) {
-    return { success: false, data: { output: "", context: "", tags: [], groupId: null }, error: "Text is required." };
+    return { success: false, data: { output: "", example: "", tags: [], groupId: null }, error: "Text is required." };
   }
 
   const labelToId = new Map(groups.map((group, index) => [`G${index + 1}`, group.id]));
@@ -754,15 +760,15 @@ export async function captureWithMeta(request: CaptureMetaRequest): Promise<AIRe
         : "You are a concise dictionary assistant for a vocabulary app. Return JSON only.",
       prompt: [
         targetLanguage
-          ? `Translate this from ${language} to ${targetLanguage}, preserving tone and intent, and put it in output: ${trimmed}`
+          ? `Translate the word or short phrase "${trimmed}" from ${language} to ${targetLanguage}. Put only the equivalent word or short phrase in output; do not include a definition or usage sentence.`
           : `Write a clear, learner-friendly ${language} definition of "${trimmed}" in one or two sentences, and put it in output.`,
         "",
-        targetLanguage && context?.trim()
-          ? `The user gave this context, so translate the sense it implies: ${context.trim()}`
+        targetLanguage && example?.trim()
+          ? `The user gave this example, so translate the sense it implies: ${example.trim()}`
           : "",
         targetLanguage
-          ? `In context, write one short, natural ${language} sentence (under 15 words) showing how "${trimmed}" is typically used.`
-          : "Leave context empty.",
+          ? `Put one short, natural ${language} usage sentence (under 15 words) containing "${trimmed}" in example. If the user already gave an example, repeat it unchanged.`
+          : "Leave example empty.",
         "Also give 1 to 3 short lowercase tags with no punctuation.",
         TAG_GUIDANCE,
         describeTagVocabulary(knownTags),
@@ -776,14 +782,14 @@ export async function captureWithMeta(request: CaptureMetaRequest): Promise<AIRe
 
     const output = object.output.trim();
     if (!output) {
-      return { success: false, data: { output: "", context: "", tags: [], groupId: null }, error: "AI returned an empty result." };
+      return { success: false, data: { output: "", example: "", tags: [], groupId: null }, error: "AI returned an empty result." };
     }
 
     return {
       success: true,
       data: {
         output,
-        context: targetLanguage ? object.context.trim() : "",
+        example: targetLanguage ? object.example.trim() : "",
         tags: cleanTags(object.tags, 4),
         groupId: labelToId.get(object.group.trim().toUpperCase()) ?? null,
       },
@@ -791,7 +797,7 @@ export async function captureWithMeta(request: CaptureMetaRequest): Promise<AIRe
   } catch (error) {
     return {
       success: false,
-      data: { output: "", context: "", tags: [], groupId: null },
+      data: { output: "", example: "", tags: [], groupId: null },
       error: toErrorMessage(targetLanguage ? "Translation failed" : "Definition failed", error),
     };
   }

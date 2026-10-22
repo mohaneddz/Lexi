@@ -49,8 +49,8 @@ export function useAI() {
   );
 
   const translate = useCallback(
-    async (text: string, sourceLang: string, targetLang: string) =>
-      runCall(() => aiService.translateText(text, sourceLang, targetLang), ""),
+    async (text: string, sourceLang: string, targetLang: string, example?: string) =>
+      runCall(() => aiService.translateText(text, sourceLang, targetLang, example), ""),
     [runCall],
   );
 
@@ -92,7 +92,7 @@ export function useAI() {
 
   const captureWithMeta = useCallback(
     async (request: aiService.CaptureMetaRequest) =>
-      runCall(() => aiService.captureWithMeta(request), { output: "", context: "", tags: [], groupId: null }),
+      runCall(() => aiService.captureWithMeta(request), { output: "", example: "", tags: [], groupId: null }),
     [runCall],
   );
 

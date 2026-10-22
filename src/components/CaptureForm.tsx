@@ -70,7 +70,7 @@ export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragReg
 
   const [sourceText, setSourceText] = useState("");
   const [outputText, setOutputText] = useState("");
-  const [context, setContext] = useState("");
+  const [example, setExample] = useState("");
   const [definitionLanguage, setDefinitionLanguage] = useState("English");
   const [sourceLanguage, setSourceLanguage] = useState("English");
   const [targetLanguage, setTargetLanguage] = useState("English");
@@ -138,7 +138,7 @@ export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragReg
       text: trimmed,
       language: mode === "define" ? definitionLanguage || defaultLanguage : sourceLanguage,
       targetLanguage: mode === "define" ? undefined : targetLanguage,
-      context: mode === "translate" ? context : undefined,
+      example: mode === "translate" ? example : undefined,
       groups: groups.filter((entry) => !entry.isOthers).map(({ id, name, description }) => ({ id, name, description })),
       knownTags: tagVocabulary([...words, ...translations]),
     });
@@ -148,8 +148,8 @@ export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragReg
       setAiGenerated(true);
       setErrors((current) => ({ ...current, outputText: undefined }));
       if (!tagsTouched && withMeta.data.tags.length > 0) setTagsText(withMeta.data.tags.join(", "));
-      // Only fills context you left empty, never replaces what you wrote.
-      if (mode === "translate" && withMeta.data.context && !context.trim()) setContext(withMeta.data.context);
+      // Keep a user-written example; fill only an empty field.
+      if (mode === "translate" && withMeta.data.example && !example.trim()) setExample(withMeta.data.example);
       if (!groupTouched) {
         const fallbackId = groups.find((entry) => entry.isOthers)?.id;
         setGroupId(withMeta.data.groupId ?? fallbackId ?? NO_GROUP);
@@ -169,7 +169,7 @@ export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragReg
       return;
     }
 
-    const result = await translate(trimmed, sourceLanguage, targetLanguage);
+    const result = await translate(trimmed, sourceLanguage, targetLanguage, example);
     if (result.success) {
       setOutputText(result.data);
       setAiGenerated(true);
@@ -218,7 +218,7 @@ export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragReg
   const resetFields = () => {
     setSourceText("");
     setOutputText("");
-    setContext("");
+    setExample("");
     setAiGenerated(false);
     setMessage(null);
     setErrors({});
@@ -267,7 +267,7 @@ export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragReg
           targetWord: sanitizeInput(outputText),
           targetLanguage,
           aiGenerated,
-          context: context.trim() ? sanitizeInput(context) : undefined,
+          sourceExamples: example.trim() ? [sanitizeInput(example)] : [],
           tags: parseTagInput(tagsText),
           groupIds: selectedGroupIds,
         });
@@ -507,8 +507,8 @@ export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragReg
 
         {mode === "translate" ? (
           <div className="space-y-2">
-            <div className="text-sm font-medium">Context (Optional)</div>
-            {aiLoading && !context.trim() ? (
+            <div className="text-sm font-medium">Example (Optional)</div>
+            {aiLoading && !example.trim() ? (
               <div className="frost-input form-textarea flex min-h-[5.75rem] flex-col gap-2.5 py-3" aria-busy>
                 <Skeleton className="h-4 w-full bg-white/8" />
                 <Skeleton className="h-4 w-2/3 bg-white/8" />
@@ -516,15 +516,15 @@ export function CaptureForm({ mode, onModeChange, onClose, headerAction, dragReg
             ) : (
             <textarea
               className="frost-input form-textarea"
-              value={context}
-              onChange={(event) => setContext(event.target.value)}
+              value={example}
+              onChange={(event) => setExample(event.target.value)}
               onKeyDown={(event) => {
                 if (event.ctrlKey && event.key === "Enter") {
                   event.preventDefault();
                   void handleSave();
                 }
               }}
-              placeholder="Add context or example usage..."
+              placeholder="Use the source word in a sentence..."
               rows={3}
             />
             )}
