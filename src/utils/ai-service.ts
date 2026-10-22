@@ -7,7 +7,6 @@ import { isReviewStatusTag } from "@/utils/review";
 import { getSettings } from "@/utils/storage";
 
 export const DEFAULT_MODEL = "openai/gpt-oss-20b";
-const JSON_FALLBACK_MODEL = "llama-3.3-70b-versatile";
 export const GROQ_MODELS = [
   "openai/gpt-oss-20b",
   "llama-3.3-70b-versatile",
@@ -270,6 +269,7 @@ async function runStructuredPrompt<T>(options: {
   system: string;
   prompt: string;
   temperature?: number;
+  maxOutputTokens?: number;
   config?: AiConfigOverrides;
 }): Promise<T> {
   const config = await resolveAiConfig(options.config);
@@ -285,10 +285,12 @@ async function runStructuredPrompt<T>(options: {
       system: options.system,
       prompt: options.prompt,
       temperature: options.temperature ?? 0.2,
+      maxOutputTokens: options.maxOutputTokens,
       providerOptions: {
         groq: {
           structuredOutputs: true,
           strictJsonSchema: true,
+          ...(model.startsWith("openai/gpt-oss-") ? { reasoningEffort: "low" } : {}),
         },
       },
     });
@@ -298,8 +300,8 @@ async function runStructuredPrompt<T>(options: {
   try {
     result = await attempt(configuredModel);
   } catch (error) {
-    if (isUnsupportedJsonSchemaModelError(error) || isFailedJsonGeneration(error)) {
-      result = await attempt(configuredModel === DEFAULT_MODEL ? JSON_FALLBACK_MODEL : DEFAULT_MODEL);
+    if (configuredModel !== DEFAULT_MODEL && (isUnsupportedJsonSchemaModelError(error) || isFailedJsonGeneration(error))) {
+      result = await attempt(DEFAULT_MODEL);
     } else {
       throw error;
     }
@@ -444,6 +446,7 @@ export async function translateText(
         `Text: ${trimmedText}`,
       ].filter(Boolean).join("\n"),
       temperature: 0,
+      maxOutputTokens: 1024,
     });
 
     return {
@@ -456,7 +459,7 @@ export async function translateText(
     try {
       const config = await resolveAiConfig();
       const groq = createGroq({ apiKey: config.apiKey });
-      const candidateModels = Array.from(new Set([config.model, DEFAULT_MODEL, JSON_FALLBACK_MODEL]));
+      const candidateModels = Array.from(new Set([config.model, DEFAULT_MODEL]));
       let translated = "";
       let fallbackError: unknown = null;
 
@@ -473,6 +476,10 @@ export async function translateText(
               `Text: ${trimmedText}`,
             ].filter(Boolean).join("\n"),
             temperature: 0,
+            maxOutputTokens: 1024,
+            providerOptions: model.startsWith("openai/gpt-oss-")
+              ? { groq: { reasoningEffort: "low" } }
+              : undefined,
           });
 
           translated = result.text.trim().replace(/^["'`]+|["'`]+$/g, "");
@@ -778,6 +785,7 @@ export async function captureWithMeta(request: CaptureMetaRequest): Promise<AIRe
         "Put the label of the best fitting group (such as G1) in group, or NONE if nothing clearly fits.",
       ].filter(Boolean).join("\n"),
       temperature: 0.2,
+      maxOutputTokens: 1024,
     });
 
     const output = object.output.trim();
