@@ -47,6 +47,7 @@ export function EditTranslationDialog({
   const [sourceLanguage, setSourceLanguage] = useState("English");
   const [targetLanguage, setTargetLanguage] = useState("French");
   const [context, setContext] = useState("");
+  const [sourceExample, setSourceExample] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -59,6 +60,7 @@ export function EditTranslationDialog({
     setSourceLanguage(translation.sourceLanguage || "English");
     setTargetLanguage(translation.targetLanguage || "French");
     setContext(translation.context || "");
+    setSourceExample(translation.sourceExamples?.[0] || "");
   }, [translation]);
 
   const handleSave = async () => {
@@ -74,6 +76,9 @@ export function EditTranslationDialog({
         sourceLanguage,
         targetLanguage,
         context: context.trim() ? sanitizeInput(context) : undefined,
+        sourceExamples: sourceExample.trim()
+          ? [sanitizeInput(sourceExample), ...(translation.sourceExamples?.slice(1) ?? [])]
+          : (translation.sourceExamples?.slice(1) ?? []),
       });
       onOpenChange(false);
     } finally {
@@ -137,6 +142,16 @@ export function EditTranslationDialog({
               onChange={(event) => setContext(event.target.value)}
               rows={3}
               className="frost-input form-textarea"
+            />
+          </div>
+          <div className="space-y-1">
+            <span className="text-sm font-medium">Source example (optional)</span>
+            <textarea
+              value={sourceExample}
+              onChange={(event) => setSourceExample(event.target.value)}
+              rows={2}
+              className="frost-input form-textarea"
+              placeholder="Use the source word in a sentence..."
             />
           </div>
         </div>
